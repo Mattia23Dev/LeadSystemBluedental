@@ -1,0 +1,94 @@
+.account-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-40%);
+    width: 70%;
+}
+
+.plan {
+    margin-top: 15vh;
+}
+
+.plan h2 {
+    text-align: center;
+    font-size: 60px;
+    font-weight: 300;
+}
+
+.plan h2 font {
+    font-weight: 600;
+}
+
+.plan-price {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    justify-content: center;
+    align-items: center;
+    margin-top: 70px;
+}
+.home-price-first{
+    width: 30% !important;
+    margin: 0 auto;
+}
+
+@media screen and (width <=1800px) {
+    .plan {
+        h2 {
+            font-size: 45px;
+        }
+    }
+}
+
+
+@media screen and (width <=1200px) {
+    .plan {
+        margin-top: 22vh !important;
+    }
+
+    .plan-price {
+        flex-wrap: wrap;
+    }
+}
+
+
+@media screen and (width <=900px) {
+    .plan{
+        margin-top: 12vh !important;
+    }
+}
+
+
+@media screen and (max-width: 500px) {
+    .account-container {
+        margin: 0 auto;
+        left: 0%;
+        transform: translateX(0%);
+        width: 100% !important;
+    }
+    
+    .plan-price {
+        flex-wrap: wrap;
+        width: 100% !important;
+        gap: 4rem;
+        justify-content: center;
+        margin-top: 100px !important;
+    }
+    
+    .plan {
+        width: 80% !important;
+        margin: 0 auto !important;
+        margin-top: 22vh !important;
+        padding-bottom: 30px;
+    }
+
+    .plan>h2 {
+        font-size: 40px;
+        text-align: center;
+    }
+
+    .plan-top {
+        margin-bottom: 40px;
+        margin-top: 70px;
+    }
+}

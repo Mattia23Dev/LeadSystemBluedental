@@ -1,0 +1,449 @@
+#switchwindow {
+    display: none;
+    border: none;
+    outline: none;
+    background-color: white;
+
+    svg {
+        height: 25px;
+        width: 25px;
+        fill: rgba(0, 0, 0, 0.5);
+    }
+}
+
+
+.wa-lead-list-conainer {
+    width: 100%;
+
+    .search-lead-wa {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 1rem;
+        padding: 0 20px;
+
+        input {
+            border: none;
+            outline: none;
+            background-color: var(--bg);
+            border-bottom: 1px solid gray;
+        }
+    }
+
+    .lead-list-chat {
+        padding: 10px;
+        border-radius: 20px;
+        width: 100%;
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 50px;
+        overflow-x: auto;
+
+
+        #leadentrywa {
+            width: 250px;
+            height: 130px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            padding: 20px;
+            border-radius: 20px;
+            border: 2px solid white;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.07);
+
+            span {
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+
+
+        button {
+            background-color: #3471CC;
+            margin: 0 auto;
+            padding: 4px 10px;
+            border: none;
+            cursor: pointer;
+            color: white;
+            border-radius: 10px;
+            white-space: nowrap;
+        }
+
+
+    }
+
+    .lead-list-chat::-webkit-scrollbar {
+        height: 10px;
+    }
+
+    .lead-list-chat::-webkit-scrollbar-track {
+        background: rgba(52, 113, 204, 0.1);
+        border-radius: 70px;
+        padding: 4px 8px;
+        height: 20px;
+    }
+
+    .lead-list-chat::-webkit-scrollbar-thumb {
+        background: #3471CC;
+        border-radius: 56px;
+        height: 10px;
+    }
+
+
+}
+
+
+
+.wabody {
+    background-color: white;
+    padding: 80px 0 0 40px;
+    border-radius: 50px;
+    box-shadow: 0px 14px 16px rgba(0, 0, 0, 0.07);
+    max-height: calc(100vh - 150px);
+    margin: 20px 0;
+
+    display: flex;
+
+    .rightwa {
+        width: 30%;
+
+        .row1 {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            height: 50px;
+
+            .nameicon {
+                background-color: rgba(52, 113, 204, 0.35);
+                width: fit-content;
+                padding: 15px;
+                border-radius: 100%;
+
+                svg {
+                    fill: white;
+                    width: 35px;
+                    height: 35px;
+                }
+            }
+
+            .namename {
+                font-size: 30px;
+                position: relative;
+
+                &::after {
+                    content: "";
+                    height: 15px;
+                    aspect-ratio: 1;
+                    position: absolute;
+                    background-color: #11EB34;
+                    border-radius: 100%;
+                    filter: drop-shadow(0 0 4px #11EB34);
+                }
+            }
+        }
+
+        .row2 {
+            margin-top: 15px;
+            height: 110px;
+
+            .tit {
+                text-decoration: underline;
+                color: rgba(0, 0, 0, 0.5);
+                font-size: 25px;
+            }
+
+            .data {
+                display: flex;
+                align-items: center;
+
+                #num {
+                    font-size: 50px;
+                }
+
+                #name {
+                    font-size: 15px;
+                    color: rgba(0, 0, 0, 0.5);
+                }
+            }
+        }
+
+        .row3 {
+            height: calc(100% - 100px);
+            margin-top: 30px;
+            overflow-y: auto;
+
+            .personentry {
+                padding: 10px 40px;
+                display: grid;
+                grid-template-columns: 1fr 0.2fr;
+                align-items: center;
+                border-bottom: 1px solid gray;
+                transition: all 200ms ease-in-out;
+                cursor: pointer;
+
+                &:hover {
+                    background-color: rgba(52, 113, 204, 0.1);
+                }
+
+                .nome {
+                    font-size: 18px;
+                    position: relative;
+                }
+
+                .nome::before {
+                    content: "";
+                    height: 15px;
+                    width: 15px;
+                    border-radius: 100%;
+                    position: absolute;
+                    top: 0;
+                    left: -25px;
+                    top: 10px;
+                }
+
+                .nome.green::before {
+                    background-color: #11EB34;
+                    filter: drop-shadow(0 0 4px #11EB34);
+                }
+
+                .nome.yellow::before {
+                    background-color: #FBBC05;
+                    filter: drop-shadow(0 0 4px #FBBC05);
+                }
+
+                .nome.grey::before {
+                    background-color: rgba(41, 41, 41, 0.23);
+                }
+
+
+                .lastdate {
+                    font-size: 12px;
+                    color: rgba(0, 0, 0, 0.5);
+                    justify-self: center;
+                }
+
+                .lasttext {
+                    font-size: 15px;
+                    color: rgba(0, 0, 0, 0.5);
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 200px;
+                }
+            }
+
+            /* ===== Scrollbar CSS ===== */
+            /* Firefox */
+            & {
+                scrollbar-width: auto;
+                scrollbar-color: #8C8C8C #ffffff;
+            }
+
+            /* Chrome, Edge, and Safari */
+            &::-webkit-scrollbar {
+                width: 20px;
+            }
+
+            &::-webkit-scrollbar-track {
+                background: #ffffff;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background-color: #8C8C8C;
+                border-radius: 10px;
+                border: 3px solid #ffffff;
+            }
+        }
+
+    }
+
+    .leftwa {
+        width: 70%;
+        border-left: 2px solid lightgray;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+
+
+        .chatheader {
+            background-color: #3471CC;
+            font-size: 30px;
+            color: white;
+            box-shadow: -2px 0 0 0px #3471CC;
+
+            #status {
+                font-size: 20px;
+                font-weight: 200;
+            }
+        }
+
+        .mainchat {
+            height: 100%;
+            padding: 0 60px;
+            overflow-y: auto;
+
+            /* ===== Scrollbar CSS ===== */
+            /* Firefox */
+            & {
+                scrollbar-width: auto;
+                scrollbar-color: #8C8C8C #ffffff;
+            }
+
+            /* Chrome, Edge, and Safari */
+            &::-webkit-scrollbar {
+                width: 15px;
+            }
+
+            &::-webkit-scrollbar-track {
+                background: #ffffff;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background-color: #8C8C8C;
+                border-radius: 10px;
+                border: 3px solid #ffffff;
+            }
+        }
+
+
+        .chatfooter {
+            background-color: #3471CC;
+            box-shadow: -2px 0 0 0px #3471CC;
+            padding: 20px 50px;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            align-items: center;
+
+            position: relative;
+
+            .notes {
+                grid-column: span 1;
+            }
+
+            .emojis {
+                grid-column: span 1;
+
+                svg {
+                    cursor: pointer;
+                }
+
+                aside {
+                    position: absolute;
+                    bottom: 100%;
+                }
+            }
+
+            .input {
+                grid-column: span 8;
+                background-color: white;
+                display: flex;
+                align-items: center;
+                border-radius: 15px;
+                padding-right: 20px;
+
+                svg {
+                    cursor: pointer;
+                }
+
+                input {
+                    border-radius: 15px;
+                    font-size: 20px;
+                    width: 100%;
+                    padding: 15px 20px;
+                    border: none;
+                    outline: none;
+                }
+            }
+        }
+    }
+}
+
+@media screen and (width <=1400px) {
+    .wabody {
+        padding: 50px 0 0 20px !important;
+
+        .personentry {
+            padding: 8px 0 8px 30px !important;
+
+            .nome {
+                font-size: 20px !important;
+            }
+        }
+
+        .chatfooter {
+            input {
+                font-size: 18px !important;
+                padding: 10px 10px !important;
+            }
+
+            .emojis>svg,
+            .notes>svg {
+                scale: 0.6 !important;
+            }
+        }
+    }
+}
+
+@media screen and (width <=1000px) {
+    #switchwindow {
+        display: block;
+    }
+
+    .wabody {
+        padding: 20px !important;
+
+        .showwindow {
+            display: none;
+        }
+
+        .leftwa {
+            width: 100% !important;
+        }
+
+        .rightwa {
+            width: 100% !important;
+        }
+
+
+
+        .chatfooter {
+            padding: 10px !important;
+        }
+    }
+}
+
+@media screen and (width <=700px) {
+    .wa-lead-list-conainer {
+        #leadentrywa {
+            font-size: 14px !important;
+
+            * {
+                font-size: 14px !important;
+            }
+        }
+    }
+
+    #switchwindow svg {
+        height: 20px !important;
+        width: 20px !important;
+        transform: translateX(-10px);
+    }
+
+    .wabody {
+        padding: 15px !important;
+        font-size: 18px !important;
+
+        * {
+            font-size: 18px !important;
+        }
+    }
+}
+
+@media screen and (width <=600px) {
+    #bigcontwa {
+        width: 98% !important;
+        transform: translateX(-45%) !important;
+    }
+}

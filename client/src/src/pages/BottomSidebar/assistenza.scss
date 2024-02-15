@@ -1,0 +1,258 @@
+.assistenza-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-45%);
+    /* width: 80%; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 3rem;
+    margin-top: 20vh;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+.ass {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 0rem;
+    align-items: center;
+    width: 100%;
+
+    #num-mail{
+        white-space: normal;
+    }
+}
+
+.assistenza {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.assistenza-top {
+    margin: 20vh 0 100px 0;
+}
+
+.assistenza-top>h2 {
+    font-size: 60px;
+    font-weight: 300;
+    text-align: center;
+}
+
+.assistenza-top>h2>font {
+    font-weight: 700;
+    display: block;
+}
+
+.form-assistenza {
+    width: 50%;
+}
+
+.form-top {
+    margin: 0px 0 30px 0;
+}
+
+.form-top>* {
+    font-size: 18px;
+    font-weight: 400;
+}
+
+.form-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-body>textarea {
+    border: none;
+    border-bottom: 1px solid black;
+    width: 100%;
+    height: 200px;
+}
+
+.form-body>textarea:focus {
+    border: none;
+    border-bottom: 1px solid black;
+}
+
+.assistenza-button {
+    background: #3471CC;
+    border-radius: 30px;
+    padding: 6px 35px;
+    border: none;
+    color: white;
+    font-weight: 500;
+    margin-top: 50px;
+}
+
+.assistenza-bottom {
+    width: 70%;
+}
+
+.assistenza-bottom-item {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 300px;
+    padding: 15px 0;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(24, 24, 24, 0.5);
+    /* margin-bottom: 20px; */
+
+
+}
+
+.assistenza-bottom-item p {
+    margin: 0;
+}
+
+.assistenza-bottom-item>div:first-of-type>h4 {
+    font-style: normal;
+    font-weight: 500;
+    line-height: 0px;
+    color: rgba(0, 0, 0, 0.5);
+    font-size: 30px;
+}
+
+.assistenza-bottom-item>div:first-of-type>p {
+    font-weight: 400;
+    font-size: 15px;
+    color: rgba(0, 0, 0, 0.4);
+}
+
+.assistenza-bottom-item>div:last-of-type>p {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 18px;
+    line-height: 0px;
+    color: rgba(0, 0, 0, 0.5);
+}
+
+
+#num-mail {
+    font-size: 30px;
+    font-weight: 500;
+}
+
+.ass #sub {
+    margin-top: 15px;
+}
+
+#privacycookies{
+    justify-content: flex-start;
+    gap: 3rem;
+    a{
+        color: #3471CC;
+        font-size: 16px;
+        white-space: nowrap;
+    }
+}
+
+@media screen and (max-width:500px) {
+    .assistenza-container {
+        position: static;
+        left: 0%;
+        transform: translateX(0%);
+        width: 100%;
+    }
+
+    .ass {
+        flex-wrap: wrap;
+        gap: 10rem;
+        width: 100%;
+    }
+
+    .assistenza {
+        width: 100% !important;
+        display: flex;
+        justify-content: center;
+    }
+
+    .assistenza-bottom {
+        width: 90%;
+    }
+
+    .assistenza-bottom-item {
+        flex-direction: column;
+    }
+
+    .assistenza-top>h2 {
+        font-size: 26px !important;
+    }
+
+    .assistenza-top {
+        margin-top: 30px;
+    }
+}
+
+@media screen and (height <=900px) {
+    .assistenza-top {
+        margin: 50px 0 !important;
+    }
+}
+
+@media screen and (width <=2000px) {
+    .assistenza-top {
+        margin: 100px 0 !important;
+    }
+}
+
+@media screen and (width <=1800px) {
+    .assistenza-top {
+        h2 {
+            font-size: 45px !important;
+        }
+    }
+    .ass {
+        h4 {
+            font-size: 25px !important;
+            line-height: initial !important;
+        }
+
+        #num-mail {
+            font-size: 20px !important;
+        }
+
+        .assistenza-bottom-item {
+            gap: 0 !important;
+            margin-bottom: 0 !important;
+        }
+    }
+
+    #privacycookies{
+        a{
+            margin-right: 10px;
+        }
+    }
+}
+
+
+@media screen and (width <=1000px) {
+    .assistenza-top {
+        margin-top: 150px !important;
+    }
+
+    .assistenza-top {
+        h2 {
+            font-size: 45px !important;
+        }
+    }
+    .ass {
+        h4 {
+            font-size: 25px !important;
+            line-height: initial !important;
+        }
+
+        #num-mail {
+            font-size: 20px !important;
+        }
+
+        .assistenza-bottom-item {
+            gap: 0 !important;
+            margin-bottom: 0 !important;
+        }
+    }
+}

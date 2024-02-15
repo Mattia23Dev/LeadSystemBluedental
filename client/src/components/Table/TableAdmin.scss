@@ -1,0 +1,249 @@
+.table-admin {
+  min-width: 80% !important;
+  width: 80%;
+  overflow-y: hidden;
+}
+
+.table-big-container-admin {
+  box-shadow: 0px 0px 20px 2px #80808029;
+  border-radius: 20px;
+  padding: 30px 20px;
+  overflow: auto;
+  font-family: 'Poppins', sans-serif;
+  margin-top: 30px;
+  width: 100%;
+  background-color: white;
+  max-height: 85vh;
+  padding: 20px 30px;
+  box-shadow: 0px 0px 20px 2px #80808029;
+  padding-top: 0;
+
+  overflow-x: hidden;
+
+  thead {
+    z-index: 10;
+    top: 0;
+    padding-top: 30px;
+    display: contents;
+  }
+
+  #ofhandler {
+    overflow: auto;
+  }
+
+}
+
+
+
+#scrolladmin {
+  &::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(235, 228, 231, 1);
+    border-radius: 70px;
+    padding: 4px 8px;
+    width: 20px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #973031;
+    border-radius: 56px;
+    width: 12px;
+  }
+}
+
+.table-big-container-admin::-webkit-scrollbar {
+  width: 12px;
+}
+
+.table-big-container-admin::-webkit-scrollbar-track {
+  background: rgba(52, 113, 204, 0.1);
+  border-radius: 70px;
+  padding: 4px 8px;
+  width: 20px;
+}
+
+.table-big-container-admin::-webkit-scrollbar-thumb {
+  background: #3471CC;
+  border-radius: 56px;
+  width: 12px;
+}
+
+.button-filter {
+  border: none;
+  cursor: pointer;
+  padding: 6px 18px;
+  border-radius: 5px;
+  background-color: #3471CC;
+  color: white;
+  margin: 0 10px;
+}
+
+.table-big-container-admin {
+
+  .status {
+    position: relative;
+
+    &::after {
+      display: none;
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      border-radius: 100%;
+      left: -20px;
+      top: 6px;
+      background-color: lightgray;
+    }
+
+    &.Da.contattare::before {
+      background: #CC2131;
+    }
+
+    &.In.lavorazione::before {
+      background: #FBBC05;
+    }
+
+    &.Non.interessato::before {
+      background: #59bfff;
+    }
+
+    &.Opportunità::before {
+      background: #ACFB05;
+    }
+
+    &.In.valutazione::before {
+      background: #FBBC05;
+    }
+
+    &.Venduto::before {
+      background: #30978B;
+    }
+
+  }
+
+  .table-filters {
+    z-index: 1;
+    padding: 30px;
+
+    width: 100%;
+
+    .adminsearchkeyword {
+      width: 400px;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      svg {
+        height: 30px;
+        aspect-ratio: 1;
+        margin-right: 20px;
+      }
+
+      input {
+        border: none;
+        outline: none;
+        border-bottom: 1px solid;
+        width: 100%;
+      }
+    }
+
+    .adminfilterdate {
+      padding-right: 40px;
+      font-size: 15pt;
+      margin-top: 20px;
+      display: flex;
+
+      div {
+        margin-bottom: 10px;
+      }
+
+      input {
+        font-weight: 300;
+        border: none;
+        outline: none;
+        color: #973031;
+        margin-right: 20px;
+        margin-left: 20px;
+        position: relative;
+      }
+
+      input[type="date"]::-webkit-calendar-picker-indicator {
+        background: transparent;
+        bottom: 0;
+        color: transparent;
+        cursor: pointer;
+        height: auto;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: auto;
+      }
+    }
+  }
+}
+
+
+// /* @media screen and (max-width: 500px) {
+//   .table-big-container-admin {
+//       width: 40% !important;
+//       margin: 0 auto;
+//     }
+//   } */
+
+@media screen and (width <=1400px) {
+  .table-big-container-admin {
+    .table-filters {
+      * {
+        font-size: 15px !important;
+      }
+    }
+
+    tr {
+      th {
+        font-size: 18px !important;
+      }
+    }
+  }
+
+}
+
+
+
+@media screen and (width <=1200px) {
+  .table-big-container-admin {
+
+    .status {
+      &::before {
+        height: 15px !important;
+        width: 15px !important;
+        top: 2px !important;
+      }
+    }
+  }
+}
+
+@media screen and (width <=600px) {
+  .table-big-container-admin {
+    .table-filters {      
+      padding: 15px !important;
+
+      .adminsearchkeyword {
+        margin-top: 25px !important;
+      }
+
+      .adminfilterdate {
+        margin-top: 25px !important;
+        flex-direction: column !important;
+      }
+    }
+  }
+
+}

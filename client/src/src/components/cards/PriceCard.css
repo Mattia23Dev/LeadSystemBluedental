@@ -1,0 +1,203 @@
+/*PRICECARD*/
+.card-active-sub {
+    font-family: 'Poppins', sans-serif;
+    border-radius: 30px;
+    background: #3471CC;
+    height: auto;
+}
+
+.card-not-active-sub {
+    font-family: 'Poppins', sans-serif;
+    border-radius: 30px;
+    color: rgb(0, 0, 0);
+    background: #ffffff;
+    box-shadow: 0px 4px 24px rgba(52, 113, 204, 0.4);
+}
+
+.header-active-sub {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    justify-content: center;
+    color: white;
+    align-items: center;
+    padding: 20px 0;
+}
+
+.header-active-sub>h4 {
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.header-active-sub>h2 {
+    font-size: 40px;
+}
+
+.header-not-active-sub>h2 {
+    font-size: 40px;
+}
+
+.body-active-sub {
+    background: #FFFFFF;
+    box-shadow: 0px 4px 24px rgba(52, 113, 204, 0.4);
+    border-radius: 30px;
+    color: #3471CC;
+    padding: 30px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.body-active-sub>h1 {
+    font-size: 40px;
+    font-weight: 500;
+}
+
+.body-not-active-sub>h1 {
+    font-size: 40px;
+    font-weight: 500;
+}
+
+.body-not-active-sub {
+    background: #3471CC;
+    border-radius: 30px;
+    color: white;
+    padding: 30px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-not-active-sub {
+    border-radius: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+}
+
+.header-not-active-sub>h4 {
+    font-size: 14px;
+    font-weight: 300;
+    color: #3471CC;
+}
+
+.button-active-sub {
+    background: #3471CC;
+    border-radius: 30px;
+    color: white;
+    padding: 8px 30px;
+    border: none;
+    font-weight: 600;
+    width: 80%;
+    font-size: 20px;
+}
+
+.button-not-active-sub {
+    background: #ffffff;
+    border-radius: 30px;
+    color: #3471CC;
+    padding: 8px 30px;
+    border: none;
+    font-weight: 600;
+    width: 80%;
+    font-size: 20px;
+}
+
+.link-boost-page {
+    font-size: 16px;
+    color: #3471cc;
+}
+
+
+/*PRICEONETIMECARD*/
+.price-card-container {
+    font-family: 'Poppins', sans-serif;
+}
+
+.price-card-container>div {
+    border-radius: 30px;
+}
+
+.top-card-price {
+    background: #3471CC;
+    border-radius: 30px;
+    width: 100%;
+    height: 130px;
+    display: flex;
+    flex-direction: column;
+    gap: 0rem;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+.top-card-price>h4 {
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.top-card-price>h2 {
+    font-size: 40px;
+
+}
+
+.button-price-one-time {
+    background: #3471CC;
+    border-radius: 30px;
+    padding: 6px 35px;
+    border: none;
+    color: white;
+    font-weight: 500;
+}
+
+.card-body {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+}
+
+.card-body button {
+    font-size: 21px;
+}
+
+.card-title {
+    font-weight: 600;
+    text-align: center;
+    font-size: 40px;
+}
+
+@media screen and (width <=1800px) {
+    .card-title.pricing-card-title {
+        font-size: 25px !important;
+    }
+
+    .top-card-price h2 {
+        font-size: 25px !important;
+    }
+
+    .card .card-body {
+        gap: 0 !important;
+        margin-top: 0 !important;
+    }
+}
+
+
+@media screen and (max-width: 500px) {
+    .card-active-sub {
+        width: 100%;
+    }
+
+    .card-not-active-sub {
+        width: 100%;
+    }
+}

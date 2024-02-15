@@ -1,0 +1,180 @@
+.boost-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-40%);
+    width: 70%;
+    font-family: 'Poppins', sans-serif;
+    padding-bottom: 40px;
+    transition: 'width 0.3s ease',
+}
+
+.boost-container-closed {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-46%);
+    width: 90%;
+    font-family: 'Poppins', sans-serif;
+    padding-bottom: 40px;
+    transition: 'width 0.3s ease',
+}
+
+.boost {
+    margin-top: 15vh;
+}
+
+.boost-top {
+    margin-bottom: 40px;
+    margin-top: 70px;
+}
+
+.boost>h2 {
+    color: black;
+    font-size: 60px;
+    text-align: center;
+    font-weight: 300;
+}
+
+.boost>h2>font {
+    font-weight: 700;
+}
+
+.boost-price {
+    margin-top: 140px;
+    display: flex;
+    justify-content: center;
+    gap: 4rem;
+    flex-direction: row;
+    align-items: center;
+
+    .card {
+        box-shadow: 0px 4px 24px rgba(52, 113, 204, 0.3);
+    }
+}
+
+
+// @media screen and (max-width:500px) {
+//     .boost>h2 {
+//         font-size: 28px;
+//         text-align: center;
+//     }
+
+//     .boost {
+//         width: 80%;
+//         margin: 0 auto !important;
+//     }
+
+//     .boost-container {
+//         position: static;
+//         left: 0%;
+//         transform: translateX(0%);
+//         width: 100%;
+//         height: auto !important;
+//         max-height: none !important;
+//         overflow-y: scroll;
+//     }
+
+//     .boost-price {
+//         gap: 10rem;
+//         flex-wrap: wrap;
+//     }
+// }
+
+@media screen and (width <=1800px) {
+    .boost {
+        margin-top: 20vh !important;
+
+        h2 {
+            font-size: 45px;
+        }
+
+        .button-price-one-time {
+            font-size: 20px !important;
+        }
+    }
+}
+
+
+@media screen and (width <=1200px) {
+    .boost {
+        margin-top: 22vh !important;
+
+        #boosttit {
+            margin-bottom: 100px !important;
+        }
+
+
+    }
+
+    .boost-container {
+        width: 77% !important;
+        transform: translateX(-39%) !important;
+    }
+
+    .boost {
+        .boost-price {
+            gap: 1rem !important;
+            margin-top: 0px;
+            flex-wrap: wrap;
+
+            .col {
+                min-width: 200px;
+            }
+        }
+
+        .card {
+            .top-card-price {
+                height: 90px !important;
+
+                h2 {
+                    font-size: 30px;
+                }
+            }
+
+            .card-body {
+                margin-top: 0 !important;
+                gap: 1rem !important;
+
+                h1 {
+                    font-size: 30px;
+                }
+
+                .button-price-one-time {
+                    font-size: 18px !important;
+                }
+            }
+        }
+    }
+}
+
+@media screen and (width <=900px) {
+    .boost {
+        margin-top: 18vh !important;
+    }
+
+    .boost-container {
+        width: 80% !important;
+        padding-bottom: 40px !important;
+    }
+}
+
+@media screen and (width <=600px) {
+    .boost-container {
+        width: 90% !important;
+        transform: translateX(-50%) !important;
+    }
+
+    .boost>h2 {
+        font-size: 40px !important;
+        margin-bottom: 40px;
+    }
+
+    .boost {
+        .boost-price {
+            gap: 3rem !important;
+        }
+    }
+
+    .boost-container-closed {
+        transform: translateX(-49%) !important;
+    }
+}

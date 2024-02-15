@@ -1,0 +1,17 @@
+.register, .login{
+    font-family: "Poppins", sans-serif;
+}
+.register {
+    margin-top: 30px;
+    min-height: 120vh;
+}
+.a-login{
+    color: #3471CC;
+}
+.button-reg{
+    background: #3471CC;
+    border-radius: 10px;
+    border: none;
+    color: white;
+    padding: 6px 25px;
+}

@@ -1,5 +1,5 @@
-/* @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
 
 *{
   font-family: 'Poppins', sans-serif !important;
@@ -40,6 +40,9 @@
   font-family: 'Poppins', sans-serif;
   padding-bottom: 40px;
   transition: 'width 0.3s ease',
+}
+button, a {
+  cursor: pointer !important;
 }
 .boost-container-closed {
   position: absolute;

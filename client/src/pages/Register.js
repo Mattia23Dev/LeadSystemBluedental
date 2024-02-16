@@ -5,10 +5,10 @@ import { toast } from "react-hot-toast";
 import { UserContext } from "../context";
 import { Link } from "react-router-dom";
 import './loginRegister.css';
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [nameECP, setNameECP] = useState("");
   const [pIva, setPIva] = useState("");
@@ -61,9 +61,9 @@ const Register = () => {
           setState(data);
           localStorage.setItem("auth", JSON.stringify(data));
           if (data.user.role === 'admin') {
-            history.push('/admin/lead-general')
+            navigate('/admin/lead-general')
           } else {
-            history.push("/");
+            navigate("/");
           }
         }
       } catch (err) {

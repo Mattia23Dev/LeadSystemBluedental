@@ -2,30 +2,53 @@ const Orientatore = require('../models/orientatori');
 const Lead = require('../models/lead');
 const User = require('../models/user');
 const LeadDeleted = require("../models/leadDeleted");
+const {hashPassword, comparePassword} = require('../helpers/auth');
+const nodemailer = require('nodemailer');
 
 exports.createOrientatore = async (req, res) => {
-    //console.log(req.body);
     try {
-      // Estrai i dati dalla richiesta
       const { nome, cognome, email, telefono } = req.body;
   
-      // Controlla se l'utente è autenticato e ottieni il suo ID
       const userId = req.body.utente;
       if (!userId) {
         return res.status(400).json({ error: 'ID utente non fornito' });
       }
-  
-      // Crea un nuovo oggetto Orientatore con i dati forniti
+      const hashedPassword = await hashPassword('12345678');
       const orientatore = new Orientatore({
         nome,
         cognome,
         email,
         telefono,
-        utente: userId  // Assegna l'ID dell'utente all'orientatore
+        utente: userId,
+        password: hashedPassword,
+        role: 'orientatore',
+        new: true,
       });
   
-      // Salva l'orientatore nel database
       const nuovoOrientatore = await orientatore.save();
+
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_GMAIL,
+          pass: process.env.PASS_GMAIL,
+        }
+      });
+  
+      const mailOptions = {
+        from: process.env.EMAIL_GMAIL,
+        to: email,
+        subject: 'Benvenuto nel LeadSystem!',
+        text: `Gentile ${nome},\n\nTi diamo il benvenuto come nel tuo LeadSystem di Bluedental! Di seguito trovi le tue informazioni di accesso:\n\nEmail: ${email}\nPassword: 12345678\n\nTi consigliamo di cambiare la tua password temporanea appena possibile. Grazie e buon lavoro!`,
+      };
+  
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.log('Errore nell\'invio dell\'email:', error);
+        } else {
+          console.log('Email inviata con successo:', info.response);
+        }
+      });
   
       res.status(201).json(nuovoOrientatore);
     } catch (err) {
@@ -33,7 +56,6 @@ exports.createOrientatore = async (req, res) => {
       console.log(err.message);
     }
   };
-
 
   exports.deleteOrientatore = async (req, res) => {
     //console.log(req.body.id);

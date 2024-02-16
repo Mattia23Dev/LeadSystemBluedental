@@ -1,5 +1,5 @@
 const express = require('express');
-const {register, login, updateUser, getUserImpostazioni, recoveryPassword, resetPassword, verifyEmail, loginSuperAdmin, getUsersSuperAdmin} = require('../controllers/auth');
+const {register, login, updateUser, getUserImpostazioni, recoveryPassword, resetPassword, verifyEmail, loginSuperAdmin, getUsersSuperAdmin, changeOrientatorePassword} = require('../controllers/auth');
 const { sendEmail } = require('../controllers/sendEmail');
 const { modifyCounter, updateUserStatus } = require('../controllers/superAdmin');
 const User = require('../models/user');
@@ -20,6 +20,8 @@ router.get('/get-all-user-super-admin', getUsersSuperAdmin);
 
 router.post("/modify-counter-super", modifyCounter);
 router.post("/update-user-status-admin", updateUserStatus);
+
+router.post("/change-ori-password", changeOrientatorePassword);
 
 router.post("/modify-rating-note-super", async (req, res) => {
     try {

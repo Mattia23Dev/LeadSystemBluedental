@@ -1,19 +1,24 @@
 import React, {Suspense} from "react";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import AuthRoute from "./components/routes/AuthRoute";
 import Home from "./pages/Home";
 import Dashboard from "./pages/dashboard";
 import SuperAdminRoute from "./components/routes/SuperAdminRoute";
 import CalendarM from "./pages/Calendar";
+import AuthRouteWithLayout from "./components/routes/AuthRoute";
+import Assistenza from "./pages/BottomSidebar/Assistenza";
+import Orientatori from "./pages/Orientatori";
+import Impostazioni from "./pages/BottomSidebar/Impostazioni";
+import TermsCond from "./pages/TermsCond";
+import './components/SideBar/Sidebar.scss';
+import './App.css';
+import './pages/loginRegister.css';
+import Login from "./pages/Login";
 
 const LazyRegister = React.lazy(() => import("./pages/Register"));
 const LazyLoginSuperAdmin = React.lazy(() => import("./pages/LoginSuperAdmin"));
 const LazyLogin = React.lazy(() => import("./pages/Login"));
-const LazyTermsCond = React.lazy(() => import("./pages/TermsCond"));
-const LazyImpostazioni = React.lazy(() => import("./pages/BottomSidebar/Impostazioni"));
-const LazyAssistenza = React.lazy(() => import("./pages/BottomSidebar/Assistenza"));
-const LazyOrientatori = React.lazy(() => import("./pages/Orientatori"));
 const LazyHomeSuper = React.lazy(() => import("./pages/superAdmin/HomeSuper"));
 
 function App() {
@@ -25,110 +30,80 @@ function App() {
           duration: 3000,
         }}
       />
-        <Switch>
+        <Routes>
           <Route
             exact
             path="/register"
-            component={() => (
+            element={
               <Suspense fallback={<div>Loading...</div>}>
                 <LazyRegister />
               </Suspense>
-            )}
+            }
           />
 
           <Route
             exact
             path="/super-admin"
-            component={() => (
+            element={
               <Suspense fallback={<div>Loading...</div>}>
                 <LazyLoginSuperAdmin />
               </Suspense>
-            )}
+            }
           />
 
           <Route
             exact
             path="/login"
-            component={() => (
-              <Suspense fallback={<div>Loading...</div>}>
-                <LazyLogin />
-              </Suspense>
-            )}
+            element={
+                <Login />
+            }
           />  
-            <AuthRoute
-              exact
-              path="/"
-              component={() => (
-                  <Home />
-              )}
-            />
+          <Route
+            exact
+            path="/"
+            element={<AuthRouteWithLayout component={Home} />}
+          />
 
-            <AuthRoute
-              exact
-              path="/dashboard"
-              component={() => (
-                  <Dashboard />
-              )}
-            />
+          {/*<Route
+            exact
+            path="/dashboard"
+            element={<AuthRouteWithLayout component={Dashboard} />}
+            />*/}
 
-            <AuthRoute
-              exact
-              path="/termini-condizioni"
-              component={() => (
-                <Suspense fallback={<div>Loading...</div>}>
-                  <LazyTermsCond />
-                </Suspense>
-              )}
-            />
+          <Route
+            exact
+            path="/termini-condizioni"
+            element={<AuthRouteWithLayout component={TermsCond} />}
+          />
 
-            <AuthRoute
-              exact
-              path="/calendar"
-              component={() => (
-                  <CalendarM />
-              )}
-            />
+          <Route
+            exact
+            path="/calendar"
+            element={<AuthRouteWithLayout component={CalendarM} />}
+          />
 
-            <AuthRoute
-              exact
-              path="/impostazioni"
-              component={() => (
-                <Suspense fallback={<div>Loading...</div>}>
-                  <LazyImpostazioni />
-                </Suspense>
-              )}
-            />
+          <Route
+            exact
+            path="/impostazioni"
+            element={<AuthRouteWithLayout component={Impostazioni} />}
+          />
 
-            <AuthRoute
-              exact
-              path="/orientatori"
-              component={() => (
-                <Suspense fallback={<div>Loading...</div>}>
-                  <LazyOrientatori />
-                </Suspense>
-              )}
-            />
-
-            <AuthRoute
+          <Route
+            exact
+            path="/orientatori"
+            element={<AuthRouteWithLayout component={Orientatori} />}
+          />
+            <Route
               exact
               path="/assistenza"
-              component={() => (
-                <Suspense fallback={<div>Loading...</div>}>
-                  <LazyAssistenza />
-                </Suspense>
-              )}
+              element={<AuthRouteWithLayout component={Assistenza} />}
             />
-
-              <SuperAdminRoute
-                exact
-                path="/super-admin/home"
-                component={() => (
-                  <Suspense fallback={<div>Loading...</div>}>
-                    <LazyHomeSuper />
-                  </Suspense>
-                )}
-              />
-        </Switch>
+          <Route
+            exact
+            path="/super-admin/home"
+            element={<SuperAdminRoute path={<LazyHomeSuper />} />}
+          />
+        </Routes>
     </Router>
   );
 }

@@ -8,7 +8,6 @@ import { UserContext } from '../../../context';
 import { ProvinceItaliane } from '../../../components/Data';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import {useHistory} from 'react-router-dom';
 import recallblue from '../../../imgs/recallblue.png';
 import indietro from '../../../imgs/indietro.png';
 import Calendar from 'react-calendar';
@@ -34,7 +33,6 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead ,
     const [facolta, setFacolta] = useState(lead.facolta ? lead.facolta : '');
     const [fatturato, setFatturato] = useState(lead.fatturato ? lead.fatturato : '0');
     const [oraChiamataRichiesto, setOraChiamataRichiesto] = useState(lead.oraChiamataRichiesto ? lead.oraChiamataRichiesto : '');
-    const history = useHistory();
     const [mostraCalendar, setMostraCalendar] = useState(false);
     const [selectedDate, setSelectedDate] = useState(lead.recallDate && lead.recallDate !== null ? new Date(lead.recallDate) : new Date());
     const [selectedTime, setSelectedTime] = useState({ hours: 0, minutes: 0 });

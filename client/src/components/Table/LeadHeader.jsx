@@ -3,6 +3,8 @@ import { UserContext } from '../../context';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { BiRefresh } from 'react-icons/bi';
+import '../MainDash/MainDash.scss';
+import './LeadEntry.scss'
 
 export default function LeadHeader({ 
   esito, SETtoggles, toggles, filteredData, type, getOtherLeads, refreshate }) {

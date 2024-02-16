@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import './LeadEntry.scss'
 import recall from '../../imgs/recallGren.png';
+import '../MainDash/MainDash.scss';
 //import { useDrag, useDrop } from 'react-dnd';
 //import { MyDnDContext } from '../../context/MyDnDcontext';
 

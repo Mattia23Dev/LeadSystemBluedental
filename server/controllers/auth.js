@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const Lead = require('../models/lead');
 const SuperAdmin = require("../models/superAdmin");
 const nodemailer = require('nodemailer');
+const Orientatore = require('../models/orientatori');
 require('dotenv').config()
 
 exports.register = async (req, res) => {
@@ -95,24 +96,35 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    // check email
-    const user = await User.findOne({ email: req.body.email });
+    const { email, password, accediCome } = req.body;
+
+    let user;
+
+    if (accediCome === 'admin') {
+      user = await User.findOne({ email });
+    } else if (accediCome === 'orientatore') {
+      user = await Orientatore.findOne({ email });
+      user.new = false;
+    } else {
+      return res.status(400).json({ error: 'Valore accediCome non valido' });
+    }
+
     if (!user) {
       return res.json({
-        error: "No user found",
+        error: 'Nessun utente trovato',
       });
     }
-    // check password
-    const match = await comparePassword(req.body.password, user.password);
+
+    const match = await comparePassword(password, user.password);
     if (!match) {
       return res.json({
-        error: "Wrong password",
+        error: 'Password errata',
       });
     }
-    // create signed token
+
     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {});
 
-    const { password, ...rest } = user._doc;
+    const { password: userPassword, ...rest } = user._doc;
 
     res.json({
       token,
@@ -120,6 +132,37 @@ exports.login = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
+    res.status(500).json({ error: 'Errore durante il login' });
+  }
+};
+
+exports.changeOrientatorePassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    const orientatore = await Orientatore.findOne({ email });
+    if (!orientatore) {
+      return res.status(404).json({ error: 'Orientatore non trovato' });
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+
+    orientatore.password = hashedPassword;
+    const token = jwt.sign({ _id: orientatore._id }, process.env.JWT_SECRET, {});
+
+    const { password: userPassword, ...rest } = orientatore._doc;
+
+    await orientatore.save();
+
+    res.json({
+      token,
+      user: rest,
+    });
+
+    res.status(200).json({ message: 'Password dell\'orientatore aggiornata con successo' });
+  } catch (err) {
+    console.error('Errore durante il cambio di password dell\'orientatore:', err);
+    res.status(500).json({ error: 'Si è verificato un errore durante il cambio di password dell\'orientatore' });
   }
 };
 

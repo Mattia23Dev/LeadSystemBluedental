@@ -23,6 +23,16 @@ const OrientatoreSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  password: {
+    type: String,
+  },
+  role: {
+    type: String,
+  },
+  new: {
+    type: Boolean,
+    default: true,
   }
 });
 

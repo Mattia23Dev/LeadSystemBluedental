@@ -29,7 +29,7 @@ const TopDash = ({ hideexport = false,
 
         <div className="topDash-item" id='lasttopdashitem'>
           <div id='fstdiv'>
-            <span className='iniziale-top-dash'>{state.user.name && state.user.name.charAt(0)}</span>
+            <span className='iniziale-top-dash'>{state.user.role && state.user.role === "orientatore" ? state.user.nome.charAt(0) : state.user.name ? state.user.name.charAt(0) : ""}</span>
             <p>ciao <span><u>{state.user.name}</u></span></p>
           </div>
         </div>
@@ -100,8 +100,8 @@ const TopDash = ({ hideexport = false,
           }
           {!hideciao &&
             <div id='fstdiv'>
-              <span className='iniziale-top-dash'>{state.user.name && state.user.name.charAt(0)}</span>
-              <p>ciao <span><u>{state.user.name}</u></span></p>
+              <span className='iniziale-top-dash'>{state.user.role && state.user.role === "orientatore" ? state.user.nome.charAt(0) : state.user.name ? state.user.name.charAt(0) : ""}</span>
+              <p>ciao <span><u>{state.user.role && state.user.role === "orientatore" ? state.user.nome : state.user.name}</u></span></p>
             </div>
           }
         </div>

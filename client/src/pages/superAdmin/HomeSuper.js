@@ -18,10 +18,10 @@ import Rating from 'react-rating';
 import PopupCounterLeadSuper from './components/PopupCounterLeadSuper';
 import AddPopupLeadSuper from './components/AddPopupLeadSuper';
 import PopupCap from './components/PopupCap';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const HomeSuper = () => {
-    const history = useHistory();
+    const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [popupAddLead, setPopupAddLead] = useState(false);
@@ -183,7 +183,7 @@ const HomeSuper = () => {
 
     const handleLogout = () => {
       localStorage.removeItem('auth');
-      history.push('/super-admin');
+      navigate('/super-admin');
       toast.success('Ti sei disconnesso con successo!')
     }
     

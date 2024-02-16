@@ -4,10 +4,10 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { UserContext } from "../context";
 import './loginRegister.css';
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
  const LoginSuperAdmin = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   // context
@@ -29,7 +29,7 @@ import { useHistory } from "react-router-dom";
         setPassword("");
         setState(data);
         localStorage.setItem("auth", JSON.stringify(data));
-        history.push("/super-admin/home");
+        navigate("/super-admin/home");
         toast.success("Bentornato!")
       }
     } catch (err) {

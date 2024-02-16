@@ -1,7 +1,5 @@
 import React from 'react'
-import Sidebar from '../components/SideBar/Sidebar'
 import './orientatori.scss';
-import TopDash from '../components/MainDash/TopDash';
 import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../context';
@@ -9,6 +7,7 @@ import toast from 'react-hot-toast';
 import { SyncOutlined } from "@ant-design/icons";
 import { SidebarContext } from '../context/SidebarContext';
 import { FaPencilAlt } from "react-icons/fa";
+import '../components/Table/popupModify/popupModify.scss';
 
 const Orientatori = () => {
   const [filterValue, setFilterValue] = useState('');

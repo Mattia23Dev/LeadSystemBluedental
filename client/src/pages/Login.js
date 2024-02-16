@@ -4,10 +4,10 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { UserContext } from "../context";
 import './loginRegister.css';
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [recoveryPasswordPopup, setRecoveryPasswordPopup] = useState(false);
   const [nextStepPopup, SetNextStepPopup] = useState(false);
   const [email, setEmail] = useState("");
@@ -28,24 +28,31 @@ const Login = () => {
   };
 
   const handleClick = async (e) => {
-    // console.log("email and password", email, password);
+    if (accediCome === ""){
+      window.alert('Inserisci come vuoi accedere');
+      return
+    }
     try {
       e.preventDefault();
       const { data } = await axios.post("/login", {
         email,
         password,
+        accediCome,
       });
-      console.log(data);
 
       if (data.error) {
         toast.error('Email o Password errata');
       } else {
-        setEmail("");
         setPassword("");
-        setState(data);
-        localStorage.setItem("auth", JSON.stringify(data));
-        history.push("/");
-        toast.success("Bentornato!")
+        if (accediCome === "orientatore" && data.user.new === true){
+          setCambiaPass(true)
+        } else {
+          setEmail("");
+          setState(data);
+          localStorage.setItem("auth", JSON.stringify(data));
+          navigate("/");
+          toast.success("Bentornato!")  
+        }
       }
     } catch (err) {
       console.log(err);
@@ -81,6 +88,25 @@ const Login = () => {
       toast.error('Si è verificato un errore');
     }
   };
+
+  const [accediCome, setAccediCome] = useState("");
+  const [cambiaPass, setCambiaPass] = useState(false);
+  const handleChangePass = async () => {
+    try {
+      const data = await axios.post('/change-ori-password', {
+        email,
+        newPassword,
+      });
+      console.log(data);
+      setState(data.data);
+      localStorage.setItem("auth", JSON.stringify(data.data));
+      toast.success('Hai cambiato la password, benvenuto!')
+      setCambiaPass(false);
+      navigate("/");
+    } catch (error) {
+      toast.error('Si è verificato un errore');
+    }
+  }
 
   return (
     <div className="d-flex justify-content-center login" style={{ height: "80vh" }}>
@@ -145,7 +171,7 @@ const Login = () => {
             <a style={{color: 'black', margin: '0 50px', cursor:'pointer', fontSize: '0.8rem', textDecoration: 'underline'}} onClick={() => setRecoveryPasswordPopup(true)} >Recupera password</a>
           </p>
 
-          <div className="form-group">
+          {!cambiaPass ? <div className="form-group">
             <Input
               label="Email"
               type="email"
@@ -160,6 +186,12 @@ const Login = () => {
               setValue={setPassword}
               placeholder="Inserisci la tua password.."
             />
+            <select onChange={(e) => setAccediCome(e.target.value)}>
+              <label>Accedi come</label>
+              <option value={""}>Seleziona</option>
+              <option value={"orientatore"}>Operatore</option>
+              <option value={"admin"}>Amministrazione</option>
+            </select>
              <label style={{width: '100%'}}>
               <input 
               type="checkbox" 
@@ -173,8 +205,25 @@ const Login = () => {
               <button onClick={handleClick} className="button-reg">
                 Accedi
               </button>
-            </div>
-          </div>
+            </div> 
+          </div> :
+            <div className="form-group">
+              <Input
+                label="Cambia password"
+                type="password"
+                value={newPassword}
+                setValue={setNewPassword}
+                placeholder="Inserisci la tua password.."
+              />
+              <div>
+                <button onClick={() => {navigate('/'); toast.success('Benvenuto')}}>
+                  Salta
+                </button>
+                <button onClick={handleChangePass} className="button-reg">
+                  Cambia password
+                </button>
+              </div> 
+            </div>}
         </div>
       </div>
       )

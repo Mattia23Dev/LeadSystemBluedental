@@ -1,13 +1,13 @@
 import React from 'react'
 import './orientatori.scss';
 import { AiOutlineArrowLeft } from 'react-icons/ai';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const TermsCond = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const indietro = () => {
-    history.push('/assistenza')
+    navigate('/assistenza')
   };
 
   return (

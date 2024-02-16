@@ -1,5 +1,5 @@
-import React, { useContext } from "react";
-import { Route, Redirect } from "react-router-dom";
+import React, { Suspense, useContext } from "react";
+import { Route, Navigate } from "react-router-dom";
 import { UserContext } from "../../context";
 import Sidebar from "../SideBar/Sidebar";
 import { SidebarContext } from "../../context/SidebarContext";
@@ -13,7 +13,7 @@ const AuthRouteWithLayout = ({ component: Component, ...rest }) => {
   };
 
   if (!state) {
-    return <Redirect to="/login" />;
+    return <Navigate to="/login" />;
   }
 
   return state && state.token ? (

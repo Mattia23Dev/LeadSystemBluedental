@@ -1,15 +1,15 @@
 import React, { useContext } from "react";
-import { Route, Redirect } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 import { UserContext } from "../../context";
 
-const SuperAdminRoute = ({ ...rest }) => {
+const SuperAdminRoute = ({ path }) => {
   const [state, setState] = useContext(UserContext);
 
   if (!state) {
-    return <Redirect to="/super-admin" />;
+    return <Navigate to="/super-admin" />;
   }
 
-  return state.user.role === 'superadmin' && state && state.token ? <Route {...rest} /> : "";
+  return state.user.role === 'superadmin' && state && state.token ? path : null;
 };
 
 export default SuperAdminRoute;

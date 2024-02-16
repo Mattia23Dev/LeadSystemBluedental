@@ -6,6 +6,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import './LeadEntry.scss'
 import { IoIosArrowDown } from 'react-icons/io';
+import '../MainDash/MainDash.scss';
 import listaImg from '../../imgs/lista.png';
 import LeadEntry from "./LeadEntry.jsx";
 import LeadHeader from "./LeadHeader.jsx";

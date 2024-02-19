@@ -52,7 +52,7 @@ export default function LeadEntry({ secref, id, index, data, handleModifyPopup, 
         <div className="dis">
           <p className='topnomelead'>Nome lead</p>
           <div className="top-bollettino">
-            <p className='name'>{data.name + " " + data.surname}</p>
+            <p className='name'>{data.name}</p>
             <p 
             onClick={data?.orientatore ? null : () => selezionOrientatore(data)} 
             className={data?.orientatore ? 'iniziali' : 'iniziali redIniz'}

@@ -9,12 +9,12 @@ const LeadSchema = new Schema({
     lastModify: {
       type: String,
     },
+    dataLastContatto: {
+      type: String,
+    },
     nome: {
       type: String,
       required: true
-    },
-    cognome: {
-      type: String,
     },
     email: {
       type: String,
@@ -38,7 +38,7 @@ const LeadSchema = new Schema({
         ref: 'User',
         required: true
       },
-    provincia: {
+    città: {
         type: String,
       },
     note: {
@@ -51,7 +51,7 @@ const LeadSchema = new Schema({
       type: Date,
       default: null,
     },
-    oraChiamataRichiesto: {
+    trattamento: {
       type: String,
     },
     manualLead: {
@@ -75,7 +75,6 @@ const LeadSchema = new Schema({
     motivo: String,
     recallDate: Date,
     recallHours: String,
-    budget: String,
   });
 
 

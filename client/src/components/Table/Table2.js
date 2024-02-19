@@ -172,8 +172,6 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
     try {
       const response = await axios.post('/get-leads-manual-base', {
         _id: state.user._id
-        //_id: "655f707143a59f06d5d4dc3b" //ONE NETWORK
-        //_id: "65b135d2318336cd0bfc4361" //WIKIBE
       });
 
 
@@ -187,7 +185,6 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
 
         return {
           name: lead.nome,
-          surname: lead.cognome,
           email: lead.email,
           date: lead.data,
           telephone: cleanedTelephone,
@@ -278,14 +275,13 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
       } else {
         const searchTerms = filterValue.toLowerCase().split(' ');
 
-        const fullName = row.name.toLowerCase() + ' ' + row.surname.toLowerCase();
+        const fullName = row.name.toLowerCase();
         return searchTerms.every(term => fullName.includes(term));
       }
     }).map((row) => {
       return {
         id: row.id,
         name: row.name,
-        surname: row.surname,
         date: row.date,
         telephone: row.telephone,
         status: row.status,
@@ -446,7 +442,6 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
 
         return {
           name: lead.nome,
-          surname: lead.cognome,
           email: lead.email,
           date: lead.data,
           telephone: cleanedTelephone,
@@ -568,7 +563,6 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           if (lead.id === leadId) {
             const adaptedLead = {
               name: updatedLead.nome,
-              surname: updatedLead.cognome,
               email: updatedLead.email,
               date: updatedLead.data,
               telephone: updatedLead.numeroTelefono,
@@ -600,7 +594,6 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
         if (lead.id === leadId) {
           const adaptedLead = {
             name: updatedLead.nome,
-            surname: updatedLead.cognome,
             email: updatedLead.email,
             date: updatedLead.data,
             telephone: updatedLead.numeroTelefono,
@@ -751,7 +744,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
 
       setFilteredData(
         filteredData.filter(r => {
-          const fullName = `${r.name.trim()} ${r.surname.trim()}`.toLowerCase();
+          const fullName = `${r.name.trim()}`.toLowerCase();
 
           console.log('Search Words:', searchWords);
           console.log('Full Name:', fullName);
@@ -892,6 +885,8 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
             </div>            
           </div>
 
+          {state.user.role && state.user.role === "orientatore" ?
+           null :
           <div className="filter-etichette">
             <p style={{ color: "gray", fontSize: '14px' }}>Filtra per orientatore</p>
               <select
@@ -908,7 +903,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
               ))}
               <option value="nonassegnato">Non assegnato</option>
               </select>
-          </div>
+          </div>}
           <div className="filtra-recall">
             <p style={{ color: "gray", fontSize: '14px' }}>Filtra per Recall</p>
             <div className="recall-option">
@@ -1133,7 +1128,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
       {popupModifyEsito && (
                     <div style={{marginTop: '-90px', position: 'fixed'}} className="choose-esito-popup">
                         <div className='top-choose-esito'>
-                        <h4>Modifica l'esito di {selectedLead.name + " " + selectedLead.surname}</h4>
+                        <h4>Modifica l'esito di {selectedLead.name}</h4>
                         </div>
 
                         <svg id="modalclosingicon-popup" onClick={() => { setPopupModifyEsito(false)}} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
@@ -1263,7 +1258,6 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
               <tbody style={{ color: "white", textAlign: 'left', padding: '0 20px' }} className="table-body-container" id="table2lista">
                 {filteredData && filteredData
                   .filter(r =>
-                    r.surname.toLowerCase().includes(searchval.toLowerCase()) ||
                     r.name.toLowerCase().includes(searchval.toLowerCase()) ||
                     r.telephone.toLowerCase().includes(searchval.toLowerCase())
                   )
@@ -1272,7 +1266,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
                   .map((row) => (
                     <tr className={row.campagna === "Mgm" ? "mgm-lead" : ""} style={{position:'relative', padding: '0 20px'}} key={row.id}>
                       <td className="row-name">
-                        {row.name + ' ' + row.surname}
+                        {row.name}
                       </td>
                       <td>{formatDate(row.date)}</td>
                       <td>{row.telephone}</td>
@@ -1367,34 +1361,6 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           </div>
           <div className="secwrap"
             onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, "In lavorazione")}
-            onDragEnd={handleDragEnd}
-          >
-            <LeadHeader
-              handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
-              type={"In lavorazione"}
-              refreshate={false}
-              toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
-            <div className="entries">
-              {toggles.inlavorazione && filteredData && filteredData.filter(x => x.status == "In lavorazione").reverse().map((row, k) =>
-                <LeadEntry
-                  id={JSON.stringify(row)}
-                  index={k}
-                  handleRowClick={handleRowClick} data={row}
-                  handleModifyPopup={handleModifyPopup}
-                  secref={secref}
-                  handleModifyPopupEsito={handleModifyPopupEsito}
-                  handleDelete={handleDelete}
-                  campagna={row.campagna}
-                  nuovaEtichetta={nuovaEtichetta}
-                  setNuovaEtichetta={setNuovaEtichetta}
-                  selezionOrientatore={openChangeOrientatore}
-                />
-              )}
-            </div>
-          </div>
-          <div className="secwrap"
-            onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Non risponde")}
             onDragEnd={handleDragEnd}
           >
@@ -1423,45 +1389,16 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           </div>
           <div className="secwrap"
             onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, "Irraggiungibile")}
+            onDrop={(e) => handleDrop(e, "Da richiamare")}
             onDragEnd={handleDragEnd}
           >
             <LeadHeader
               handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
-              type={"Irraggiungibile"}
+              type={"Da richiamare"}
               refreshate={false}
               toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
             <div className="entries">
               {toggles.irraggiungibile && filteredData && filteredData.filter(x => x.status == "Irraggiungibile").reverse().map((row, k) =>
-                <LeadEntry
-                  id={JSON.stringify(row)}
-                  index={k}
-                  handleRowClick={handleRowClick} data={row}
-                  handleModifyPopup={handleModifyPopup}
-                  secref={secref}
-                  handleModifyPopupEsito={handleModifyPopupEsito}
-                  handleDelete={handleDelete}
-                  campagna={row.campagna}
-                  nuovaEtichetta={nuovaEtichetta}
-                  setNuovaEtichetta={setNuovaEtichetta}
-                  selezionOrientatore={openChangeOrientatore}
-                />
-              )}
-            </div>
-          </div>
-          <div className="secwrap"
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, "Non valido")}
-            onDragEnd={handleDragEnd}
-          >
-            <LeadHeader
-              handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
-              type={"Non valido"}
-              getOtherLeads={getOtherLeads}
-              refreshate={refreshate}
-              toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
-            <div className="entries">
-              {toggles.nonValido && filteredData && filteredData.filter(x => x.status == "Non valido").reverse().map((row, k) =>
                 <LeadEntry
                   id={JSON.stringify(row)}
                   index={k}
@@ -1509,63 +1446,6 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           </div>
           <div className="secwrap"
             onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, "Opportunità")}
-            onDragEnd={handleDragEnd}
-          >
-            <LeadHeader
-              handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
-              type={"Opportunità"}
-              refreshate={false}
-              toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
-
-            <div className="entries">
-              {toggles.opportunita && filteredData && filteredData.filter(x => x.status == "Opportunità").reverse().map((row, k) =>
-                <LeadEntry
-                  id={JSON.stringify(row)}
-                  index={k}
-                  handleRowClick={handleRowClick} data={row}
-                  handleModifyPopup={handleModifyPopup}
-                  secref={secref}
-                  handleModifyPopupEsito={handleModifyPopupEsito}
-                  handleDelete={handleDelete}
-                  campagna={row.campagna}
-                  nuovaEtichetta={nuovaEtichetta}
-                  setNuovaEtichetta={setNuovaEtichetta}
-                  selezionOrientatore={openChangeOrientatore}
-                />
-              )}
-            </div>
-          </div>
-          <div className="secwrap"
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, "In valutazione")}
-            onDragEnd={handleDragEnd}
-          >
-            <LeadHeader
-              handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
-              type={"In valutazione"}
-              refreshate={false}
-              toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
-            <div className="entries">
-              {toggles.invalutazione && filteredData && filteredData.filter(x => x.status == "In valutazione").reverse().map((row, k) =>
-                <LeadEntry
-                  id={JSON.stringify(row)}
-                  index={k}
-                  handleRowClick={handleRowClick} data={row}
-                  handleModifyPopup={handleModifyPopup}
-                  handleModifyPopupEsito={handleModifyPopupEsito}
-                  secref={secref}
-                  handleDelete={handleDelete}
-                  campagna={row.campagna}
-                  nuovaEtichetta={nuovaEtichetta}
-                  setNuovaEtichetta={setNuovaEtichetta}
-                  selezionOrientatore={openChangeOrientatore}
-                />
-              )}
-            </div>
-          </div>
-          <div className="secwrap"
-            onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Venduto")}
             onDragEnd={handleDragEnd}
           >
@@ -1576,34 +1456,6 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
               toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
             <div className="entries">
               {toggles.venduto && filteredData && filteredData.filter(x => x.status == "Venduto").reverse().map((row, k) =>
-                <LeadEntry
-                  id={JSON.stringify(row)}
-                  index={k}
-                  handleRowClick={handleRowClick} data={row}
-                  handleModifyPopup={handleModifyPopup}
-                  secref={secref}
-                  handleModifyPopupEsito={handleModifyPopupEsito}
-                  handleDelete={handleDelete}
-                  campagna={row.campagna}
-                  nuovaEtichetta={nuovaEtichetta}
-                  setNuovaEtichetta={setNuovaEtichetta}
-                  selezionOrientatore={openChangeOrientatore}
-                />
-              )}
-            </div>
-          </div>
-          <div className="secwrap"
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, "Iscrizione posticipata")}
-            onDragEnd={handleDragEnd}
-          >
-            <LeadHeader
-              handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
-              type={"Iscrizione posticipata"}
-              refreshate={false}
-              toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
-            <div className="entries">
-              {toggles.iscrizionePosticipata && filteredData && filteredData.filter(x => x.status == "Iscrizione posticipata").reverse().map((row, k) =>
                 <LeadEntry
                   id={JSON.stringify(row)}
                   index={k}

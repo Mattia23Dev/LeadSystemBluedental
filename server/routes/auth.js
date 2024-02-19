@@ -1,5 +1,5 @@
 const express = require('express');
-const {register, login, updateUser, getUserImpostazioni, recoveryPassword, resetPassword, verifyEmail, loginSuperAdmin, getUsersSuperAdmin, changeOrientatorePassword} = require('../controllers/auth');
+const {register, login, updateUser, getUserImpostazioni, recoveryPassword, resetPassword, verifyEmail, loginSuperAdmin, getUsersSuperAdmin, changeOrientatorePassword, getOriImpostazioni} = require('../controllers/auth');
 const { sendEmail } = require('../controllers/sendEmail');
 const { modifyCounter, updateUserStatus } = require('../controllers/superAdmin');
 const User = require('../models/user');
@@ -12,6 +12,7 @@ router.post("/login", login);
 router.post("/send-email", sendEmail);
 router.put("/update-user", updateUser);
 router.get('/getUser-impostazioni/:id', getUserImpostazioni);
+router.get('/getOri-impostazioni/:id', getOriImpostazioni);
 router.post('/recovery-password', recoveryPassword);
 router.post("/reset-password", resetPassword);
 router.post('/verify-email', verifyEmail);

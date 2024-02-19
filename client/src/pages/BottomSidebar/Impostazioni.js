@@ -83,7 +83,26 @@ const Impostazioni = ({ history }) => {
         throw error;
       }
     };
-    if (state && state.token) fetchUser();
+    const fetchOrientatore = async () => {
+      try {
+        const response = await axios.get(`/getOri-impostazioni/${userId}`);
+        console.log(response.data);
+        const user = response.data;
+        setUserImp(user);
+        setIsLoadingMin(false);
+        setDailyCap(user.dailyCap);
+      } catch (error) {
+        console.error('Errore durante la richiesta', error);
+        throw error;
+      }
+    };
+    if (state && state.token) {
+      if (state.user.role && state.user.role === "orientatore"){
+        fetchOrientatore()
+      } else {
+        fetchUser()
+      }
+    };
   }, [state && state.token]);
   
   const handleEditClick = () => {

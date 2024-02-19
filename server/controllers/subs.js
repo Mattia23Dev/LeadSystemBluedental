@@ -4,16 +4,20 @@ const LeadWordpress = require("../models/leadWordpress");
 const Lead = require('../models/lead');
 var cron = require('node-cron');
 const { sendEmailLeadArrivati } = require('../middlewares');
-const { getPegasoLeads, getTagLeads, getTagLeads2 } = require('./Facebook');
+const { getDentistaLead, getTagLeads, getTagLeads2 } = require('./Facebook');
+const Orientatore = require('../models/orientatori');
 
 let lastUserReceivedLead = null;
 
 const calculateAndAssignLeadsEveryDay = async () => {
   try {
-    let users = await User.find({ $and: [
+    let users = await Orientatore.find();
+    /*
+    let users = await Orientatore.find({ $and: [
       { monthlyLeadCounter: { $gt: 0 } },
       { tag: "pegaso" }
     ]});
+    */
     let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] });
 
     const totalLeads = leads.length;
@@ -27,25 +31,25 @@ const calculateAndAssignLeadsEveryDay = async () => {
     console.log( 'Utenti:'+ users.length);
 
     let userIndex = 0;
-
-    while (leads.length > 0 && users.some(user => user.monthlyLeadCounter > 0)) {
+    //(leads.length > 0 && users.some(user => user.monthlyLeadCounter > 0)
+    while (leads.length > 0) {
       const user = users[userIndex];
 
-      if (!user || user.monthlyLeadCounter == 0) {
+      /*if (!user || user.monthlyLeadCounter == 0) {
         console.log('Tutti gli utenti hanno il contatore a 0');
         break;
-      }
+      }*/
 
-      if (user.dailyCap !== undefined && user.dailyCap !== null) {
+      /*if (user.dailyCap !== undefined && user.dailyCap !== null) {
     
         if (user.dailyLead >= user.dailyCap) {
           console.log(`L'utente ${user.nameECP} ha raggiunto il dailyCap per oggi.`);
           userIndex++;
           continue;
         }
-      }
+      }*/
 
-      const leadsNeeded = Math.min(user.monthlyLeadCounter, 1);
+      const leadsNeeded = Math.min(leads.length, 1); //Math.min(user.monthlyLeadCounter, 1);
 
       if (leadsNeeded === 0) {
         console.log(`Il contatore mensile dell'utente ${user._id} è insufficiente. Non vengono assegnati ulteriori lead.`);
@@ -63,67 +67,39 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
         const userData = {
           first_name: "",
-          last_name: "",
           email: "",
           phone_number: "",
-          frequentiUni: false,
-          oraChiamataRichiesto: '',
-          provincia: '',
-          corsoDiLaurea: "",
+          trattamento: "",
+          città: '',
         };
 
         for (const field of leadWithoutUser.fieldData) {
-          if (field.name === "first_name") {
+          if (field.name === "full_name") {
             userData.first_name = field.values[0];
-          } else if (field.name === "last_name") {
-            userData.last_name = field.values[0];
           } else if (field.name === "email") {
             userData.email = field.values[0];
           } else if (field.name === "phone_number") {
             userData.phone_number = field.values[0];
-          } else if (field.name === "frequenti_già_l'università?"){
-            const value = field.values[0];
-            if (value == "no"){
-              userData.frequentiUni === false;
-            } else if (value == "sì" || value == "si" || value == "si_") {
-              userData.frequentiUni === true;
-            }
-          } else if (field.name === "stai_già_lavorando?"){
-            const value = field.values[0];
-            if (value == "no"){
-              userData.lavoro === false;
-            } else if (value == "sì" || value == "si" || value == "si_") {
-              userData.lavoro === true;
-            }
-          } else if ( field.name == "prenota_senza_impegno_il_tuo_appuntamento_telefonico._seleziona_la_fascia_d'orario_in_cui_sei_disponibile_:" ){
-            userData.oraChiamataRichiesto = field.values[0];
-          } else if ( field.name == "quale_percorso_di_studi_ti_interessa?"){
-            userData.corsoDiLaurea = field.values[0];
-          } else if ( field.name == "province"){
-            userData.provincia = field.values[0];
+          } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni"){
+            userData.trattamento = field.values[0];
+          } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
+            userData.città = field.values[0];
           }
         } 
 
         const newLead = new Lead({
           data: new Date(),
           nome: userData.first_name,
-          cognome: userData.last_name,
           email: userData.email,
           numeroTelefono: userData.phone_number,
           campagna: 'Social',
-          corsoDiLaurea: userData.corsoDiLaurea ? userData.corsoDiLaurea : '',
-          frequentiUni: userData.frequentiUni ? userData.frequentiUni : false,
-          lavoro: false,
-          facolta: '',
-          oreStudio: "",
+          città: userData.città ? userData.città : '',
+          trattamento: userData.trattamento ? userData.trattamento : '',
           esito: "Da contattare",
-          orientatori: null,
-          utente: user._id,
-          università: "",
-          provincia: userData.provincia ? userData.provincia : "",
+          orientatori: user._id,
+          utente: "65d3110eccfb1c0ce51f7492",
           note: "",
           fatturato: "",
-          oraChiamataRichiesto: userData.oraChiamataRichiesto ? userData.oraChiamataRichiesto : '',
           annunci: leadWithoutUser.annunci ? leadWithoutUser.annunci : '',
           adsets: leadWithoutUser.adsets ? leadWithoutUser.adsets : '',
           nameCampagna: leadWithoutUser.name ? leadWithoutUser.name : '', 
@@ -135,8 +111,8 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
           lastUserReceivedLead = user._id;
 
-          user.monthlyLeadCounter -= 1;
-          user.dailyLead += 1;
+          //user.monthlyLeadCounter -= 1;
+          //user.dailyLead += 1;
           await user.save();
 
           leadWithoutUser.assigned = true;
@@ -144,9 +120,9 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
           //await sendNotification(user._id);
 
-          await sendEmailLeadArrivati(user._id);
+          //await sendEmailLeadArrivati(user._id);
 
-          console.log(`Assegnato il lead ${leadWithoutUser._id} all'utente ${user.nameECP}`);
+          console.log(`Assegnato il lead ${leadWithoutUser._id} all'utente ${user.nome}`);
         } catch (error) {
           console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
         }
@@ -467,8 +443,8 @@ const resetDailyCap = async () => {
 });
 
 cron.schedule('10,46,20,35,50 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
-  getPegasoLeads();
-  console.log('Prendo i lead di pegaso');
+  getDentistaLead();
+  console.log('Prendo i lead di Bluedental 3.0');
 });
 
 cron.schedule('15,58,25,40 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {

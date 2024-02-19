@@ -154,15 +154,13 @@ exports.changeOrientatorePassword = async (req, res) => {
     const token = jwt.sign({ _id: orientatore._id }, process.env.JWT_SECRET, {});
 
     const { password: userPassword, ...rest } = orientatore._doc;
-
+    orientatore.new = false;
     await orientatore.save();
 
     res.json({
       token,
       user: rest,
     });
-
-    res.status(200).json({ message: 'Password dell\'orientatore aggiornata con successo' });
   } catch (err) {
     console.error('Errore durante il cambio di password dell\'orientatore:', err);
     res.status(500).json({ error: 'Si è verificato un errore durante il cambio di password dell\'orientatore' });
@@ -229,6 +227,22 @@ exports.getUserImpostazioni = async (req, res) => {
   const userId = req.params.id;
   try {
     const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'Utente non trovato' });
+    }
+
+    res.json(user);
+  }
+  catch(error){
+    console.log(error.message);
+  }
+}
+
+exports.getOriImpostazioni = async (req, res) => {
+  const userId = req.params.id;
+  try {
+    const user = await Orientatore.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: 'Utente non trovato' });

@@ -1,5 +1,4 @@
 const LeadFacebook = require('../models/leadFacebook');
-const token_whatsapp = 'EAAN2JZAnVsjYBAKwP53KCE3zLSWoSrYjG6lAVvIeuz2ttiRMYPdCeJiu9elzIEfYYRWeTGpwJjZB7V4SdXZBarKk1JJ7rEZAkgZBzHlGkKW7QFLXmrAasZBmr58r7seZC0edXZAZCZArql9ZCo4ZACzANx8ZCi77UJdrElOCHtzErgItwmZBj1SmYw64Bi';
 const showDebugingInfo = true; 
 'use strict';
 const cron = require('node-cron');
@@ -50,16 +49,16 @@ const Lead = require('../models/lead');
     if (newLeads.length > 0) {
       LeadFacebook.insertMany(newLeads)
         .then(() => {
-          console.log('Dati dei lead Pegaso salvati nel database', newLeads);
+          console.log('Dati dei lead Bluedental salvati nel database', newLeads);
         })
         .catch((error) => {
-          console.error('Errore nel salvataggio dei lead Pegaso nel database:', error);
+          console.error('Errore nel salvataggio dei lead Bluedental nel database:', error);
         });
     } else {
-      console.log('Nessun nuovo lead Pegaso da salvare nel database');
+      console.log('Nessun nuovo lead Bluedental da salvare nel database');
     }
   } else {
-    console.log('Dati Lead Pegaso non validi');
+    console.log('Dati Lead Bluedental non validi');
   }
 };
 
@@ -149,9 +148,9 @@ const Lead = require('../models/lead');
         console.error('Errore nella richiesta:', error);
       });
   };
-// NUOVO ID DELL'ACCOUNT PUBBLICITARIO COMPARACORSI     act_1412882202660160
-  exports.getPegasoLeads = () => {
-    const url = 'https://graph.facebook.com/v17.0/act_881135543153413/campaigns';
+// NUOVO ID DELL'ACCOUNT PUBBLICITARIO 3.0 DENTISTA VICINO A ME     act_511963014361529
+  exports.getDentistaLead = () => {
+    const url = 'https://graph.facebook.com/v17.0/act_511963014361529/campaigns';
     const params = {
       fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
       effective_status: "['ACTIVE']",
@@ -204,7 +203,6 @@ const Lead = require('../models/lead');
       .catch(error => {
         console.error('Errore:', error);
       });
-
   };
 
    const client = new GoogleAdsApi({

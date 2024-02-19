@@ -66,14 +66,15 @@
     position: fixed;
     background-color: #ffffff;
     border-radius: 10px;
-    height: 95vh;
-    max-height: 95vh;
+    height: auto;
+    max-height: auto;
     top: 20px;
     z-index: 1000;
     padding-top: 0;
     left: 6%;
     transform: translateY(0%);
     transition: 0.3s all;
+    box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.352);
 }
 .btn-legenda-visibile{
     cursor: pointer;
@@ -102,7 +103,8 @@
     width: 100%;
     padding-top: 0;
     max-height: 100%;
-    overflow-y: scroll;
+    overflow-y: auto;
+    border-radius: 10px;
 }
 .legenda-container::-webkit-scrollbar {
     width: 5px;
@@ -138,6 +140,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
 }
 .btn-dentro-legenda > button {
     border-radius: 5px;
@@ -184,12 +188,12 @@
     background-color: #000000;
 }
 .esiti-item:nth-of-type(1) > span{
-    background-color: #94B7D3;
-    color: #94B7D3;  
+    background-color: #3471CC;
+    color: #3471CC;  
 }
 .esiti-item:nth-of-type(2) > span{
-    background-color: #426487;
-    color: #426487;  
+    background-color: #263F45;
+    color: #263F45;  
 }
 .esiti-item:nth-of-type(3) > span{
     background-color: #F88600;
@@ -200,39 +204,19 @@
     color: #C41247;  
 }
 .esiti-item:nth-of-type(5) > span{
-    background-color: #263F45;
-    color: #263F45;  
-}
-.esiti-item:nth-of-type(6) > span{
-    background-color: #852F1F;
-    color: #852F1F;  
-}
-.esiti-item:nth-of-type(7) > span{
-    background-color: #FBBC05;
-    color: #FBBC05;  
-}
-.esiti-item:nth-of-type(8) > span{
-    background-color: #3471CC;
-    color: #3471CC;  
-}
-.esiti-item:nth-of-type(9) > span{
     background-color: #30978B;
     color: #30978B;  
-}
-.esiti-item:nth-of-type(10) > span{
-    background-color: #00F0B6;
-    color: #00F0B6;  
 }
 .esiti-item > div {
     margin-left: 10px;
 }
 .esiti-item > div > p:first-of-type{
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 500;
 }
 .esiti-item > div > p:last-of-type{
     font-size: 12px;
-    color: #00000066;
+    color: #000000b4;
     margin-top: -5px;
 }
 .MainDash-abbonamento {
@@ -667,13 +651,12 @@
                 background-color: rgba(91, 104, 109, 0.048);
             }
 
-
             &:nth-of-type(1) {
-                border-color: #94B7D3;
+                border-color: #3471CC;
               }
             
               &:nth-of-type(2) {
-                border-color: #426487;
+                border-color: #263F45;
               }
             
               &:nth-of-type(3) {
@@ -685,29 +668,10 @@
               }
             
               &:nth-of-type(5) {
-                border-color: #263F45;
-              }
-            
-              &:nth-of-type(6) {
-                border-color: #852F1F;
-              }
-            
-              &:nth-of-type(7) {
-                border-color: #FBBC05;
-              }
-            
-              &:nth-of-type(8) {
-                border-color: #3471CC;
-              }
-              
-              &:nth-of-type(9) {
                 border-color: #30978B;
               }
             
-              &:nth-of-type(10) {
-                border-color: #00F0B6; 
-              }
-
+        
             .secheader {
                 background-color: white;
                 padding: 15px;

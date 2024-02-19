@@ -44,7 +44,7 @@ const Login = () => {
         toast.error('Email o Password errata');
       } else {
         setPassword("");
-        if (accediCome === "orientatore" && data.user.new === true){
+        if (accediCome === "orientatore" && data.user.new === false){
           setCambiaPass(true)
         } else {
           setEmail("");

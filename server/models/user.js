@@ -26,12 +26,10 @@ const userSchema = new Schema({
   nameECP: {
     type: String,
     trim: true,
-    required: true,
   },
   pIva: {
     type: String,
     trim: true,
-    required: true,
     minlength: 11,
     maxlength: 11,
   },

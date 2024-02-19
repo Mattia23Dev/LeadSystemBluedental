@@ -38,6 +38,9 @@ exports.register = async (req, res) => {
         role,
         legaleResponsabile,
         emailLegale,
+        isChecked,
+        pIva,
+        codeSdi
       }).save();
   
       const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {});
@@ -183,9 +186,7 @@ exports.loginSuperAdmin = async (req, res) => {
       });
     }
     // create signed token
-    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {});
 
     const { password, ...rest } = user._doc;
 

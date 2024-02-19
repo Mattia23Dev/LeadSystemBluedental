@@ -1,9 +1,9 @@
-const { expressjwt: jwt } = require('express-jwt');
+const expressJwt = require('express-jwt');
 const User = require('../models/user');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-exports.requireSignin = jwt({
+exports.requireSignin = expressJwt({
   secret: process.env.JWT_SECRET,
   algorithms: ["HS256"],
 });

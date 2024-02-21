@@ -185,17 +185,17 @@
     width: 100%;
 }
 
-.input-item>input {
+.input-item input {
     border: none;
     background-color: #d9d9d95b;
     border-radius: 5px;
     width: 100%;
-    font-size: 16px;
-    padding: 5px;
+    font-size: 12px !important;
+    padding: 8px;
 }
 
 .input-item label {
-    font-size: 20px;
+    font-size: 16px !important;
 }
 
 .input-item label::after {
@@ -207,8 +207,6 @@
     background: url(../imgs/penna.svg);
     background-size: cover;
 }
-
-
 .input-orientatori {
     display: flex;
     flex-direction: column;
@@ -216,7 +214,6 @@
     align-items: center;
     width: 90%;
     margin-left: 5%;
-
 }
 
 .btn-orie {

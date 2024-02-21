@@ -8,7 +8,7 @@
     cursor: default;
     .elim {
         position: absolute;
-        right: 10px;
+        right: 15px;
         bottom: 20px;
         svg {
             cursor: pointer;
@@ -39,15 +39,29 @@
         align-items: center;
         justify-content: flex-start;
         gap: 1rem;
-        margin-top: 7px;
-        margin-bottom: -3px;
+        margin-top: -5px;
+        margin-bottom: 10px;
     }
     .date-recall > p:first-of-type{
-        background-color: #C41247;
-        color: white;
-        padding: 3px 12px;
+        color: #000000B2;
+        padding: 0px 0px;
         border-radius: 20px;
-        font-size: 14px;
+        font-size: 12px;
+    }
+    .date-recall > p:first-of-type > span {
+        background-color: #3471CC;
+        color: white;
+        border-radius: 10px;
+        padding: 1px 12px;
+        margin-left: 3px;
+    }
+    .recPeg{
+        position: absolute;
+        left: 15px;
+        bottom: 20px; 
+    }
+    .recPeg img {
+        width: 40px;
     }
     .recall-bollettino{
         background-color: transparent;
@@ -206,7 +220,8 @@
     }
     .modifica{
         text-decoration: underline;
-        margin-top: -10px;
+        margin-top: -20px;
+        margin-bottom: -5px;
     }
     .options {
         display: flex;

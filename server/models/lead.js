@@ -47,6 +47,9 @@ const LeadSchema = new Schema({
     fatturato: {
       type: String,
     },
+    tentativiChiamata: {
+      type: String,
+    },
     dataCambiamentoEsito: {
       type: Date,
       default: null,

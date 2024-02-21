@@ -48,12 +48,50 @@ const Lead = require('../models/lead');
     }
   };
 
+  exports.getOrientatoreLeads = async (req, res) => {
+    try {
+      const userId = req.body._id;
+  
+      const leads = await Lead.find({ 
+        orientatori: userId,
+        $and: [
+          { esito: { $ne: "Non valido" } }, 
+          { esito: { $ne: "Non interessato" } }
+        ]
+      }).populate('orientatori');
+  
+      res.json(leads);
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({ error: 'Errore nel recupero dei lead' });
+    }
+  };
+
   exports.getOtherLeads = async (req, res) => {
     try {
       const userId = req.body._id;
   
       const otherLeads = await Lead.find({ 
         utente: userId,
+        $or: [
+          { esito: "Non valido" },
+          { esito: "Non interessato" }
+        ]
+      }).populate('orientatori');
+  
+      res.json(otherLeads);
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({ error: 'Errore nel recupero delle lead' });
+    }
+  };
+
+  exports.getOtherLeadsOri = async (req, res) => {
+    try {
+      const userId = req.body._id;
+  
+      const otherLeads = await Lead.find({ 
+        orientatori: userId,
         $or: [
           { esito: "Non valido" },
           { esito: "Non interessato" }

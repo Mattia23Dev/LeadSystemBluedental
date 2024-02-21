@@ -13,6 +13,7 @@ import Arrow from '../../imgs/Arrow.png';
 import download from '../../imgs/download.png';
 import { FaPencilAlt } from "react-icons/fa";
 import { SidebarContext } from '../../context/SidebarContext';
+import {useNavigate} from 'react-router-dom';
 
 
 const makeStyle = (status) => {
@@ -39,11 +40,12 @@ const makeStyle = (status) => {
 }
 
 
-const Impostazioni = ({ history }) => {
+const Impostazioni = () => {
   moment.locale("it");
   const [state, setState] = useContext(UserContext);
   const [subscriptions, setSubscriptions] = useState([]);
   const [payments, setPayments] = useState([]);
+  const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -114,7 +116,7 @@ const Impostazioni = ({ history }) => {
     localStorage.removeItem('payments');
     localStorage.removeItem('sub');
     localStorage.removeItem('table-lead');
-    history.push('/login');
+    navigate('/login');
     toast.success('Ti sei disconnesso con successo!')
   }
 

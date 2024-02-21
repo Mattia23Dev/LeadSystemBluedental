@@ -14,7 +14,7 @@ import { SearchOutlined } from '@ant-design/icons';
 import toast from 'react-hot-toast';
 import PopupModifyCalendar from '../components/Table/popupModify/PopupModifyCalendar';
 
-function MyCalendar({leads, setSelectedLead, setOpenInfoCal, setPopupPosition, saveNewRecall, setOpenDeleteRecall}) {
+function MyCalendar({leads, setSelectedLead, setOpenInfoCal, saveNewRecall, setOpenDeleteRecall}) {
   const calendarRef = useRef(null);
   console.log(leads);
   const initialView = localStorage.getItem('calendarioVisualizzazione') || 'timeGridWeek';
@@ -38,7 +38,6 @@ function MyCalendar({leads, setSelectedLead, setOpenInfoCal, setPopupPosition, s
       eventContent: function (arg, createElement) {
         var titleText = arg.event.title;
         var descriptionText = arg.event.extendedProps.recallHours; 
-        var iniziali = arg.event.extendedProps.iniziali;
         
         return createElement(
           'div',
@@ -64,25 +63,15 @@ function MyCalendar({leads, setSelectedLead, setOpenInfoCal, setPopupPosition, s
       },
       eventClick: function(info) {
         setOpenInfoCal(true);
-        document.body.classList.add("overlay");
+        console.log(info.event);
         setSelectedLead(info.event._def.extendedProps);
-        const eventRect = info.el.getBoundingClientRect();
-        const popupWidth = 400;
-        const popupHeight = 300;
-        const top = eventRect.top + window.scrollY - popupHeight + 100; // -10 per un piccolo offset
-        const left = eventRect.left + window.scrollX - popupWidth / 2 + eventRect.width / 2 -400;
-
-        setPopupPosition({ top, left });
       },
       eventDrop: function (info) {
-        // Accedi alla nuova data di inizio dell'evento
         const newStartDate = info.event.start;
       
-        // Utilizza moment.js per formattare la data e l'orario nel formato desiderato
         const formattedDate = moment(newStartDate).format('YYYY-MM-DDTHH:mm:ss.SSSZ');
         const formattedTime = moment(newStartDate).format('HH:mm');
       
-        // Ecco i valori formattati che puoi inviare al tuo database
         console.log('Data formattata:', formattedDate);
         console.log('Orario formattato:', formattedTime);
       
@@ -136,45 +125,29 @@ const CalendarM = () => {
     
           const dateTime = moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate();
           const inizialiNome = lead.orientatori ? lead.orientatori.nome.charAt(0).toUpperCase() : '';
-          const inizialiCognome = lead.orientatori ? lead.orientatori.cognome.charAt(0).toUpperCase() : '';
-
     
             return {
               id: lead._id,
-              title: lead.nome + ' ' + lead.cognome,
+              title: lead.nome,
               extendedProps : {
-              iniziali: inizialiNome + inizialiCognome,  
-              name: lead.nome,
-              surname: lead.cognome,
-              email: lead.email,
-              date: lead.data,
-              telephone: cleanedTelephone,
-              status: lead.esito,
-              orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
-              facolta: lead.facolta ? lead.facolta : '',
-              fatturato: lead.fatturato ? lead.fatturato : '',
-              università: lead.università ? lead.università : '',
-              campagna: lead.campagna,
-              corsoDiLaurea: lead.corsoDiLaurea ? lead.corsoDiLaurea : '',
-              oreStudio: lead.oreStudio ? lead.oreStudio : '',
-              provincia: lead.provincia ? lead.provincia : '',
-              note: lead.note ? lead.note : '',
-              id: lead._id,
-              frequentiUni: lead.frequentiUni ? lead.frequentiUni : null,
-              lavoro: lead.lavoro ? lead.lavoro : null,
-              oraChiamataRichiesto: lead.oraChiamataRichiesto ? lead.oraChiamataRichiesto : "",
-              etichette: lead.etichette ? lead.etichette : null,
-              motivo: lead.motivo ? lead.motivo : null,
-              recallHours: lead.recallHours ? lead.recallHours : null,
-              recallDate: lead.recallDate ? lead.recallDate : null,
-              lastModify: lead.lastModify ? lead.lastModify : null, 
-              tipologiaCorso: lead.tipologiaCorso ? lead.tipologiaCorso : "",
-              budget: lead.budget ? lead.budget : "",
-              enrollmentTime: lead.enrollmentTime ? lead.enrollmentTime : "",
-              oreStudio: lead.oreStudio ? lead.oreStudio : "",
-              categories: lead.categories ? lead.categories : "",
-              campagna: lead.utmCampaign ? lead.utmCampaign : "",
-              leadAmbassador: lead.leadAmbassador ? lead.leadAmbassador : undefined,
+                name: lead.nome,
+                email: lead.email,
+                date: lead.data,
+                telephone: cleanedTelephone,
+                status: lead.esito,
+                orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
+                fatturato: lead.fatturato ? lead.fatturato : '',
+                provenienza: lead.campagna,
+                città: lead.città ? lead.città : '',
+                trattamento: lead.trattamento ? lead.trattamento : '',
+                note: lead.note ? lead.note : '',
+                id: lead._id,
+                etichette: lead.etichette ? lead.etichette : null,
+                motivo: lead.motivo ? lead.motivo : null,
+                recallHours: lead.recallHours ? lead.recallHours : null,
+                recallDate: lead.recallDate ? lead.recallDate : null,
+                lastModify: lead.lastModify ? lead.lastModify : null, 
+                campagna: lead.utmCampaign ? lead.utmCampaign : "",
             },
               start: dateTime,
               description: `Data: ${dateTime}, Testo`,
@@ -210,6 +183,70 @@ const CalendarM = () => {
         }
       };
 
+      const getOrientatoreLeads = async () => {
+        try {
+          const response = await axios.post('/get-orientatore-lead-base', {
+            _id: state.user._id
+          });
+    
+          const filteredTableLead = response.data.map((lead) => {
+            const telephone = lead.numeroTelefono ? lead.numeroTelefono.toString() : '';
+            const cleanedTelephone =
+              telephone.startsWith('+39') && telephone.length === 13
+                ? telephone.substring(3)
+                : telephone;
+
+                const dateTime = moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate();
+    
+            return {
+              id: lead._id,
+              title: lead.nome,
+              extendedProps: {
+                name: lead.nome,
+                email: lead.email,
+                date: lead.data,
+                telephone: cleanedTelephone,
+                status: lead.esito,
+                orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
+                fatturato: lead.fatturato ? lead.fatturato : '',
+                provenienza: lead.campagna,
+                città: lead.città ? lead.città : '',
+                trattamento: lead.trattamento ? lead.trattamento : '',
+                note: lead.note ? lead.note : '',
+                id: lead._id,
+                etichette: lead.etichette ? lead.etichette : null,
+                motivo: lead.motivo ? lead.motivo : null,
+                recallHours: lead.recallHours ? lead.recallHours : null,
+                recallDate: lead.recallDate ? lead.recallDate : null,
+                lastModify: lead.lastModify ? lead.lastModify : null, 
+                campagna: lead.utmCampaign ? lead.utmCampaign : "",
+              },
+              start: dateTime,
+              description: `Data: ${dateTime}, Testo`,
+            };
+          });
+    
+          const recall = localStorage.getItem("recallFilter");
+    
+          const filteredByRecall = filteredTableLead.filter((lead) => {
+            if (lead.recallDate && recall && recall === "true") {
+              const recallDate = new Date(lead.recallDate);
+              const today = new Date();
+              return recallDate <= today;
+            } else if (recall === false || recall == undefined || !recall) {
+              return true;
+            }
+            return false;
+          });
+    
+          setFilteredData(filteredByRecall);
+          setIsLoading(false);
+          setOriginalData(filteredTableLead);
+        } catch (error) {
+          console.error(error.message);
+        }
+      }
+
       const getOrientatori = async () => {
         await axios.get(`/utenti/${state.user._id}/orientatori`)
           .then(response => {
@@ -224,13 +261,15 @@ const CalendarM = () => {
       }
 
       useEffect(() => {
-        getOrientatori();
+        if (state.user.role && state.user.role === "orientatore"){
+          getOrientatoreLeads();
+        } else {
+          getOrientatori();
+        }
         const ori = localStorage.getItem("Ori");
         if (ori && ori !== null && ori !== undefined && ori !== "") {
           setSelectedOrientatore(ori);
-          console.log('HO cambiat ori')
         }
-    
       }, []);
 
       const [isLoading, setIsLoading] = useState(true);
@@ -250,7 +289,11 @@ const CalendarM = () => {
           });
       
           console.log('Lead aggiornata:', response.data);
-          fetchLeads();
+          if (state.user.role && state.user.role === "orientatore"){
+            getOrientatoreLeads();
+          } else {
+            fetchLeads(orientatoriOptions);
+          }
           toast.success('Recall Modificata!');
 
           const updatedLeads = [...filteredData]; // Crea una copia dell'array
@@ -298,7 +341,11 @@ const CalendarM = () => {
           if (response.status === 200) {
             console.log('Recall eliminata con successo');
             toast.success('Recall eliminata');
-            fetchLeads();
+            if (state.user.role && state.user.role === "orientatore"){
+              getOrientatoreLeads();
+            } else {
+              fetchLeads();
+            }
             setOpenDeleteRecall(false);
             setOpenInfoCal(false);
             const updatedLeads = [...filteredData];
@@ -327,7 +374,13 @@ const CalendarM = () => {
               onUpdateLead={handleUpdateLead}
               setPopupModify={() => {setOpenInfoCal(false); setSelectedLead(null)}}
               //popupRef={popupRef}
-              fetchLeads={() => fetchLeads(orientatoriOptions)}
+              fetchLeads={() => {
+                if (state.user.role && state.user.role === "orientatore"){
+                  getOrientatoreLeads()
+                } else {
+                  fetchLeads(orientatoriOptions)
+                }
+              }}
             />
             </div>
           }

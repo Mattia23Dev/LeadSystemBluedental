@@ -509,7 +509,7 @@
         .wrapperwrapper {
             display: flex;
             justify-content: flex-start;
-            gap: 2rem;
+            gap: 0.3rem;
             align-items: flex-start;
             margin-top: 0px;
 
@@ -986,7 +986,7 @@
     .filtralead {
         .wrapperwrapper {
             flex-direction: column !important;
-            gap: 1rem !important;
+            gap: 0.3rem !important;
 
             .leadslinks {
                 gap: 1rem !important;

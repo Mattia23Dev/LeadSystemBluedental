@@ -34,14 +34,27 @@ exports.createOrientatore = async (req, res) => {
           pass: process.env.PASS_GMAIL,
         }
       });
+
+      const url = "https://bluedental-leadsystem.netlify.app/login"
   
       const mailOptions = {
         from: process.env.EMAIL_GMAIL,
         to: email,
         subject: 'Benvenuto nel LeadSystem!',
-        text: `Gentile ${nome},\n\nTi diamo il benvenuto come nel tuo LeadSystem di Bluedental! Di seguito trovi le tue informazioni di accesso:\n\nEmail: ${email}\nPassword: 12345678\n\nTi consigliamo di cambiare la tua password temporanea appena possibile. Grazie e buon lavoro!`,
+        html: `
+          <html>
+            <body>
+              <p>Gentile ${nome},</p>
+              <p>Ti diamo il benvenuto come nel tuo LeadSystem di Bluedental! Di seguito trovi le tue informazioni di accesso:</p>
+              <p>Email: ${email}</p>
+              <p>Password: 12345678</p>
+              <a href="${url}" style="display: inline-block; padding: 10px 20px; background-color: #3471CC; color: #fff; text-decoration: none; border-radius: 5px;">Cambia password</a>
+              <p>Ti consigliamo di cambiare la tua password temporanea appena possibile. Grazie e buon lavoro!</p>
+            </body>
+          </html>
+        `,
       };
-  
+
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
           console.log('Errore nell\'invio dell\'email:', error);

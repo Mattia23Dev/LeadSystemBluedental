@@ -28,24 +28,21 @@ const Login = () => {
   };
 
   const handleClick = async (e) => {
-    if (accediCome === ""){
-      window.alert('Inserisci come vuoi accedere');
-      return
-    }
     try {
       e.preventDefault();
       const { data } = await axios.post("/login", {
         email,
         password,
-        accediCome,
       });
 
       if (data.error) {
         toast.error('Email o Password errata');
       } else {
         setPassword("");
-        if (accediCome === "orientatore" && data.user.new === false){
+        if (data.user.new === true){
           setCambiaPass(true)
+          setState(data);
+          localStorage.setItem("auth", JSON.stringify(data));
         } else {
           setEmail("");
           setState(data);
@@ -89,7 +86,6 @@ const Login = () => {
     }
   };
 
-  const [accediCome, setAccediCome] = useState("");
   const [cambiaPass, setCambiaPass] = useState(false);
   const handleChangePass = async () => {
     try {
@@ -186,12 +182,6 @@ const Login = () => {
               setValue={setPassword}
               placeholder="Inserisci la tua password.."
             />
-            <select onChange={(e) => setAccediCome(e.target.value)}>
-              <label>Accedi come</label>
-              <option value={""}>Seleziona</option>
-              <option value={"orientatore"}>Operatore</option>
-              <option value={"admin"}>Amministrazione</option>
-            </select>
              <label style={{width: '100%'}}>
               <input 
               type="checkbox" 
@@ -216,7 +206,7 @@ const Login = () => {
                 placeholder="Inserisci la tua password.."
               />
               <div>
-                <button onClick={() => {navigate('/'); toast.success('Benvenuto')}}>
+                <button className="salta-login" onClick={() => {navigate('/'); toast.success('Benvenuto')}}>
                   Salta
                 </button>
                 <button onClick={handleChangePass} className="button-reg">

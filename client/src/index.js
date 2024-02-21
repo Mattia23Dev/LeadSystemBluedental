@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from 'react-dom/client';
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
@@ -18,15 +18,15 @@ import { SidebarProvider } from "./context/SidebarContext";
   });
 }*/
 
-ReactDOM.render(
+
+createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <UserProvider>
-    <SidebarProvider>
+      <SidebarProvider>
         <App />
-    </SidebarProvider>
+      </SidebarProvider>
     </UserProvider>
-  </React.StrictMode>,
-  document.getElementById("root")
+  </React.StrictMode>
 );
 
 reportWebVitals();

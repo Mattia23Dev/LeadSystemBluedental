@@ -81,9 +81,9 @@ const calculateAndAssignLeadsEveryDay = async () => {
           } else if (field.name === "phone_number") {
             userData.phone_number = field.values[0];
           } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni"){
-            userData.trattamento = field.values[0];
+            userData.trattamento = field.values[0].replace(/_/g, " ");
           } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
-            userData.città = field.values[0];
+            userData.città = field.values[0].replace(/_/g, " ");
           }
         } 
 
@@ -94,16 +94,16 @@ const calculateAndAssignLeadsEveryDay = async () => {
           numeroTelefono: userData.phone_number,
           campagna: 'Social',
           città: userData.città ? userData.città : '',
-          trattamento: userData.trattamento ? userData.trattamento : '',
+          trattamento: userData.trattamento ? userData.trattamento : 'Implantologia a carico immediato',
           esito: "Da contattare",
           orientatori: user._id,
           utente: "65d3110eccfb1c0ce51f7492",
           note: "",
           fatturato: "",
-          annunci: leadWithoutUser.annunci ? leadWithoutUser.annunci : '',
-          adsets: leadWithoutUser.adsets ? leadWithoutUser.adsets : '',
-          nameCampagna: leadWithoutUser.name ? leadWithoutUser.name : '', 
-          idMeta: leadWithoutUser.id ? leadWithoutUser.id : '',
+          utmContent: leadWithoutUser.annunci ? leadWithoutUser.annunci : '',
+          utmAdset: leadWithoutUser.adsets ? leadWithoutUser.adsets : '',
+          utmCampaign: leadWithoutUser.name ? leadWithoutUser.name : '',
+          tentativiChiamata: '0'
         });
 
         try {

@@ -39,6 +39,16 @@ export default function Table2({ onResults, searchval, setLeadsPdf }) {
   const [changeOrientatore, setChangeOrientatore] = useState(false);
   const [leadMancantiPopup, setLeadMancantiPopup] = useState(true);
   const [filtroDiRiserva, setFiltroDiRiserva] = useState([]);
+  const [selectedCity, setSelectedCity] = useState('');
+  const cities = [
+    "Abbiategrasso", "Anzio", "Arezzo", "Bari", "Bergamo", "Biella", "Bologna", "Brescia", "Busto Arsizio", "Cagliari", 
+    "Cantù", "Capena", "Carpi", "Cassino", "Cesena", "Ciampino", "Cinisello Balsamo", "Civitavecchia", "Cologno Monzese", 
+    "Como", "Cremona", "Desenzano del Garda", "Ferrara", "Firenze", "Forlì", "Frosinone", "Genova", "Latina", "Lodi", 
+    "Lucca", "Mantova", "Melzo", "Mestre", "Milano", "Modena", "Monza", "Ostia", "Padova", "Perugia", "Parma", "Piacenza", 
+    "Pioltello", "Pomezia", "Prato", "Ravenna", "Reggio Emilia", "Rho", "Roma", "San Giuliano Milanese", "Sassari", "Seregno", 
+    "Terni", "Torino", "Treviso", "Varese", "Verona", "Vicenza", "Vigevano"
+  ];
+
   const [motivo, setMotivo] = useState();
   const ori = localStorage.getItem("Ori");
   const popupRef = useRef(null);
@@ -55,14 +65,12 @@ export default function Table2({ onResults, searchval, setLeadsPdf }) {
     }
   };
 
-const [motivoNonValidoList, setMotivoNonValidoList] = useState([
-    "Linea disattivata", "Numero errato", "Lead doppione", "Lead in carico ad ateneo"
-]);
+  const handleCityChange = (event) => {
+    setSelectedCity(event.target.value);
+  };
+
 const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
-    "Disconoscimento richiesta", "Richiesta vecchia", "Nessuna risposta",
-    "Solo curiosità", "Non vuole intermediari", "Fuori budget", "Prodotto non disponibile",
-    "Altro ateneo", "Difficoltà nel reperire documentazione", "Titolo straniero senza equipollenza",
-    "Prevalutazione rifiutata",
+    "Numero Errato", "Non interessato", "Fuori Zona",
 ]);
 const [motivoVendutoList, setMotivoVendutoList] = useState([
     "Promozione / sconto", "Convenzione", "Prevalutazione corretta",
@@ -73,9 +81,6 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
   document.addEventListener('mousedown', handleClickOutside);
 
   const userId = state.user._id;
-  //const userId = "655f707143a59f06d5d4dc3b" //ONE NETWORK
-  //const userId = "65b135d2318336cd0bfc4361" //WIKIBE
-  const monthlyLeadCounter = state.user.monthlyLeadCounter;
   const handleRowClick = (lead) => {
      setSelectedLead(lead);
      setDeleting(true);
@@ -88,7 +93,6 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
       await axios.get(`/utenti/${userId}/orientatori`)
         .then(response => {
           const data = response.data.orientatori;
-
           setOrientatoriOptions(data);
           fetchLeads(data);
         })
@@ -97,7 +101,13 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
         });
     }
 
-    if (state && state.token) getOrientatori();
+    if (state && state.token) {
+      if (state.user.role && state.user.role === "orientatore") {
+        getOrientatoreLeads()
+      } else {
+        getOrientatori()
+      }
+    };
     const ori = localStorage.getItem("Ori");
     const startDate = localStorage.getItem("startDate");
     const endDate = localStorage.getItem("endDate");
@@ -136,9 +146,20 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
     }
   }, [])
 
+  const patientTypes = ["Nuovo paziente", "Gia’ paziente"];
+  const treatments = ["Impianti", "Pulizia dei denti", "Protesi Mobile", "Sbiancamento", "Ortodonzia", "Faccette dentali"];
+  const locations = [
+    "Desenzano Del Garda", "Melzo", "Carpi", "Lodi", "Cantù", "Mantova", "Seregno", "Milano Piazza Castelli", "Abbiategrasso",
+    "Pioltello", "Vigevano", "Milano Via Parenzo", "Settimo Milanese", "Cremona", "Milano", "Monza", "Busto Arsizio", "Brescia",
+    "Cinisello Balsamo", "Cologno Monzese", "Varese", "Como", "San Giuliano Milanese", "Milano", "Bergamo", "Roma Marconi",
+    "Roma Balduina", "Roma Prati Fiscali", "Roma Casilina", "Roma Tiburtina", "Roma Torre Angela", "Ostia", "Pomezia",
+    "Ciampino", "Capena", "Cassino", "Frosinone", "Latina", "Valmontone outlet", "Roma Tuscolana", "Civitavecchia",
+    "Terni", "Perugia", "Arezzo", "Firenze", "Lucca", "Prato", "Piacenza", "Ferrara", "Cesena", "Forlì", "Reggio Emilia",
+    "Modena", "Parma", "Bologna", "Rovigo", "Treviso", "Padova", "Verona", "Vicenza", "Mestre", "Torino Chironi",
+    "Settimo Torinese", "Biella", "Torino Botticelli", "Bari", "Genova", "Cagliari", "Sassari", "Pordenone", "Rimini",
+    "Ravenna", "Rho", "Anzio"
+  ];
 
-
-  //per filter esito 
   const [selectedStatusEsito, setSelectedStatusEsito] = useState({
     dacontattare: false,
     inlavorazione: false,
@@ -166,6 +187,76 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
       [filter]: !prevFilters[filter],
     }));
   };
+  
+  const getOrientatoreLeads = async () => {
+    try {
+      const response = await axios.post('/get-orientatore-lead-base', {
+        _id: state.user._id
+      });
+
+      const filteredTableLead = response.data.map((lead) => {
+        const telephone = lead.numeroTelefono ? lead.numeroTelefono.toString() : '';
+        const cleanedTelephone =
+          telephone.startsWith('+39') && telephone.length === 13
+            ? telephone.substring(3)
+            : telephone;
+
+        return {
+          name: lead.nome,
+          email: lead.email,
+          date: lead.data,
+          telephone: cleanedTelephone,
+          status: lead.esito,
+          orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
+          fatturato: lead.fatturato ? lead.fatturato : '',
+          provenienza: lead.campagna,
+          città: lead.città ? lead.città : '',
+          trattamento: lead.trattamento ? lead.trattamento : '',
+          note: lead.note ? lead.note : '',
+          id: lead._id,
+          etichette: lead.etichette ? lead.etichette : null,
+          motivo: lead.motivo ? lead.motivo : null,
+          recallHours: lead.recallHours ? lead.recallHours : null,
+          recallDate: lead.recallDate ? lead.recallDate : null,
+          lastModify: lead.lastModify ? lead.lastModify : null, 
+          campagna: lead.utmCampaign ? lead.utmCampaign : "",
+          tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
+        };
+      });
+
+      const recall = localStorage.getItem("recallFilter");
+
+      const filteredByRecall = filteredTableLead.filter((lead) => {
+        if (lead.recallDate && recall && recall === "true") {
+          const recallDate = new Date(lead.recallDate);
+          const today = new Date();
+          return recallDate <= today;
+        } else if (recall === false || recall == undefined || !recall) {
+          return true;
+        }
+        return false;
+      });
+
+      const startDate = localStorage.getItem("startDate");
+      const endDate = localStorage.getItem("endDate");
+      if (startDate !== null && endDate !== null && startDate !== undefined && endDate !== undefined){
+        const filteredByDate = filterDataByDate(filteredByRecall, startDate, endDate); 
+        setFilteredData(filteredByDate);
+        setFiltroDiRiserva(filteredByDate)
+       } else {
+        setFilteredData(filteredByRecall);
+        setFiltroDiRiserva(filteredByRecall);
+       }
+
+      const leadNumVenduti = response.data.filter(lead => lead.esito === 'Venduto');
+      const leadNum = response.data.length;
+      onResults(leadNum, leadNumVenduti.length);
+      setOriginalData(filteredTableLead);
+      setLeadsPdf(filteredTableLead);
+    } catch (error) {
+      console.error(error.message);
+    }
+  }
 
   const fetchLeads = async (orin) => {
 
@@ -190,30 +281,19 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           telephone: cleanedTelephone,
           status: lead.esito,
           orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
-          facolta: lead.facolta ? lead.facolta : '',
           fatturato: lead.fatturato ? lead.fatturato : '',
-          università: lead.università ? lead.università : '',
           provenienza: lead.campagna,
-          corsoDiLaurea: lead.corsoDiLaurea ? lead.corsoDiLaurea : '',
-          oreStudio: lead.oreStudio ? lead.oreStudio : '',
-          provincia: lead.provincia ? lead.provincia : '',
+          città: lead.città ? lead.città : '',
+          trattamento: lead.trattamento ? lead.trattamento : '',
           note: lead.note ? lead.note : '',
           id: lead._id,
-          frequentiUni: lead.frequentiUni ? lead.frequentiUni : null,
-          lavoro: lead.lavoro ? lead.lavoro : null,
-          oraChiamataRichiesto: lead.oraChiamataRichiesto ? lead.oraChiamataRichiesto : "",
           etichette: lead.etichette ? lead.etichette : null,
           motivo: lead.motivo ? lead.motivo : null,
           recallHours: lead.recallHours ? lead.recallHours : null,
           recallDate: lead.recallDate ? lead.recallDate : null,
           lastModify: lead.lastModify ? lead.lastModify : null, 
-          tipologiaCorso: lead.tipologiaCorso ? lead.tipologiaCorso : "",
-          budget: lead.budget ? lead.budget : "",
-          enrollmentTime: lead.enrollmentTime ? lead.enrollmentTime : "",
-          oreStudio: lead.oreStudio ? lead.oreStudio : "",
-          categories: lead.categories ? lead.categories : "",
           campagna: lead.utmCampaign ? lead.utmCampaign : "",
-          leadAmbassador: lead.leadAmbassador ? lead.leadAmbassador : undefined,
+          tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
         };
       });
 
@@ -288,28 +368,16 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
         orientatore: row.orientatore,
         email: row.email,
         note: row.note,
-        facolta: row.facolta,
         fatturato: row.fatturato,
-        università: row.università,
+        città: row.città ? row.città : '',
+        trattamento: row.trattamento ? row.trattamento : '',
         campagna: row.campagna,
-        corsoDiLaurea: row.corsoDiLaurea,
-        oreStudio: row.oreStudio,
-        provincia: row.provincia,
-        frequentiUni: row.frequentiUni,
-        lavoro: row.lavoro,
-        oraChiamataRichiesto: row.oraChiamataRichiesto,
-        etichette: row.etichette,
         motivo: row.motivo,
         recallHours: row.recallHours,
         recallDate: row.recallDate,
         lastModify: row.lastModify,
-        tipologiaCorso: row.tipologiaCorso,
-        budget: row.budget,
-        enrollmentTime: row.enrollmentTime,
-        oreStudio: row.oreStudio,
-        categories: row.categories,
         campagna: row.utmCampaign,
-        leadAmbassador: row.leadAmbassador ? row.leadAmbassador : undefined,
+        tentativiChiamata: row.tentativiChiamata ? row.tentativiChiamata : "0",
       };
     });
     setFilteredData(filteredDataIn);
@@ -371,6 +439,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
     setEndDate(null);
     setFilteredData(originalData);
     setSelectedFilter('');
+    setSelectedCity("");
     setSelectedOrientatore("");
     localStorage.removeItem("Ori");
     localStorage.removeItem("startDate");
@@ -411,18 +480,23 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
     // Filtra per data
     if (startDate !== null && endDate !== null){
      const filteredByDate = filterDataByDate(originalData, startDate, endDate); 
-     const combinedFilteredData = filteredByRecall.filter(row => filteredByOrientatore.includes(row) && filteredByDate.includes(row));
+     let combinedFilteredData = filteredByRecall.filter(row => filteredByOrientatore.includes(row) && filteredByDate.includes(row));
+     if (selectedCity) {
+      combinedFilteredData = combinedFilteredData.filter(row => row.città.toLowerCase() === selectedCity.toLowerCase());
+    }
      setFilteredData(combinedFilteredData);
      setFiltroDiRiserva(combinedFilteredData);
     } else {
-      const combinedFilteredData = filteredByRecall.filter(row => filteredByOrientatore.includes(row));
+      let combinedFilteredData = filteredByRecall.filter(row => filteredByOrientatore.includes(row));
+      if (selectedCity) {
+        combinedFilteredData = combinedFilteredData.filter(row => row.città.toLowerCase() === selectedCity.toLowerCase());
+      }
       setFilteredData(combinedFilteredData);
       setFiltroDiRiserva(combinedFilteredData);
     }
-
     
     
-  }, [recallFilter, selectedOrientatore, startDate, endDate]);
+  }, [recallFilter, selectedOrientatore, startDate, endDate, selectedCity]);
 
   const getOtherLeads = async () => {
     try {
@@ -447,30 +521,19 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           telephone: cleanedTelephone,
           status: lead.esito,
           orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
-          facolta: lead.facolta ? lead.facolta : '',
           fatturato: lead.fatturato ? lead.fatturato : '',
-          università: lead.università ? lead.università : '',
           provenienza: lead.campagna,
-          corsoDiLaurea: lead.corsoDiLaurea ? lead.corsoDiLaurea : '',
-          oreStudio: lead.oreStudio ? lead.oreStudio : '',
-          provincia: lead.provincia ? lead.provincia : '',
+          città: lead.città ? lead.città : '',
+          trattamento: lead.trattamento ? lead.trattamento : '',
           note: lead.note ? lead.note : '',
           id: lead._id,
-          frequentiUni: lead.frequentiUni ? lead.frequentiUni : null,
-          lavoro: lead.lavoro ? lead.lavoro : null,
-          oraChiamataRichiesto: lead.oraChiamataRichiesto ? lead.oraChiamataRichiesto : "",
           etichette: lead.etichette ? lead.etichette : null,
           motivo: lead.motivo ? lead.motivo : null,
           recallHours: lead.recallHours ? lead.recallHours : null,
           recallDate: lead.recallDate ? lead.recallDate : null,
           lastModify: lead.lastModify ? lead.lastModify : null, 
-          tipologiaCorso: lead.tipologiaCorso ? lead.tipologiaCorso : "",
-          budget: lead.budget ? lead.budget : "",
-          enrollmentTime: lead.enrollmentTime ? lead.enrollmentTime : "",
-          oreStudio: lead.oreStudio ? lead.oreStudio : "",
-          categories: lead.categories ? lead.categories : "",
           campagna: lead.utmCampaign ? lead.utmCampaign : "",
-          leadAmbassador: lead.leadAmbassador ? lead.leadAmbassador : undefined,
+          tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
         };
       });
 
@@ -491,6 +554,73 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
       });
 
       const filteredByRecall = filteredByOrientatore.filter((lead) => {
+        if (lead.recallDate && recall && recall === "true") {
+          const recallDate = new Date(lead.recallDate);
+          const today = new Date();
+          return recallDate <= today;
+        } else if (recall === false || recall == undefined || !recall) {
+          return true;
+        }
+        return false;
+      });
+
+      const startDate = localStorage.getItem("startDate");
+      const endDate = localStorage.getItem("endDate");
+      if (startDate !== null && endDate !== null && startDate !== undefined && endDate !== undefined){
+        const filteredByDate = filterDataByDate(filteredByRecall, startDate, endDate); 
+        setFilteredData((prevData) => [...prevData, ...filteredByDate]);
+        setFiltroDiRiserva((prevData) => [...prevData, ...filteredByDate]);
+       } else {
+        setFilteredData((prevData) => [...prevData, ...filteredByRecall]);
+        setFiltroDiRiserva((prevData) => [...prevData, ...filteredByRecall]);
+       }
+      setRefreshate(false);
+      setOriginalData((prevData) => [...prevData, ...filteredTableLead]);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const getOtherLeadsOri = async () => {
+    try {
+      const response = await axios.post('/get-other-leads-ori', {
+        _id: state.user._id
+      });
+
+      const filteredTableLead = response.data.map((lead) => {
+        const telephone = lead.numeroTelefono ? lead.numeroTelefono.toString() : '';
+        const cleanedTelephone =
+          telephone.startsWith('+39') && telephone.length === 13
+            ? telephone.substring(3)
+            : telephone;
+
+
+        return {
+          name: lead.nome,
+          email: lead.email,
+          date: lead.data,
+          telephone: cleanedTelephone,
+          status: lead.esito,
+          orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
+          fatturato: lead.fatturato ? lead.fatturato : '',
+          provenienza: lead.campagna,
+          città: lead.città ? lead.città : '',
+          trattamento: lead.trattamento ? lead.trattamento : '',
+          note: lead.note ? lead.note : '',
+          id: lead._id,
+          etichette: lead.etichette ? lead.etichette : null,
+          motivo: lead.motivo ? lead.motivo : null,
+          recallHours: lead.recallHours ? lead.recallHours : null,
+          recallDate: lead.recallDate ? lead.recallDate : null,
+          lastModify: lead.lastModify ? lead.lastModify : null, 
+          campagna: lead.utmCampaign ? lead.utmCampaign : "",
+          tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
+        };
+      });
+
+      const recall = localStorage.getItem("recallFilter");
+
+      const filteredByRecall = filteredTableLead.filter((lead) => {
         if (lead.recallDate && recall && recall === "true") {
           const recallDate = new Date(lead.recallDate);
           const today = new Date();
@@ -555,7 +685,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
         orientatori
       };
   
-      const response = await axios.put(`/lead/${userId}/update/${leadId}`, modifyLead);
+      const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
       const updatedLead = response.data.updatedLead;
 
       setOriginalData((prevData) =>
@@ -568,19 +698,13 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
               telephone: updatedLead.numeroTelefono,
               status: updatedLead.esito,
               orientatore: updatedLead.orientatori ? updatedLead.orientatori.nome + ' ' + updatedLead.orientatori.cognome : '',
-              facolta: updatedLead.facolta ? updatedLead.facolta : '',
               fatturato: updatedLead.fatturato ? updatedLead.fatturato : '',
-              università: updatedLead.università ? updatedLead.università : '',
               campagna: updatedLead.campagna,
-              corsoDiLaurea: updatedLead.corsoDiLaurea ? updatedLead.corsoDiLaurea : '',
-              oreStudio: updatedLead.oreStudio ? updatedLead.oreStudio : '',
-              provincia: updatedLead.provincia ? updatedLead.provincia : '',
+              città: updatedLead.città ? updatedLead.città : '',
               note: updatedLead.note ? updatedLead.note : '',
               id: updatedLead._id,
-              frequentiUni: updatedLead.frequentiUni ? updatedLead.frequentiUni : false,
-              lavoro: updatedLead.lavoro ? updatedLead.lavoro : false,
-              oraChiamataRichiesto: updatedLead.oraChiamataRichiesto ? updatedLead.oraChiamataRichiesto : "",
-              leadAmbassador: updatedLead.leadAmbassador ? updatedLead.leadAmbassador : undefined,
+              trattamento: updatedLead.trattamento,
+              tentativiChiamata: updatedLead.tentativiChiamata ? updatedLead.tentativiChiamata : "0",
             };
             return { ...lead, ...adaptedLead };
           } else {
@@ -599,19 +723,13 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
             telephone: updatedLead.numeroTelefono,
             status: updatedLead.esito,
             orientatore: updatedLead.orientatori ? updatedLead.orientatori.nome + ' ' + updatedLead.orientatori.cognome : '',
-            facolta: updatedLead.facolta ? updatedLead.facolta : '',
             fatturato: updatedLead.fatturato ? updatedLead.fatturato : '',
-            università: updatedLead.università ? updatedLead.università : '',
             campagna: updatedLead.campagna,
-            corsoDiLaurea: updatedLead.corsoDiLaurea ? updatedLead.corsoDiLaurea : '',
-            oreStudio: updatedLead.oreStudio ? updatedLead.oreStudio : '',
-            provincia: updatedLead.provincia ? updatedLead.provincia : '',
+            città: updatedLead.città ? updatedLead.città : '',
             note: updatedLead.note ? updatedLead.note : '',
             id: updatedLead._id,
-            frequentiUni: updatedLead.frequentiUni ? updatedLead.frequentiUni : false,
-            lavoro: updatedLead.lavoro ? updatedLead.lavoro : false,
-            leadAmbassador: updatedLead.leadAmbassador ? updatedLead.leadAmbassador : undefined,
-            oraChiamataRichiesto: updatedLead.oraChiamataRichiesto ? updatedLead.oraChiamataRichiesto : "",
+            trattamento: updatedLead.trattamento,
+            tentativiChiamata: updatedLead.tentativiChiamata ? updatedLead.tentativiChiamata : "0",
           };
           return { ...lead, ...adaptedLead };
         } else {
@@ -631,7 +749,11 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
     try {
       const response = await axios.delete('/delete-lead', { data: { id: leadId } });
       toast.success('Hai eliminato correttamente il lead');
-      fetchLeads(orientatoriOptions);
+      if (state.user.role && state.user.role === "orientatore"){
+        getOrientatoreLeads();
+      } else {
+        fetchLeads(orientatoriOptions);
+      } 
       setPopupModify(false);
       setDeleting(false);
     } catch (error) {
@@ -658,7 +780,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           fatturato,
           motivo,
         };   
-        const response = await axios.put(`/lead/${userId}/update/${leadId}`, modifyLead);
+        const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
         setPopupModifyEsito(false);
         SETheaderIndex(999);             
         }
@@ -669,11 +791,15 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           fatturato,
           motivo,
         };   
-        const response = await axios.put(`/lead/${userId}/update/${leadId}`, modifyLead);
+        const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
         setPopupModifyEsito(false);
         SETheaderIndex(999); 
       }
-      fetchLeads(orientatoriOptions);
+      if (state.user.role && state.user.role === "orientatore"){
+        getOrientatoreLeads();
+      } else{
+        fetchLeads(orientatoriOptions);
+      }
       toast.success('Il lead è stato modificato con successo.')
     } catch (error) {
       console.error(error);
@@ -813,10 +939,14 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
         esito,
         fatturato,
       };
-      const response = await axios.put(`/lead/${userId}/update/${leadId.id}`, modifyLead);
+      const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId.id}`, modifyLead);
 
       toast.success('Il lead è stato modificato con successo.');
-      fetchLeads(orientatoriOptions);
+      if (state.user.role && state.user.role === "orientatore"){
+        getOrientatoreLeads();
+      } else{
+        fetchLeads(orientatoriOptions);
+      }
       console.log(response.data.message);
     } catch (error) {
       console.error(error);
@@ -831,10 +961,14 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
         fatturato,
         motivo,
       };
-      const response = await axios.put(`/lead/${userId}/update/${leadId.id}`, modifyLead);
+      const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId.id}`, modifyLead);
 
       toast.success('Il lead è stato modificato con successo.');
-      fetchLeads(orientatoriOptions);
+      if (state.user.role && state.user.role === "orientatore"){
+        getOrientatoreLeads();
+      } else{
+        fetchLeads(orientatoriOptions);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -862,7 +996,13 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
         setPopupModify={() => setPopupModify(false)}
         deleteLead={deleteLead}
         popupRef={popupRef}
-        fetchLeads={() => fetchLeads(orientatoriOptions)}
+        fetchLeads={() => {
+          if (state.user.role && state.user.role === "orientatore"){
+            getOrientatoreLeads();
+          } else{
+            fetchLeads(orientatoriOptions);
+          }
+        }}
          />
          </div>
          }
@@ -872,7 +1012,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
         <h5 style={{ color: "gray", fontSize: '18px', marginBottom: '15px' }}>Selezione filtri:</h5>
         <div className="wrapperwrapper">
           <div>
-            <p style={{ color: "gray", fontSize: '14px' }}>Filtra per data</p>
+            <p style={{ color: "gray", fontSize: '13px' }}>Filtra per data</p>
             <div className="wrapper">
               <div>
                 <label>Da</label>
@@ -888,7 +1028,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           {state.user.role && state.user.role === "orientatore" ?
            null :
           <div className="filter-etichette">
-            <p style={{ color: "gray", fontSize: '14px' }}>Filtra per orientatore</p>
+            <p style={{ color: "gray", fontSize: '13px' }}>Operatore</p>
               <select
                 id="etichettaSelect"
                 placeholder="Nome orientatore"
@@ -905,7 +1045,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
               </select>
           </div>}
           <div className="filtra-recall">
-            <p style={{ color: "gray", fontSize: '14px' }}>Filtra per Recall</p>
+            <p style={{ color: "gray", fontSize: '13px' }}>Filtra per Recall</p>
             <div className="recall-option">
               <label>
                 <input
@@ -935,6 +1075,15 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
                 No
               </label>
             </div>
+          </div>
+          <div className="filter-etichette">
+            <p style={{ color: "gray", fontSize: '13px' }} htmlFor="citySelect">Città di provenienza:</p>
+            <select id="citySelect" onChange={handleCityChange} value={selectedCity}>
+              <option value="">Seleziona</option>
+              {cities.map(city => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
           </div>
           <button onClick={handleClearFilter} className="button-filter rimuovi-button">Rimuovi filtri</button>
         </div>
@@ -1093,7 +1242,13 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
       }
 
         {addOpen && <AddLeadPopup
-        setAddOpen={setAddOpen} popupRef={popupRef} fetchLeads={() => fetchLeads(orientatoriOptions)}
+        setAddOpen={setAddOpen} popupRef={popupRef} fetchLeads={() => {
+          if (state.user.role && state.user.role === "orientatore"){
+            getOrientatoreLeads();
+          } else{
+            fetchLeads(orientatoriOptions);
+          }
+        }}
          />}
       <Suspense fallback={<div>Loading...</div>}>
         {popupMotivi && (
@@ -1126,97 +1281,83 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
 
 
       {popupModifyEsito && (
-                    <div style={{marginTop: '-90px', position: 'fixed'}} className="choose-esito-popup">
-                        <div className='top-choose-esito'>
-                        <h4>Modifica l'esito di {selectedLead.name}</h4>
-                        </div>
+                         <div style={{marginTop: '-90px', position: 'fixed'}} className="choose-esito-popup">
+                         <div className='top-choose-esito'>
+                         <h4>Modifica l'esito di {selectedLead.name}</h4>
+                         </div>
 
-                        <svg id="modalclosingicon-popup" onClick={() => { setPopupModifyEsito(false)}} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
-                             <div className='esiti-option-div' style={{ display: 'flex', justifyContent: 'center', overflowY: 'scroll' }}>
-                                <div className={esito === "Da contattare" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Da contattare')}>
-                                    <span><span>o</span></span>
-                                    Da contattare
-                                </div>
-                                <div className={esito === "In lavorazione" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('In lavorazione')}>
-                                    <span><span>o</span></span>
-                                    In lavorazione
-                                </div>
-                                <div className={esito === "Non risponde" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Non risponde')}>
-                                    <span><span>o</span></span>
-                                    Non risponde
-                                </div>
-                                <div className={esito === "Irraggiungibile" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Irraggiungibile')}>
-                                    <span><span>o</span></span>
-                                    Irraggiungibile
-                                </div>
-                                <div className={esito === "Non valido" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Non valido')}>
-                                    <span><span>o</span></span>
-                                    Non valido
-                                {esito === "Non valido" && (
-                                    <select className="selectMotivo" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
-                                    <option value='' disabled>Seleziona motivo</option>
-                                    {motivoNonValidoList.map((motivoOption, index) => (
-                                        <option key={index} value={motivoOption}>{motivoOption}</option>
-                                    ))}
-                                    </select>
-                                )}
-                                </div>
-                                <div className={esito === "Non interessato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Non interessato')}>
-                                    <span><span>o</span></span>
-                                    Lead persa
-                                    {esito === "Non interessato" && (
-                                        <select className="selectMotivo" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
-                                        <option value='' disabled>Seleziona motivo</option>
-                                        {motivoLeadPersaList.map((motivoOption, index) => (
-                                            <option key={index} value={motivoOption}>{motivoOption}</option>
-                                        ))}
-                                        </select>
-                                    )}
-                                </div>
-                                <div className={esito === "Opportunità" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Opportunità')}>
-                                    <span><span>o</span></span>
-                                    Opportunità
-                                </div>
-                                <div className={esito === "In valutazione" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('In valutazione')}>
-                                    <span><span>o</span></span>
-                                    In valutazione
-                                </div>
-                                <div className={esito === "Venduto" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Venduto')}>
-                                    <span><span>o</span></span>
-                                    Venduto
-                                    {esito === 'Venduto' ?
-                                        <label id="prezzovenditaesito">
-                                            Inserisci importo della retta annuale
-                                            <input
-                                            type="text"
-                                            placeholder="Fatturato"
-                                            style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginRight: '16px' }}
-                                            onChange={(e) => setFatturato(e.target.value)}
-                                            value={fatturato}
-                                            required />
-                                        </label>
-                                        :
-                                        null}
-                                    {esito === "Venduto" && (
-                                            <select className="selectMotivo" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
-                                            <option value='' disabled>Seleziona motivo</option>
-                                            {motivoVendutoList.map((motivoOption, index) => (
-                                                <option key={index} value={motivoOption}>{motivoOption}</option>
-                                            ))}
-                                            </select>
-                                        )}
-                                </div>
-                                <div className={esito === "Iscrizione posticipata" ? "selected-option-motivo esito-option" : "esito-option"}  onClick={() => setEsito('Iscrizione posticipata')}>
-                                    <span><span>o</span></span>
-                                    Iscrizione posticipata
-                                </div>
-                            </div>
-                        <button style={{ fontSize: "14px" }} className='btn-orie' onClick={updateLeadEsito}>Salva modifiche</button>
-                        </div>
+                         <svg id="modalclosingicon-popup" onClick={() => { setPopupModifyEsito(false)}} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
+                              <div className='esiti-option-div' style={{ display: 'flex', justifyContent: 'center', overflowY: 'scroll' }}>
+                                 <div className={esito === "Da contattare" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Da contattare')}>
+                                     <span><span>o</span></span>
+                                     Da contattare
+                                 </div>
+                                 <div className={esito === "Non risponde" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Non risponde')}>
+                                     <span><span>o</span></span>
+                                     Non risponde
+                                 </div>
+                                 <div className={esito === "Irraggiungibile" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Irraggiungibile')}>
+                                     <span><span>o</span></span>
+                                     Da richiamare
+                                 </div>
+                                 <div className={esito === "Non interessato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Non interessato')}>
+                                     <span><span>o</span></span>
+                                     Lead persa
+                                     {esito === "Non interessato" && (
+                                         <select className="selectMotivo" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
+                                         <option value='' disabled>Seleziona motivo</option>
+                                         {motivoLeadPersaList.map((motivoOption, index) => (
+                                             <option key={index} value={motivoOption}>{motivoOption}</option>
+                                         ))}
+                                         </select>
+                                     )}
+                                 </div>
+                                 <div className={esito === "Venduto" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Venduto')}>
+                                     <span><span>o</span></span>
+                                     Fissato
+                                     {esito === "Venduto" && <div className='choose-motivo'>
+                                     {patientTypes.map((opzione, index) => (
+                                         <label key={index} className="radio-label radio-label-scheda">
+                                             <input
+                                             type="radio"
+                                             name="motivo"
+                                             value={opzione}
+                                             checked={motivo === opzione}
+                                             onChange={() => setMotivo(opzione)}
+                                             />
+                                             {opzione}
+                                         </label>
+                                         ))}
+                                     </div>}
+                                     {esito === 'Venduto' ?
+                                     <>
+                                     <label className='label-not-blue'>Trattamento</label>
+                                             <select className="selectMotivo" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
+                                             <option value='' disabled>Seleziona motivo</option>
+                                             {treatments.map((motivoOption, index) => (
+                                                 <option key={index} value={motivoOption}>{motivoOption}</option>
+                                             ))}
+                                             </select>
+                                             </>
+                                         :
+                                         null}
+                                     {esito === "Venduto" && (
+                                         <>
+                                         <label className='label-not-blue'>Città</label>
+                                             <select className="selectMotivo" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
+                                             <option value='' disabled>Seleziona motivo</option>
+                                             {locations.map((motivoOption, index) => (
+                                                 <option key={index} value={motivoOption}>{motivoOption}</option>
+                                             ))}
+                                             </select>
+                                           </>  
+                                         )}
+                                 </div>
+                             </div>
+                         <button style={{ fontSize: "14px" }} className='btn-orie' onClick={updateLeadEsito}>Salva modifiche</button>
+                         </div>
       )
       }
-
-
       {toggleGrid ?
         <div style={{ boxShadow: "0px 0px 20px 2px #80808029", borderRadius: '20px', padding: '30px 20px', maxHeight: '58vh',  }} className="table-big-container">
           <div className="table-filters">
@@ -1280,7 +1421,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
                         </span>
                       </td>
                       <td className="modify-table" onClick={() => handleModifyPopup(row)}>Info <IoIosArrowDown size={12} /></td>
-                      <td style={{cursor: 'pointer'}} className="Details" onClick={() => openChangeOrientatore(row)}>{row.orientatore} <IoIosArrowDown size={12} /></td>
+                      <td style={{cursor: 'pointer'}} className="Details" onClick={state.user.role && state.user.role === "orientatore" ? null : () => openChangeOrientatore(row)}>{row.orientatore} <IoIosArrowDown size={12} /></td>
                       <td>
                       <p 
                       onClick={row?.orientatore ? null : () => openChangeOrientatore(row)} 
@@ -1398,7 +1539,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
               refreshate={false}
               toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
             <div className="entries">
-              {toggles.irraggiungibile && filteredData && filteredData.filter(x => x.status == "Irraggiungibile").reverse().map((row, k) =>
+              {toggles.irraggiungibile && filteredData && filteredData.filter(x => x.status == "Da richiamare").reverse().map((row, k) =>
                 <LeadEntry
                   id={JSON.stringify(row)}
                   index={k}
@@ -1424,6 +1565,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
               handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
               type={"Lead persa"}
               getOtherLeads={getOtherLeads}
+              getOtherLeadsOri={getOtherLeadsOri}
               refreshate={refreshate}
               toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
             <div className="entries">
@@ -1473,21 +1615,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
             </div>
           </div>
         </div>
-
-
-
-
-
       }
-      <div onClick={leadMancantiPopup == false ? () => setLeadMancantiPopup(true) : null} className={`${leadMancantiPopup == true ? 'filtralead leadMancantiContainer' : 'filtralead leadMancantiContainer-closed'}`}>
-        <svg id="modalclosingicon-mancanti" onClick={() => setLeadMancantiPopup(false)} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
-        <div className="leadMancanti">
-            <h5 className="comparsa">Ti rimangono ancora <span>{monthlyLeadCounter} lead</span>. Hai bisogno di più
-          contatti? <a href="/account">Cambia il tuo piano</a> o <a href="/boost">effettua un Boost</a></h5>
-            <h5 className="scomparsa">Apri</h5>
-          
-        </div>
-      </div>
     </div>
     </>
   );

@@ -8,15 +8,38 @@ import bonificato from '../../../imgs/bonificato.png';
 const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
     const [motivo, setMotivo] = useState("");
     const [importoBonificato, setImportoBonificato] = useState("");
+    const [patientType, setPatientType] = useState('');
+    const [treatment, setTreatment] = useState('');
+    const [location, setLocation] = useState('');
 
-    const [motivoNonValidoList, setMotivoNonValidoList] = useState([
-        "Linea disattivata", "Numero errato", "Lead doppione", "Lead in carico ad ateneo"
-    ]);
+  const patientTypes = ["Nuovo paziente", "Gia’ paziente"];
+  const treatments = ["Impianti", "Pulizia dei denti", "Protesi Mobile", "Sbiancamento", "Ortodonzia", "Faccette dentali"];
+  const locations = [
+    "Desenzano Del Garda", "Melzo", "Carpi", "Lodi", "Cantù", "Mantova", "Seregno", "Milano Piazza Castelli", "Abbiategrasso",
+    "Pioltello", "Vigevano", "Milano Via Parenzo", "Settimo Milanese", "Cremona", "Milano", "Monza", "Busto Arsizio", "Brescia",
+    "Cinisello Balsamo", "Cologno Monzese", "Varese", "Como", "San Giuliano Milanese", "Milano", "Bergamo", "Roma Marconi",
+    "Roma Balduina", "Roma Prati Fiscali", "Roma Casilina", "Roma Tiburtina", "Roma Torre Angela", "Ostia", "Pomezia",
+    "Ciampino", "Capena", "Cassino", "Frosinone", "Latina", "Valmontone outlet", "Roma Tuscolana", "Civitavecchia",
+    "Terni", "Perugia", "Arezzo", "Firenze", "Lucca", "Prato", "Piacenza", "Ferrara", "Cesena", "Forlì", "Reggio Emilia",
+    "Modena", "Parma", "Bologna", "Rovigo", "Treviso", "Padova", "Verona", "Vicenza", "Mestre", "Torino Chironi",
+    "Settimo Torinese", "Biella", "Torino Botticelli", "Bari", "Genova", "Cagliari", "Sassari", "Pordenone", "Rimini",
+    "Ravenna", "Rho", "Anzio"
+  ];
+
+  const handlePatientTypeChange = (event) => {
+    setPatientType(event.target.value);
+  };
+
+  const handleTreatmentChange = (event) => {
+    setTreatment(event.target.value);
+  };
+
+  const handleLocationChange = (event) => {
+    setLocation(event.target.value);
+  };
+
     const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
-        "Disconoscimento richiesta", "Richiesta vecchia", "Nessuna risposta",
-        "Solo curiosità", "Non vuole intermediari", "Fuori budget", "Prodotto non disponibile",
-        "Altro ateneo", "Difficoltà nel reperire documentazione", "Titolo straniero senza equipollenza",
-        "Prevalutazione rifiutata", "Motivi familiari/lavorativi"
+        "Numero Errato", "Non interessato", "Fuori Zona",
     ]);
     const [motivoVendutoList, setMotivoVendutoList] = useState([
         "Promozione / sconto", "Convenzione", "Prevalutazione corretta",
@@ -24,8 +47,7 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
         "Tempi brevi", "Sede d’esame vicino casa", "Consulenza orientatore",
     ]);
 
-    const motivoList = type === "Venduto" ? motivoVendutoList :
-    type === "Non valido" ? motivoNonValidoList : motivoLeadPersaList;
+    const motivoList = type === "Venduto" ? motivoVendutoList : motivoLeadPersaList;
 
     const saveMotivo = () => {
         if (motivo !== "") {
@@ -58,11 +80,6 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
                 <h4>Lead Venduta</h4>
                 <p>Lo stato della lead è stato cambiato, specifica la leva di vendita utilizzata con una delle seguenti opzioni:</p>   
              </div>
-            ) : type === "Non valido" ? (
-            <div>   
-                <h4>Lead Non valida</h4>
-                <p>Lo stato della lead è stato cambiato, specifica il motivo selezionando una delle seguenti opzioni:</p>   
-             </div>
             ) : (
             <div>   
                 <h4>Lead Persa</h4>
@@ -70,7 +87,8 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
              </div>
             )}
         </div>
-        <div className='choose-motivo'>
+        {type !== "Venduto" && type !== "Fissato" ?
+         (<div className='choose-motivo'>
             {motivoList.map((opzione, index) => (
                 <label key={index} className="radio-label">
                     <input
@@ -83,20 +101,45 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
                     {opzione}
                 </label>
             ))}
-        </div>
-        {type === "Venduto" && 
-        <div className='fatturato'>
-            <p>Inserisci importo della retta annuale</p>
-            <div>
-                <input
-                type="number"
-                value={importoBonificato}
-                onChange={(e) => setImportoBonificato(e.target.value)}
-                 />
-                <img src={bonificato} />
+        </div>) : (
+          <div className='motivo-venduto'>
+            <div className='choose-motivo'>
+            <p style={{textAlign: 'center'}}>Tipologia paziente</p>
+            {patientTypes.map((opzione, index) => (
+                <label key={index} className="radio-label">
+                    <input
+                    type="radio"
+                    name="motivo"
+                    value={opzione}
+                    checked={motivo === opzione}
+                    onChange={() => setMotivo(opzione)}
+                    />
+                    {opzione}
+                </label>
+                ))}
             </div>
-        </div>
-        }
+       
+             <div className='venduto-motivo'>
+               <label htmlFor="treatmentSelect">Trattamento:</label>
+               <select id="treatmentSelect" onChange={handleTreatmentChange} value={treatment}>
+                 <option value="">Seleziona</option>
+                 {treatments.map(treatment => (
+                   <option key={treatment} value={treatment}>{treatment}</option>
+                 ))}
+               </select>
+             </div>
+       
+             <div className='venduto-motivo'>
+               <label htmlFor="locationSelect">Luogo Prenotazione:</label>
+               <select id="locationSelect" onChange={handleLocationChange} value={location}>
+                 <option value="">Seleziona</option>
+                 {locations.map(location => (
+                   <option key={location} value={location}>{location}</option>
+                 ))}
+               </select>
+             </div>
+         </div>
+        )}
         <div className='salva-motivo'>
             <button onClick={saveMotivo}>Salva modifiche</button>
         </div>

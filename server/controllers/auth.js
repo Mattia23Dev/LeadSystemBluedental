@@ -99,23 +99,13 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { email, password, accediCome } = req.body;
+    const { email, password } = req.body;
 
     let user;
 
-    if (accediCome === 'admin') {
       user = await User.findOne({ email });
-    } else if (accediCome === 'orientatore') {
-      user = await Orientatore.findOne({ email });
-      user.new = false;
-    } else {
-      return res.status(400).json({ error: 'Valore accediCome non valido' });
-    }
-
     if (!user) {
-      return res.json({
-        error: 'Nessun utente trovato',
-      });
+      user = await Orientatore.findOne({ email });
     }
 
     const match = await comparePassword(password, user.password);

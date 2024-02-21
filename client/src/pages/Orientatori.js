@@ -218,11 +218,10 @@ const Orientatori = () => {
                   <table style={{ minWidth: '40%' }} aria-label="simple table" className="table-container">
                     <thead style={{ top: "1rem" }}>
                       <tr>
-                        <th style={{ color: 'rgba(0, 0, 0, 0.31)', fontSize: '25px', fontWeight: "500" }}>Nome</th>
-                        <th style={{ color: 'rgba(0, 0, 0, 0.31)', fontSize: '25px', fontWeight: "500" }}>Cognome</th>
-                        <th style={{ color: 'rgba(0, 0, 0, 0.31)', fontSize: '25px', fontWeight: "500" }}>Telefono</th>
-                        <th style={{ color: 'rgba(0, 0, 0, 0.31)', fontSize: '25px', fontWeight: "500" }}>Email</th>
-                        <th style={{ color: 'rgba(0, 0, 0, 0.31)', fontSize: '25px', fontWeight: "500" }}>Modifica</th>
+                        <th style={{ color: 'rgba(0, 0, 0, 0.31)', fontSize: '20px', fontWeight: "500" }}>Nome</th>
+                        <th style={{ color: 'rgba(0, 0, 0, 0.31)', fontSize: '20px', fontWeight: "500" }}>Telefono</th>
+                        <th style={{ color: 'rgba(0, 0, 0, 0.31)', fontSize: '20px', fontWeight: "500" }}>Email</th>
+                        <th style={{ color: 'rgba(0, 0, 0, 0.31)', fontSize: '20px', fontWeight: "500" }}>Modifica</th>
                       </tr>
                     </thead>
                     <tbody style={{ textAlign: 'left', width: '100%' }} className="table-body-container">
@@ -235,8 +234,7 @@ const Orientatori = () => {
                         )
                         .map((row) =>
                           <tr key={row._id}>
-                            <td>{row.nome}</td>
-                            <td>{row.cognome}</td>
+                            <td>{row.nome + ' ' + row.cognome}</td>
                             <td>{row.telefono}</td>
                             <td>
                               {row.email}
@@ -255,7 +253,7 @@ const Orientatori = () => {
             </div>
           </div>
           <div className='right-orientatori'>
-            <h5 style={{ fontSize: "25px", width: "90%", color: "grey" }}>Classifica <span style={{ color: "black" }}>orientatori</span></h5>
+            <h5 style={{ fontSize: "20px", width: "90%", color: "grey" }}>Classifica <span style={{ color: "black" }}>orientatori</span></h5>
             <div className='classifica'>
               <div id='overflowhandler'>
                 {arrayFatturatoPerOrientatoreUser && arrayFatturatoPerOrientatoreUser

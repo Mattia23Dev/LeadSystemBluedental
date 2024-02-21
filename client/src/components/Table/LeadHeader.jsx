@@ -7,7 +7,7 @@ import '../MainDash/MainDash.scss';
 import './LeadEntry.scss'
 
 export default function LeadHeader({ 
-  esito, SETtoggles, toggles, filteredData, type, getOtherLeads, refreshate }) {
+  esito, SETtoggles, toggles, filteredData, type, getOtherLeads, refreshate, getOtherLeadsOri }) {
 
   const [state, setState] = useContext(UserContext);
   const userId = state.user._id;
@@ -25,7 +25,11 @@ export default function LeadHeader({
           SETtoggles({ ...toggles, inlavorazione: !toggles.inlavorazione })
         else if (type == "Non interessato" || type == "Lead persa"){
         if (refreshate){
-          getOtherLeads();
+          if (state.user.role && state.user.role === "orientatore"){
+            getOtherLeadsOri();
+          } else {
+            getOtherLeads();
+          }
         } else {
           SETtoggles({ ...toggles, noninteressato: !toggles.noninteressato })
         }
@@ -47,7 +51,7 @@ export default function LeadHeader({
           SETtoggles({ ...toggles, nonRisponde: !toggles.nonRisponde })
           else if (type == "Iscrizione posticipata")
           SETtoggles({ ...toggles, iscrizionePosticipata: !toggles.iscrizionePosticipata })
-          else if (type == "Irraggiungibile")
+          else if (type == "Da richiamare")
           SETtoggles({ ...toggles, irraggiungibile: !toggles.irraggiungibile })
       }}>
       <span>{type == "Venduto" ? "Venduto" : type}</span>

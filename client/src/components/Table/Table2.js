@@ -37,6 +37,9 @@ export default function Table2({ onResults, searchval, setLeadsPdf }) {
   const [selectedOrientatore, setSelectedOrientatore] = useState();
   const [selectedOrientatoreToChange, setSelectedOrientatoreToChange] = useState();
   const [changeOrientatore, setChangeOrientatore] = useState(false);
+  const [patientType, setPatientType] = useState('');
+  const [treatment, setTreatment] = useState('');
+  const [location, setLocation] = useState('');
   const [leadMancantiPopup, setLeadMancantiPopup] = useState(true);
   const [filtroDiRiserva, setFiltroDiRiserva] = useState([]);
   const [selectedCity, setSelectedCity] = useState('');
@@ -756,6 +759,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
       } 
       setPopupModify(false);
       setDeleting(false);
+      setRefreshate(true)
     } catch (error) {
       console.error(error.message);
       toast.error('Si è verificato un errore.')
@@ -770,7 +774,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
   const updateLeadEsito = async () => {
     const leadId = selectedLead.id
     try {
-      if (esito === "Non valido" || esito === "Venduto" || esito === "Non interessato"){
+      if (esito === "Non valido" || esito === "Non interessato"){
         if (!motivo || motivo == ""){
           window.alert("Inserisci il motivo")
           return
@@ -779,7 +783,23 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           esito,
           fatturato,
           motivo,
-        };   
+        }; 
+        const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+        setPopupModifyEsito(false);
+        SETheaderIndex(999);             
+        }
+      } else if (esito === "Venduto"){
+        if (patientType === "" || treatment === "" || location === ""){
+          window.alert("Compila i campi")
+          return
+        } else {
+        const modifyLead = {
+          esito,
+          fatturato,
+          tipo: patientType, 
+          trattPrenotato: treatment, 
+          luogo: location,
+        }; 
         const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
         setPopupModifyEsito(false);
         SETheaderIndex(999);             
@@ -800,6 +820,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
       } else{
         fetchLeads(orientatoriOptions);
       }
+      setRefreshate(true)
       toast.success('Il lead è stato modificato con successo.')
     } catch (error) {
       console.error(error);
@@ -947,19 +968,23 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
       } else{
         fetchLeads(orientatoriOptions);
       }
+      setRefreshate(true)
       console.log(response.data.message);
     } catch (error) {
       console.error(error);
     }
   };
 
-  const updateLeadEsitoConMotivo = async (motivo, leadId, fatturato, esito) => {
+  const updateLeadEsitoConMotivo = async (motivo, leadId, fatturato, esito, tipo, trattPrenotato, luogo) => {
     setPopupMotivi(false);
     try {
       const modifyLead = {
         esito,
         fatturato,
         motivo,
+        tipo, 
+        trattPrenotato, 
+        luogo
       };
       const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId.id}`, modifyLead);
 
@@ -969,15 +994,13 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
       } else{
         fetchLeads(orientatoriOptions);
       }
+      setRefreshate(true)
     } catch (error) {
       console.error(error);
     }
   };
 
   const secref = React.useRef();
-
-  const [etichettaModify, setEtichettaModify] = useState(false);
-  const [leadSel, setLeadSel] = useState(null);
 
   const [nuovaEtichetta, setNuovaEtichetta] = useState('');
 
@@ -996,12 +1019,14 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
         setPopupModify={() => setPopupModify(false)}
         deleteLead={deleteLead}
         popupRef={popupRef}
+        setRefreshate={setRefreshate}
         fetchLeads={() => {
           if (state.user.role && state.user.role === "orientatore"){
             getOrientatoreLeads();
           } else{
             fetchLeads(orientatoriOptions);
           }
+          setRefreshate(true)
         }}
          />
          </div>
@@ -1136,111 +1161,6 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
               </div>
             </div>
       }
-
-      {esitoOpen &&
-        <div className="popup-container">
-          <div className="popup" id="filterbyesito" ref={popupRef}>
-
-            <div className='popup-top'>
-              <h4>Seleziona un esito da filtrare</h4>
-            </div>
-
-            <svg id="modalclosingicon" onClick={() => setEsitoOpen(false)} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
-
-            <div className="labelwrapper">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selectedStatusEsito.dacontattare}
-                  onChange={() => toggleFilter('dacontattare')}
-                />
-                <h3>
-                  Da contattare
-                </h3>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selectedStatusEsito.inlavorazione}
-                  onChange={() => toggleFilter('inlavorazione')}
-                />
-                <h3>
-                  In lavorazione
-                </h3>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selectedStatusEsito.noninteressato}
-                  onChange={() => toggleFilter('noninteressato')}
-                />
-                <h3>
-                  Non interessato
-                </h3>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selectedStatusEsito.nonRisponde}
-                  onChange={() => toggleFilter('nonRisponde')}
-                />
-                <h3>
-                  Non risponde
-                </h3>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selectedStatusEsito.nonValido}
-                  onChange={() => toggleFilter('nonValido')}
-                />
-                <h3>
-                  Non valido
-                  {/* <h4>Non risponde al telefono</h4> */}
-                </h3>
-              </label>
-
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selectedStatusEsito.opportunita}
-                  onChange={() => toggleFilter('opportunita')}
-                />
-                <h3>
-                  Opportunità
-                </h3>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selectedStatusEsito.invalutazione}
-                  onChange={() => toggleFilter('invalutazione')}
-                />
-                <h3>
-                  In valutazione
-                  {/* <h4>Non risponde al telefono</h4> */}
-                </h3>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selectedStatusEsito.venduto}
-                  onChange={() => toggleFilter('venduto')}
-                />
-                <h3>
-                  Venduto
-                  {/* <h4>Non risponde al telefono</h4> */}
-                </h3>
-              </label>
-            </div>
-
-
-            <button className="btn-orie" style={{ fontSize: "19px" }} onClick={handleClickEsito}>Applica filtri</button>
-            <div style={{ cursor: "pointer", marginTop: "20px" }} onClick={() => {setEsitoOpen(false); setOrientatoriOpen(false)}}><u>Torna indietro</u></div>
-          </div>
-        </div>
-      }
-
         {addOpen && <AddLeadPopup
         setAddOpen={setAddOpen} popupRef={popupRef} fetchLeads={() => {
           if (state.user.role && state.user.role === "orientatore"){
@@ -1248,6 +1168,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           } else{
             fetchLeads(orientatoriOptions);
           }
+          setRefreshate(true)
         }}
          />}
       <Suspense fallback={<div>Loading...</div>}>
@@ -1322,8 +1243,8 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
                                              type="radio"
                                              name="motivo"
                                              value={opzione}
-                                             checked={motivo === opzione}
-                                             onChange={() => setMotivo(opzione)}
+                                             checked={patientType === opzione}
+                                             onChange={() => setPatientType(opzione)}
                                              />
                                              {opzione}
                                          </label>
@@ -1332,7 +1253,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
                                      {esito === 'Venduto' ?
                                      <>
                                      <label className='label-not-blue'>Trattamento</label>
-                                             <select className="selectMotivo" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
+                                             <select className="selectMotivo" value={treatment} onChange={(e) => setTreatment(e.target.value)}>
                                              <option value='' disabled>Seleziona motivo</option>
                                              {treatments.map((motivoOption, index) => (
                                                  <option key={index} value={motivoOption}>{motivoOption}</option>
@@ -1344,7 +1265,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
                                      {esito === "Venduto" && (
                                          <>
                                          <label className='label-not-blue'>Città</label>
-                                             <select className="selectMotivo" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
+                                             <select className="selectMotivo" value={location} onChange={(e) => setLocation(e.target.value)}>
                                              <option value='' disabled>Seleziona motivo</option>
                                              {locations.map((motivoOption, index) => (
                                                  <option key={index} value={motivoOption}>{motivoOption}</option>

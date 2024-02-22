@@ -50,6 +50,10 @@ const LeadSchema = new Schema({
     tentativiChiamata: {
       type: String,
     },
+    giàSpostato: {
+      type: Boolean,
+      default: false,
+    },
     dataCambiamentoEsito: {
       type: Date,
       default: null,
@@ -78,6 +82,9 @@ const LeadSchema = new Schema({
     motivo: String,
     recallDate: Date,
     recallHours: String,
+    tipo: String, 
+    trattPrenotato: String, 
+    luogo: String,
   });
 
 

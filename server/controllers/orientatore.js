@@ -253,17 +253,17 @@ exports.createOrientatore = async (req, res) => {
   
       Object.assign(lead, req.body);
       lead.lastModify = new Date().toISOString();
+      if (lead.esito === "Non risponde"){
+        if (lead.giàSpostato === false && parseInt(req.body.tentativiChiamata) > 1 ){
+          const orientatoriDisponibili = await Orientatore.find({ _id: { $ne: lead.orientatori } });
+          if (orientatoriDisponibili.length > 0) {
+            const orientatoreCasuale = orientatoriDisponibili[Math.floor(Math.random() * orientatoriDisponibili.length)];
+            lead.orientatori = orientatoreCasuale._id;
+            lead.giàSpostato = true;
+          }        
+        }
+      }
       await lead.save();
-  
-      if (req.body.esito === 'Non valido') {
-        user.monthlyLeadCounter += 1;
-        await user.save();
-      }
-
-      if (lead.esito === 'Non valido' && req.body.esito !== 'Non valido') {
-        user.monthlyLeadCounter -= 1;
-        await user.save();
-      }
       
       const updatedLead = await lead.populate('orientatori');
   

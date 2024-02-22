@@ -34,6 +34,9 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
     const [mostraCalendar, setMostraCalendar] = useState(false);
     const [selectedDate, setSelectedDate] = useState(lead.recallDate && lead.recallDate !== null ? new Date(lead.recallDate) : new Date());
     const [selectedTime, setSelectedTime] = useState({ hours: 7, minutes: 0 });
+    const [patientType, setPatientType] = useState('');
+    const [treatment, setTreatment] = useState('');
+    const [location, setLocation] = useState('');
 
     const [motivo, setMotivo] = useState(lead.motivo ? lead.motivo : "");
     const patientTypes = ["Nuovo paziente", "Gia’ paziente"];
@@ -287,19 +290,42 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
     };
 
     const saveMotivoverify = async () => {
-        if (esito === "Non valido" || esito === "Venduto" || esito === "Non interessato"){
+        if (esito === "Non valido" || esito === "Non interessato"){
             if (!motivo || motivo == ""){
               window.alert("Inserisci il motivo")
               return
-            } else if (esito === "Venduto" && fatturato === "0" ) {
-                window.alert("Inserisci il fatturato")
-                return
             } else {
                 try {
                     const modifyLead = {
                         esito,
                         fatturato,
                         motivo,
+                      };   
+                      const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+                      onUpdateLead({
+                        ...lead,
+                        status: esito,
+                        motivo: motivo,
+                        fatturato: fatturato
+                    });
+                        fetchLeads();
+                        toast.success('Stato modificato!');
+                        setChooseMotivo(false);
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+        } else if (esito === "Venduto"){
+            if (treatment === "" || location === "" || patientType === ""){
+                window.alert('Compila tutti i campi')
+            } else {
+                try {
+                    const modifyLead = {
+                        esito,
+                        fatturato,
+                        tipo: patientType, 
+                        trattPrenotato: treatment, 
+                        luogo: location,
                       };   
                       const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
                       onUpdateLead({
@@ -436,7 +462,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                                                 type="radio"
                                                 name="motivo"
                                                 value={opzione}
-                                                checked={motivo === opzione}
+                                                checked={patientType === opzione}
                                                 onChange={() => setMotivo(opzione)}
                                                 />
                                                 {opzione}
@@ -446,7 +472,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                                         {esito === 'Venduto' ?
                                         <>
                                         <label className='label-not-blue'>Trattamento</label>
-                                                <select className="selectMotivo" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
+                                                <select className="selectMotivo" value={treatment} onChange={(e) => setTreatment(e.target.value)}>
                                                 <option value='' disabled>Seleziona motivo</option>
                                                 {treatments.map((motivoOption, index) => (
                                                     <option key={index} value={motivoOption}>{motivoOption}</option>
@@ -458,7 +484,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                                         {esito === "Venduto" && (
                                             <>
                                             <label className='label-not-blue'>Città</label>
-                                                <select className="selectMotivo" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
+                                                <select className="selectMotivo" value={location} onChange={(e) => setLocation(e.target.value)}>
                                                 <option value='' disabled>Seleziona motivo</option>
                                                 {locations.map((motivoOption, index) => (
                                                     <option key={index} value={motivoOption}>{motivoOption}</option>

@@ -26,10 +26,6 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
     "Ravenna", "Rho", "Anzio"
   ];
 
-  const handlePatientTypeChange = (event) => {
-    setPatientType(event.target.value);
-  };
-
   const handleTreatmentChange = (event) => {
     setTreatment(event.target.value);
   };
@@ -50,19 +46,14 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
     const motivoList = type === "Venduto" ? motivoVendutoList : motivoLeadPersaList;
 
     const saveMotivo = () => {
-        if (motivo !== "") {
-            if (type === "Venduto"){
-              if (importoBonificato !== ""){
-                spostaLead(motivo, leadId, importoBonificato, type);   
-              }  else {
-                window.alert('Seleziona l\'importo');
-              }
-            } else {   
-             spostaLead(motivo, leadId, "0", type);   
-            }
-            
-        } else {
-            window.alert('Seleziona un motivo');
+        if (type === "Venduto") {
+             spostaLead("", leadId, importoBonificato, type, patientType, treatment, location);
+            } else {
+                if (motivo !== ""){
+                   spostaLead(motivo, leadId, "0", type); 
+                }else {
+                    window.alert('Inserisci il motivo')
+                }
         }
     }
 
@@ -111,8 +102,8 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
                     type="radio"
                     name="motivo"
                     value={opzione}
-                    checked={motivo === opzione}
-                    onChange={() => setMotivo(opzione)}
+                    checked={patientType === opzione}
+                    onChange={() => setPatientType(opzione)}
                     />
                     {opzione}
                 </label>

@@ -103,7 +103,8 @@ const calculateAndAssignLeadsEveryDay = async () => {
           utmContent: leadWithoutUser.annunci ? leadWithoutUser.annunci : '',
           utmAdset: leadWithoutUser.adsets ? leadWithoutUser.adsets : '',
           utmCampaign: leadWithoutUser.name ? leadWithoutUser.name : '',
-          tentativiChiamata: '0'
+          tentativiChiamata: '0',
+          giàSpostato: false,
         });
 
         try {

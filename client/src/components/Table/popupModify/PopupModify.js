@@ -15,7 +15,7 @@ import 'react-calendar/dist/Calendar.css';
 import recallgreen from '../../../imgs/recallGren.png';
 import moment from 'moment';
 
-const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead , admin = false, popupRef, fetchLeads, setInfoPopup}) => {
+const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshate , admin = false, popupRef, fetchLeads, setInfoPopup}) => {
     const [state, setState] = useContext(UserContext);
     console.log(lead);
     const leadId = lead.id;
@@ -34,6 +34,10 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead ,
     const [mostraCalendar, setMostraCalendar] = useState(false);
     const [selectedDate, setSelectedDate] = useState(lead.recallDate && lead.recallDate !== null ? new Date(lead.recallDate) : new Date());
     const [selectedTime, setSelectedTime] = useState({ hours: 7, minutes: 0 });
+    const [patientType, setPatientType] = useState('');
+    const [treatment, setTreatment] = useState('');
+    const [location, setLocation] = useState('');
+    const [tentativiChiamata, setTentativiChiamata] = useState(lead.tentativiChiamata ? lead.tentativiChiamata : "0");
 
     const [motivo, setMotivo] = useState(lead.motivo ? lead.motivo : "");
     const patientTypes = ["Nuovo paziente", "Gia’ paziente"];
@@ -123,6 +127,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead ,
         
             console.log('Lead aggiornata:', response.data);
             fetchLeads();
+            setRefreshate(true)
             toast.success('Recall aggiunta!');
             setMostraCalendar(false);
             onUpdateLead({
@@ -260,9 +265,11 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead ,
                         motivo: "",
                         città,
                         trattamento,
+                        tentativiChiamata
                     };
                     const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
                     fetchLeads();
+                    setRefreshate(true)
                     setPopupModify(false);
                     toast.success('Il lead è stato modificato con successo.')
                 } catch (error) {
@@ -281,10 +288,12 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead ,
                     motivo: "",
                     città,
                     trattamento,
+                    tentativiChiamata
                 };
                 const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
                 fetchLeads();
                 setPopupModify(false);
+                setRefreshate(true)
                 toast.success('Il lead è stato modificato con successo.')
             } catch (error) {
                 console.error(error);
@@ -309,19 +318,17 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead ,
             fetchLeads();
             setModificaNome(false);
             toast.success('Nome modificato!')
+            setRefreshate(true)
         } catch (error) {
             console.error(error);
         }
     };
 
     const saveMotivoverify = async () => {
-        if (esito === "Non valido" || esito === "Venduto" || esito === "Non interessato"){
+        if (esito === "Non valido" || esito === "Non interessato"){
             if (!motivo || motivo == ""){
               window.alert("Inserisci il motivo")
               return
-            } else if (esito === "Venduto" && fatturato === "0" ) {
-                window.alert("Inserisci il fatturato")
-                return
             } else {
                 try {
                     const modifyLead = {
@@ -338,6 +345,34 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead ,
                     });
                         fetchLeads();
                         toast.success('Stato modificato!');
+                        setRefreshate(true)
+                        setChooseMotivo(false);
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+        } else if (esito === "Venduto"){
+            if (treatment === "" || location === "" || patientType === ""){
+                window.alert('Compila tutti i campi')
+            } else {
+                try {
+                    const modifyLead = {
+                        esito,
+                        fatturato,
+                        tipo: patientType, 
+                        trattPrenotato: treatment, 
+                        luogo: location,
+                      };   
+                      const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+                      onUpdateLead({
+                        ...lead,
+                        status: esito,
+                        motivo: motivo,
+                        fatturato: fatturato
+                    });
+                        fetchLeads();
+                        toast.success('Stato modificato!');
+                        setRefreshate(true)
                         setChooseMotivo(false);
                 } catch (error) {
                     console.error(error);
@@ -360,6 +395,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead ,
             });
             fetchLeads();
             toast.success('Stato modificato!');
+            setRefreshate(true)
             setChooseMotivo(false);
             } catch (error) {
               console.error(error);
@@ -398,6 +434,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead ,
                 recallHours,
             });
             fetchLeads();
+            setRefreshate(true)
           } else {
             console.error('Errore durante l\'eliminazione della recall');
           }
@@ -464,8 +501,8 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead ,
                                                 type="radio"
                                                 name="motivo"
                                                 value={opzione}
-                                                checked={motivo === opzione}
-                                                onChange={() => setMotivo(opzione)}
+                                                checked={patientType === opzione}
+                                                onChange={() => setPatientType(opzione)}
                                                 />
                                                 {opzione}
                                             </label>
@@ -474,7 +511,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead ,
                                         {esito === 'Venduto' ?
                                         <>
                                         <label className='label-not-blue'>Trattamento</label>
-                                                <select className="selectMotivo" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
+                                                <select className="selectMotivo" value={treatment} onChange={(e) => setTreatment(e.target.value)}>
                                                 <option value='' disabled>Seleziona motivo</option>
                                                 {treatments.map((motivoOption, index) => (
                                                     <option key={index} value={motivoOption}>{motivoOption}</option>
@@ -486,7 +523,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead ,
                                         {esito === "Venduto" && (
                                             <>
                                             <label className='label-not-blue'>Città</label>
-                                                <select className="selectMotivo" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
+                                                <select className="selectMotivo" value={location} onChange={(e) => setLocation(e.target.value)}>
                                                 <option value='' disabled>Seleziona motivo</option>
                                                 {locations.map((motivoOption, index) => (
                                                     <option key={index} value={motivoOption}>{motivoOption}</option>
@@ -558,12 +595,12 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead ,
                             <div className='tentativi-contatto'>
                                 <p>Numero tentativi di chiamata:</p>
                                 <div>
-                                    <button>1</button>
-                                    <button>2</button>
-                                    <button>3</button>
-                                    <button>4</button>
-                                    <button>5</button>
-                                    <button>6</button>
+                                    <button onClick={() => setTentativiChiamata("1")} className={tentativiChiamata === "1" ? "tent-active" : ""}>1</button>
+                                    <button onClick={() => setTentativiChiamata("2")} className={tentativiChiamata === "2" ? "tent-active" : ""}>2</button>
+                                    <button onClick={() => setTentativiChiamata("3")} className={tentativiChiamata === "3" ? "tent-active" : ""}>3</button>
+                                    <button onClick={() => setTentativiChiamata("4")} className={tentativiChiamata === "4" ? "tent-active" : ""}>4</button>
+                                    <button onClick={() => setTentativiChiamata("5")} className={tentativiChiamata === "5" ? "tent-active" : ""}>5</button>
+                                    <button onClick={() => setTentativiChiamata("6")} className={tentativiChiamata === "6" ? "tent-active" : ""}>6</button>
                                 </div>
                             </div>
                         </div>

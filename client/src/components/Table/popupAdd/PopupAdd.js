@@ -67,6 +67,7 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
         esito,
         orientatori: orientatori == "" ? null : orientatori,
         note,
+        città,
         trattamento,
         from: 'user',
       };

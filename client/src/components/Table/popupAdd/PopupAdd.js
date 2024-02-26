@@ -10,6 +10,7 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
   const [data, setData] = useState(new Date());
   const [nome, setNome] = useState('');
   const [cognome, setCognome] = useState('');
+  const [trattamento, setTrattamento] = useState('');
   const [email, setEmail] = useState('');
   const [numeroTelefono, setNumeroTelefono] = useState('');
   const [campagna, setCampagna] = useState('');
@@ -64,8 +65,9 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
         numeroTelefono,
         campagna,
         esito,
-        orientatori,
+        orientatori: orientatori == "" ? null : orientatori,
         note,
+        trattamento,
         from: 'user',
       };
 
@@ -115,9 +117,9 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
         </label>
         {state.user.role && state.user.role === "orientatore" ? null :
         <label>
-          Orientatori*:
+          Orientatori:
           <select value={orientatori} onChange={(e) => setOrientatori(e.target.value)}>
-            <option value="" disabled>Seleziona un orientatore</option>
+            <option value="">Nessun orientatore</option>
             {orientatoriOptions.map((option) => (
               <option key={option._id} value={option._id}>
                 {option.nome} {' '} {option.cognome}
@@ -147,6 +149,21 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
             {locations.map((motivoOption, index) => (
               <option key={index} value={motivoOption}>{motivoOption}</option>
             ))}
+          </select>
+        </label>
+        <label>
+          Trattamento:
+          <select required value={trattamento} onChange={(e) => setTrattamento(e.target.value)}>
+            <option value="" disabled>Seleziona un trattamento</option>
+            <option value='Implantologia per singolo dente'>Implantologia per singolo dente</option>
+            <option value='Implantologia a carico immediato'>Implantologia a carico immediato</option>
+            <option value="Implantologia computer guidata">Implantologia computer guidata</option>
+            <option value='Impianti per mancanza di osso (Impianti pterigoidei)'>Impianti per mancanza di osso (Impianti pterigoidei)</option>
+            <option value="Protesi dentale semifissa">Protesi dentale semifissa</option>
+            <option value='Pulizia dei denti'>Pulizia dei denti</option>
+            <option value="Ortodonzia trasparente">Ortodonzia trasparente</option>
+            <option value='Faccette dentali'>Faccette dentali</option>
+            <option value='Sbiancamento'>Sbiancamento</option>
           </select>
         </label>
         <label>

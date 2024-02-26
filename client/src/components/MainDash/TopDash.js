@@ -92,10 +92,10 @@ const TopDash = ({ hideexport = false,
 
         {hideexportLeads &&
             <div id='dwrep'>
-              <svg style={{ rotate: "90deg" }} width="25" height="25" viewBox="0 0 33 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg style={{ rotate: "90deg" }} width="20" height="20" viewBox="0 0 33 30" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M-4.52725e-07 19.0576L14.4375 19.0576L14.4375 25.303L24.75 14.8939L14.4375 4.48479L14.4375 10.7303L-8.14905e-07 10.7303L-4.52725e-07 19.0576ZM28.875 29.4667L33 29.4667L33 0.321146L28.875 0.321147L28.875 29.4667Z" />
               </svg>
-              <a style={{cursor: 'pointer'}} onClick={generatePdf}>Export as CSV | XLS</a>
+              <a className='export-lead' style={{cursor: 'pointer'}} onClick={generatePdf}>Export as CSV | XLS</a>
             </div>
           }
           {!hideciao &&

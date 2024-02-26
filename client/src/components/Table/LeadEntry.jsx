@@ -76,7 +76,7 @@ export default function LeadEntry({ secref, id, index, data, handleModifyPopup, 
                         const parts = data.orientatore.split(' ');
 
                         if (parts.length >= 2) {
-                          const iniziali = parts[0].charAt(0).toUpperCase() + parts[1].charAt(0).toUpperCase();
+                          const iniziali = parts[0].trim().charAt(0).toUpperCase() + parts[1].trim().charAt(0).toUpperCase();
                           return <span>{iniziali}</span>;
                         } else {
                           return "NV";

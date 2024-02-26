@@ -17,7 +17,6 @@ import moment from 'moment';
 
 const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshate , admin = false, popupRef, fetchLeads, setInfoPopup}) => {
     const [state, setState] = useContext(UserContext);
-    console.log(lead);
     const leadId = lead.id;
     const userId = state.user._id;
     const [email, setEmail] = useState(lead.email);
@@ -56,39 +55,16 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
     const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         "Numero Errato", "Non interessato", "Fuori Zona",
     ]);
-    const [motivoVendutoList, setMotivoVendutoList] = useState([
-        "Promozione / sconto", "Convenzione", "Prevalutazione corretta",
-        "Scatto di carriera", "Titolo necessario per concorso pubblico / candidatura",
-        "Tempi brevi", "Sede d’esame vicino casa", "Consulenza orientatore",
-    ]);
 
-    /*function mapCampagnaPerLeadsystem(nomeCampagna) {
-        if (nomeCampagna.includes('Comparatore')) {
-          return 'Comparatore';
-        } else if (nomeCampagna.includes('Donne lavoratrici')) {
-          return 'Donna lavoratrice';
-        } else if (nomeCampagna.includes('Lavoratori')) {
-          return 'Lavoratori';
-        } else if (nomeCampagna.includes('INSEGNANTI')) {
-          return 'Insegnanti';
-        } else if (nomeCampagna.includes('FORZE DELL\'ORDINE')) {
-          return 'Forze dell\'ordine';
-        } else if (nomeCampagna.includes('Lavoratori settore pubblico')) {
-          return 'Lavoratori settore pubblico';
-        } else if (nomeCampagna.includes('Comparatore Landing')) {
-          return 'Comparatore';
-        } else if (nomeCampagna.includes('chatbot')) {
-          return 'chatbot';
-        } else if (nomeCampagna.includes('mamme_donne')) {
-          return 'Mamme';
-        } else if (nomeCampagna.includes('All Inclusive')) {
-          return 'All Inclusive';
-        } else if (nomeCampagna.includes('Over 45')) {
-          return 'Over 45';
+    function mapCampagnaPerLeadsystem(nomeCampagna) {
+        if (nomeCampagna.includes('Altri centri')) {
+          return 'Meta Web - Altri centri';
+        } else if (nomeCampagna.includes('Meta Web')) {
+          return 'Meta Web';
         } else {
-          return "Comparatore";
+          return "Meta Web";
         }
-      }*/
+      }
 
     const handleDateChange = (date) => {
       setSelectedDate(date);
@@ -249,7 +225,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
     }, [])
 
     const updateLead = async () => {
-        if (esito === "Non valido" || esito === "Venduto" || esito === "Non interessato"){
+        if (esito === "Non valido" || esito === "Fissato" || esito === "Non interessato"){
             if (!motivo || motivo == ""){
               window.alert("Inserisci il motivo")
               return
@@ -351,7 +327,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                     console.error(error);
                 }
             }
-        } else if (esito === "Venduto"){
+        } else if (esito === "Fissato"){
             if (treatment === "" || location === "" || patientType === ""){
                 window.alert('Compila tutti i campi')
             } else {
@@ -475,7 +451,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                         <span><span>o</span></span>
                                         Non risponde
                                     </div>
-                                    <div className={esito === "Irraggiungibile" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Irraggiungibile')}>
+                                    <div className={esito === "Da richiamare" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Da richiamare')}>
                                         <span><span>o</span></span>
                                         Da richiamare
                                     </div>
@@ -491,12 +467,12 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                             </select>
                                         )}
                                     </div>
-                                    <div className={esito === "Venduto" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Venduto')}>
+                                    <div className={esito === "Fissato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Fissato')}>
                                         <span><span>o</span></span>
                                         Fissato
-                                        {esito === "Venduto" && <div className='choose-motivo'>
+                                        {esito === "Fissato" && <div className='choose-motivo'>
                                         {patientTypes.map((opzione, index) => (
-                                            <label key={index} className="radio-label radio-label-scheda">
+                                            <label key={index}  style={{ fontSize: '14px', color: 'gray', width: '100%', display: 'flex', gap: '10px', alignItems: 'center'}} className="radio-label radio-label-scheda">
                                                 <input
                                                 type="radio"
                                                 name="motivo"
@@ -508,7 +484,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                             </label>
                                             ))}
                                         </div>}
-                                        {esito === 'Venduto' ?
+                                        {esito === 'Fissato' ?
                                         <>
                                         <label className='label-not-blue'>Trattamento</label>
                                                 <select className="selectMotivo" value={treatment} onChange={(e) => setTreatment(e.target.value)}>
@@ -520,7 +496,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                                 </>
                                             :
                                             null}
-                                        {esito === "Venduto" && (
+                                        {esito === "Fissato" && (
                                             <>
                                             <label className='label-not-blue'>Città</label>
                                                 <select className="selectMotivo" value={location} onChange={(e) => setLocation(e.target.value)}>
@@ -566,7 +542,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                     <p>{lead.lastModify && lead.lastModify !== null ? <><FiClock color='#3471CC' /> Data <b>ultima modifica</b>: <span>{formatDate(lead.date)}</span></> : ""}</p>
                                     <p style={{margin: '17px 0 10px 0'}}>Stato lead: 
                                         <span onClick={() => setChooseMotivo(true)}>{esito == "Non interessato" ? "Lead persa" : esito} <FaPencilAlt size={12} style={{marginLeft: '3px', cursor: 'pointer'}} /></span>
-                                        {esito === "Venduto" && fatturato !== "0" && <span>{fatturato}€</span>}
+                                        {esito === "Fissato" && fatturato !== "0" && <span>{fatturato}€</span>}
                                     </p>
                                     {motivo && motivo !== "" ? <p className='motivo-top'>Motivo: <span>{motivo}</span></p> : null}
                                 </div>
@@ -610,17 +586,17 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                             <div className='mi-div'>
                                 <div>
                                     <p>Telefono</p>
-                                    <input placeholder={lead.telephone} value={numeroTelefono} onChange={(e) => setNumeroTelefono(e.target.value)} />
+                                    <input placeholder={lead.telephone} disabled value={numeroTelefono} onChange={(e) => setNumeroTelefono(e.target.value)} />
                                 </div>
                                 <div>
                                     <p>Email</p>
-                                    <input placeholder={lead.email} value={email} onChange={(e) => setEmail(e.target.value)} />
+                                    <input placeholder={lead.email} disabled value={email} onChange={(e) => setEmail(e.target.value)} />
                                 </div>
                             </div>
                             <div className={lead.leadAmbassador ? 'mi-div mgm-div' : 'mi-div'}>
                                 <div>
                                     <p>Campagna</p>
-                                    <input placeholder={lead.campagna ? lead.campagna : ""} value={campagna ? campagna : ""} disabled onChange={(e) => setCampagna(e.target.value)} />
+                                    <input placeholder={lead.campagna ? lead.campagna : ""} value={mapCampagnaPerLeadsystem(lead.campagna)} disabled onChange={(e) => setCampagna(e.target.value)} />
                                 </div>
                                 {state.user.role && state.user.role === "orientatore" ? 
                                 <div>
@@ -657,11 +633,12 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                             <div className='mi-div'>
                                 <div>
                                     <p>Città</p>
-                                    <input placeholder={lead.città.charAt(0).toUpperCase()} value={città} onChange={(e) => setCittà(e.target.value)} />
+                                    <input disabled placeholder={lead.città.charAt(0).toUpperCase()} value={città} onChange={(e) => setCittà(e.target.value)} />
                                 </div>
-                                <div>
+                                <div className='trat-cont-input'>
                                     <p>Trattamento</p>
-                                    <input placeholder={lead.trattamento.replace(/_/g, ' ')} value={trattamento} onChange={(e) => setTrattamento(e.target.value)} />
+                                    <input className='input-trattamento-hover' disabled placeholder={lead.trattamento.replace(/_/g, ' ')} value={trattamento} onChange={(e) => setTrattamento(e.target.value)} />
+                                    <span className="trattamento-fullname">{lead.trattamento.replace(/_/g, ' ')}</span>
                                 </div>
                             </div>
                         </div>

@@ -51,8 +51,8 @@ const Orientatori = () => {
     event.preventDefault();
 
     const orientatoreData = {
-      nome: nome,
-      cognome: cognome,
+      nome: nome.trim(),
+      cognome: cognome.trim(),
       email: email,
       telefono: numeroTelefono,
       utente: userId,

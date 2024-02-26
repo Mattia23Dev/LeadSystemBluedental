@@ -17,7 +17,6 @@ import moment from 'moment';
 
 const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, deleteLead , admin = false, fetchLeads}) => {
     const [state, setState] = useContext(UserContext);
-    console.log(lead);
     const leadId = lead.id;
     const userId = state.user._id;
     const [email, setEmail] = useState(lead.email);
@@ -37,6 +36,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
     const [patientType, setPatientType] = useState('');
     const [treatment, setTreatment] = useState('');
     const [location, setLocation] = useState('');
+    const [tentativiChiamata, setTentativiChiamata] = useState(lead.tentativiChiamata ? lead.tentativiChiamata : "0");
 
     const [motivo, setMotivo] = useState(lead.motivo ? lead.motivo : "");
     const patientTypes = ["Nuovo paziente", "Gia’ paziente"];
@@ -55,11 +55,17 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
     const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         "Numero Errato", "Non interessato", "Fuori Zona",
     ]);
-    const [motivoVendutoList, setMotivoVendutoList] = useState([
-        "Promozione / sconto", "Convenzione", "Prevalutazione corretta",
-        "Scatto di carriera", "Titolo necessario per concorso pubblico / candidatura",
-        "Tempi brevi", "Sede d’esame vicino casa", "Consulenza orientatore",
-    ]);
+
+    
+    function mapCampagnaPerLeadsystem(nomeCampagna) {
+        if (nomeCampagna.includes('Altri centri')) {
+          return 'Meta Web - Altri centri';
+        } else if (nomeCampagna.includes('Meta Web')) {
+          return 'Meta Web';
+        } else {
+          return "Meta Web";
+        }
+      }
 
     const handleDateChange = (date) => {
       setSelectedDate(date);
@@ -219,7 +225,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
     }, [])
 
     const updateLead = async () => {
-        if (esito === "Non valido" || esito === "Venduto" || esito === "Non interessato"){
+        if (esito === "Non valido" || esito === "Fissato" || esito === "Non interessato"){
             if (!motivo || motivo == ""){
               window.alert("Inserisci il motivo")
               return
@@ -235,6 +241,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                         motivo: "",
                         città,
                         trattamento,
+                        tentativiChiamata
                     };
                     const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
                     fetchLeads();
@@ -256,6 +263,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                     motivo: "",
                     città,
                     trattamento,
+                    tentativiChiamata
                 };
                 const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
                 fetchLeads();
@@ -315,7 +323,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                     console.error(error);
                 }
             }
-        } else if (esito === "Venduto"){
+        } else if (esito === "Fissato"){
             if (treatment === "" || location === "" || patientType === ""){
                 window.alert('Compila tutti i campi')
             } else {
@@ -436,7 +444,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                                         <span><span>o</span></span>
                                         Non risponde
                                     </div>
-                                    <div className={esito === "Irraggiungibile" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Irraggiungibile')}>
+                                    <div className={esito === "Da richiamare" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Da richiamare')}>
                                         <span><span>o</span></span>
                                         Da richiamare
                                     </div>
@@ -452,24 +460,24 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                                             </select>
                                         )}
                                     </div>
-                                    <div className={esito === "Venduto" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Venduto')}>
+                                    <div className={esito === "Fissato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Fissato')}>
                                         <span><span>o</span></span>
                                         Fissato
-                                        {esito === "Venduto" && <div className='choose-motivo' style={{display: 'flex', flexDirection: 'column'}}>
+                                        {esito === "Fissato" && <div className='choose-motivo' style={{display: 'flex', flexDirection: 'column'}}>
                                         {patientTypes.map((opzione, index) => (
-                                            <label key={index} className="radio-label radio-label-scheda">
+                                            <label style={{ fontSize: '14px', color: 'gray', width: '100%', display: 'flex', gap: '10px', alignItems: 'center'}} key={index} className="radio-label radio-label-scheda">
                                                 <input
                                                 type="radio"
                                                 name="motivo"
                                                 value={opzione}
                                                 checked={patientType === opzione}
-                                                onChange={() => setMotivo(opzione)}
+                                                onChange={() => setPatientType(opzione)}
                                                 />
                                                 {opzione}
                                             </label>
                                             ))}
                                         </div>}
-                                        {esito === 'Venduto' ?
+                                        {esito === 'Fissato' ?
                                         <>
                                         <label className='label-not-blue'>Trattamento</label>
                                                 <select className="selectMotivo" value={treatment} onChange={(e) => setTreatment(e.target.value)}>
@@ -481,7 +489,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                                                 </>
                                             :
                                             null}
-                                        {esito === "Venduto" && (
+                                        {esito === "Fissato" && (
                                             <>
                                             <label className='label-not-blue'>Città</label>
                                                 <select className="selectMotivo" value={location} onChange={(e) => setLocation(e.target.value)}>
@@ -527,7 +535,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                                     <p>{lead.lastModify && lead.lastModify !== null ? <><FiClock color='#3471CC' /> Data <b>ultima modifica</b>: <span>{formatDate(lead.date)}</span></> : ""}</p>
                                     <p style={{margin: '17px 0 10px 0'}}>Stato lead: 
                                         <span onClick={() => setChooseMotivo(true)}>{esito == "Non interessato" ? "Lead persa" : esito} <FaPencilAlt size={12} style={{marginLeft: '3px', cursor: 'pointer'}} /></span>
-                                        {esito === "Venduto" && fatturato !== "0" && <span>{fatturato}€</span>}
+                                        {esito === "Fissato" && fatturato !== "0" && <span>{fatturato}€</span>}
                                     </p>
                                     {motivo && motivo !== "" ? <p className='motivo-top'>Motivo: <span>{motivo}</span></p> : null}
                                 </div>
@@ -556,12 +564,12 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                             <div className='tentativi-contatto'>
                                 <p>Numero tentativi di chiamata:</p>
                                 <div>
-                                    <button>1</button>
-                                    <button>2</button>
-                                    <button>3</button>
-                                    <button>4</button>
-                                    <button>5</button>
-                                    <button>6</button>
+                                    <button onClick={() => setTentativiChiamata("1")} className={tentativiChiamata === "1" ? "tent-active" : ""}>1</button>
+                                    <button onClick={() => setTentativiChiamata("2")} className={tentativiChiamata === "2" ? "tent-active" : ""}>2</button>
+                                    <button onClick={() => setTentativiChiamata("3")} className={tentativiChiamata === "3" ? "tent-active" : ""}>3</button>
+                                    <button onClick={() => setTentativiChiamata("4")} className={tentativiChiamata === "4" ? "tent-active" : ""}>4</button>
+                                    <button onClick={() => setTentativiChiamata("5")} className={tentativiChiamata === "5" ? "tent-active" : ""}>5</button>
+                                    <button onClick={() => setTentativiChiamata("6")} className={tentativiChiamata === "6" ? "tent-active" : ""}>6</button>
                                 </div>
                             </div>
                         </div>
@@ -571,17 +579,17 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                             <div className='mi-div'>
                                 <div>
                                     <p>Telefono</p>
-                                    <input placeholder={lead.telephone} value={numeroTelefono} onChange={(e) => setNumeroTelefono(e.target.value)} />
+                                    <input disabled placeholder={lead.telephone} value={numeroTelefono} onChange={(e) => setNumeroTelefono(e.target.value)} />
                                 </div>
                                 <div>
                                     <p>Email</p>
-                                    <input placeholder={lead.email} value={email} onChange={(e) => setEmail(e.target.value)} />
+                                    <input disabled placeholder={lead.email} value={email} onChange={(e) => setEmail(e.target.value)} />
                                 </div>
                             </div>
                             <div className={lead.leadAmbassador ? 'mi-div mgm-div' : 'mi-div'}>
                                 <div>
                                     <p>Campagna</p>
-                                    <input placeholder={lead.campagna ? lead.campagna : ""} value={campagna ? campagna : ""} disabled onChange={(e) => setCampagna(e.target.value)} />
+                                    <input placeholder={lead.campagna ? lead.campagna : ""} value={mapCampagnaPerLeadsystem(lead.campagna)} disabled onChange={(e) => setCampagna(e.target.value)} />
                                 </div>
                                 {state.user.role && state.user.role === "orientatore" ? 
                                 <div>
@@ -618,11 +626,12 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                             <div className='mi-div'>
                                 <div>
                                     <p>Città</p>
-                                    <input placeholder={lead.città.charAt(0).toUpperCase()} value={città} onChange={(e) => setCittà(e.target.value)} />
+                                    <input disabled placeholder={lead.città.charAt(0).toUpperCase()} value={città} onChange={(e) => setCittà(e.target.value)} />
                                 </div>
-                                <div>
+                                <div className='trat-cont-input'>
                                     <p>Trattamento</p>
-                                    <input placeholder={lead.trattamento.replace(/_/g, ' ')} value={trattamento} onChange={(e) => setTrattamento(e.target.value)} />
+                                    <input className='input-trattamento-hover' disabled placeholder={lead.trattamento.replace(/_/g, ' ')} value={trattamento} onChange={(e) => setTrattamento(e.target.value)} />
+                                    <span className="trattamento-fullname">{lead.trattamento.replace(/_/g, ' ')}</span>
                                 </div>
                             </div>
                         </div>

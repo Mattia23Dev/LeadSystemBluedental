@@ -87,7 +87,7 @@ const Sidebar = () => {
     return (
         <div className={active ? 'header' : 'header-mobile'} style={{zIndex:headerIndex}}>
             <div className='menu-icon' onClick={activateNav} style={active ? {margin: '10px', gap: '3.5rem' } : null}>
-                <h2 style={{fontFamily: 'Poppins, sans-serif', fontWeight: '500'}}>{active ? state.user.role && state.user.role === "orientatore" ? state.user.nome : state.user.name : null}</h2>
+                <h5 style={{fontFamily: 'Poppins, sans-serif', fontWeight: '500'}}>{active ? state.user.role && state.user.role === "orientatore" ? state.user.nome : state.user.name : null}</h5>
                 {!active ? <IoMdMenu className='menu' /> : <IoMdMenu className='menu' />}
             </div>
             <nav>

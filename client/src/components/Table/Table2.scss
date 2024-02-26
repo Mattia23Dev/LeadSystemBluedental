@@ -395,7 +395,7 @@ thead {
 .button-filter {
   border: none;
   cursor: pointer;
-  padding: 6px 18px;
+  padding: 4px 18px;
   border-radius: 5px;
   border: 1px solid #3471CC;
   color: #3471CC;
@@ -842,10 +842,55 @@ thead {
 
 }
 
+@media screen and (width <= 2000px){
+  .wrapperwrapper {
+    div p{
+      font-size: 14px !important;
+    }
+    div label{
+      font-size: 14px !important;
+    }
+    div input, div select{
+      font-size: 14px !important;
+    }
+    div select option{
+      font-size: 14px !important;
+    }
+  }
+}
+@media screen and (width >= 2001px){
+  .wrapperwrapper {
+    div p{
+      font-size: 16px !important;
+    }
+    div label{
+      font-size: 16px !important;
+    }
+    div input, div select{
+      font-size: 16px !important;
+    }
+    div select option{
+      font-size: 16px !important;
+    }
+  }
+}
+
 @media screen and (width <=1600px) {
   .Table-admin {
     .filtralead {
       .wrapperwrapper {
+        div p{
+          font-size: 12px !important;
+        }
+        div label{
+          font-size: 12px !important;
+        }
+        div input, div select{
+          font-size: 12px !important;
+        }
+        div select option{
+          font-size: 12px !important;
+        }
         .leadslinks {
           * {
             font-size: 14px !important;
@@ -853,7 +898,7 @@ thead {
 
           a,
           button {
-            padding: 7px 10px !important;
+            padding: 4px 10px !important;
           }
         }
       }

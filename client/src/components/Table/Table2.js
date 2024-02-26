@@ -75,11 +75,6 @@ export default function Table2({ onResults, searchval, setLeadsPdf }) {
 const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
     "Numero Errato", "Non interessato", "Fuori Zona",
 ]);
-const [motivoVendutoList, setMotivoVendutoList] = useState([
-    "Promozione / sconto", "Convenzione", "Prevalutazione corretta",
-    "Scatto di carriera", "Titolo necessario per concorso pubblico / candidatura",
-    "Tempi brevi", "Sede d’esame vicino casa", "Consulenza orientatore",
-]);
 
   document.addEventListener('mousedown', handleClickOutside);
 
@@ -210,7 +205,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           date: lead.data,
           telephone: cleanedTelephone,
           status: lead.esito,
-          orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
+          orientatore: lead.orientatori ? lead.orientatori.nome.trim() + ' ' + lead.orientatori.cognome.trim() : '',
           fatturato: lead.fatturato ? lead.fatturato : '',
           provenienza: lead.campagna,
           città: lead.città ? lead.città : '',
@@ -251,7 +246,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
         setFiltroDiRiserva(filteredByRecall);
        }
 
-      const leadNumVenduti = response.data.filter(lead => lead.esito === 'Venduto');
+      const leadNumVenduti = response.data.filter(lead => lead.esito === 'Fissato');
       const leadNum = response.data.length;
       onResults(leadNum, leadNumVenduti.length);
       setOriginalData(filteredTableLead);
@@ -283,7 +278,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           date: lead.data,
           telephone: cleanedTelephone,
           status: lead.esito,
-          orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
+          orientatore: lead.orientatori ? lead.orientatori.nome.trim() + ' ' + lead.orientatori.cognome.trim() : '',
           fatturato: lead.fatturato ? lead.fatturato : '',
           provenienza: lead.campagna,
           città: lead.città ? lead.città : '',
@@ -339,7 +334,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
         setFiltroDiRiserva(filteredByRecall);
        }
 
-      const leadNumVenduti = response.data.filter(lead => lead.esito === 'Venduto');
+      const leadNumVenduti = response.data.filter(lead => lead.esito === 'Fissato');
       const leadNum = response.data.length;
       onResults(leadNum, leadNumVenduti.length);
       setOriginalData(filteredTableLead);
@@ -395,7 +390,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
 
   const handleClickEsito = () => {
           const filteredDataNew = filteredData.filter((row) => {
-      if (selectedStatusEsito.venduto && row.status === 'Venduto') {
+      if (selectedStatusEsito.venduto && row.status === 'Fissato') {
         return true;
       } else if (selectedStatusEsito.dacontattare && row.status === 'Da contattare') {
         return true;
@@ -788,7 +783,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
         setPopupModifyEsito(false);
         SETheaderIndex(999);             
         }
-      } else if (esito === "Venduto"){
+      } else if (esito === "Fissato"){
         if (patientType === "" || treatment === "" || location === ""){
           window.alert("Compila i campi")
           return
@@ -940,7 +935,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
     const draggedLeadId = droppedItem.id;
     if (type === draggedLeadId.status) {
       return null
-    } else if (type === "Venduto" || type === "Non valido" || type === "Non interessato" || type === "Lead persa") {
+    } else if (type === "Fissato" || type === "Non valido" || type === "Non interessato" || type === "Lead persa") {
       setPopupMotivi(true);
       setLeadIdMotivo(draggedLeadId);
       setTypeMotivo(type);
@@ -1034,10 +1029,10 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
     <div className="Table-admin" style={{marginTop: '-30px'}}>
 
       <div className="filtralead">
-        <h5 style={{ color: "gray", fontSize: '18px', marginBottom: '15px' }}>Selezione filtri:</h5>
+        <h5 style={{ color: "gray", fontSize: '16px', marginBottom: '15px' }}>Selezione filtri:</h5>
         <div className="wrapperwrapper">
           <div>
-            <p style={{ color: "gray", fontSize: '13px' }}>Filtra per data</p>
+            <p style={{ color: "gray", fontSize: '12px' }}>Filtra per data</p>
             <div className="wrapper">
               <div>
                 <label>Da</label>
@@ -1217,7 +1212,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
                                      <span><span>o</span></span>
                                      Non risponde
                                  </div>
-                                 <div className={esito === "Irraggiungibile" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Irraggiungibile')}>
+                                 <div className={esito === "Da richiamare" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Da richiamare')}>
                                      <span><span>o</span></span>
                                      Da richiamare
                                  </div>
@@ -1233,10 +1228,10 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
                                          </select>
                                      )}
                                  </div>
-                                 <div className={esito === "Venduto" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Venduto')}>
+                                 <div className={esito === "Fissato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Fissato')}>
                                      <span><span>o</span></span>
                                      Fissato
-                                     {esito === "Venduto" && <div className='choose-motivo'>
+                                     {esito === "Fissato" && <div className='choose-motivo'>
                                      {patientTypes.map((opzione, index) => (
                                          <label key={index} className="radio-label radio-label-scheda">
                                              <input
@@ -1250,7 +1245,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
                                          </label>
                                          ))}
                                      </div>}
-                                     {esito === 'Venduto' ?
+                                     {esito === 'Fissato' ?
                                      <>
                                      <label className='label-not-blue'>Trattamento</label>
                                              <select className="selectMotivo" value={treatment} onChange={(e) => setTreatment(e.target.value)}>
@@ -1262,7 +1257,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
                                              </>
                                          :
                                          null}
-                                     {esito === "Venduto" && (
+                                     {esito === "Fissato" && (
                                          <>
                                          <label className='label-not-blue'>Città</label>
                                              <select className="selectMotivo" value={location} onChange={(e) => setLocation(e.target.value)}>
@@ -1289,15 +1284,10 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
                   <option style={{fontSize: '16px'}} value='' disabled>{esitoToFilter ? esitoToFilter : "Seleziona esito"}</option>
                   <option style={{fontSize: '16px'}} value="Nessun filtro">Nessun filtro</option>
                   <option style={{fontSize: '16px'}} value='Da contattare'>Da contattare</option>
-                  <option style={{fontSize: '16px'}} value='In lavorazione'>In lavorazione</option>
                   <option style={{fontSize: '16px'}} value='Non risponde'>Non risponde</option>
-                  <option style={{fontSize: '16px'}} value="Irraggiungibile">Irraggiungibile</option>
-                  <option style={{fontSize: '16px'}} value="Non valido">Non valido</option>
+                  <option style={{fontSize: '16px'}} value="Da richiamare">Da richiamare</option>
                   <option style={{fontSize: '16px'}} value='Non interessato'>Lead persa</option>
-                  <option style={{fontSize: '16px'}} value='Opportunità'>Opportunità</option>
-                  <option style={{fontSize: '16px'}} value='In valutazione'>In valutazione</option>
-                  <option style={{fontSize: '16px'}} value='Venduto'>Venduto</option>
-                  <option style={{fontSize: '16px'}} value="Iscrizione posticipata">Iscrizione posticipata</option>
+                  <option style={{fontSize: '16px'}} value='Fissato'>Fissato</option>
                 </select>
               </div>
             </div>
@@ -1375,20 +1365,7 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           </div>
         </div>
 
-
-
-
-
-
-
         :
-
-
-
-
-
-
-
 
         <div className="sectionswrapper"
           ref={secref}
@@ -1509,16 +1486,16 @@ const [motivoVendutoList, setMotivoVendutoList] = useState([
           </div>
           <div className="secwrap"
             onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, "Venduto")}
+            onDrop={(e) => handleDrop(e, "Fissato")}
             onDragEnd={handleDragEnd}
           >
             <LeadHeader
               handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
-              type={"Venduto"}
+              type={"Fissato"}
               refreshate={false}
               toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
             <div className="entries">
-              {toggles.venduto && filteredData && filteredData.filter(x => x.status == "Venduto").reverse().map((row, k) =>
+              {toggles.venduto && filteredData && filteredData.filter(x => x.status == "Fissato").reverse().map((row, k) =>
                 <LeadEntry
                   id={JSON.stringify(row)}
                   index={k}

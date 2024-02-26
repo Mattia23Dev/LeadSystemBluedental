@@ -211,7 +211,7 @@ async function authorize() {
 
 /**
  * Prints the names and majors of students in a sample spreadsheet:
- * @see https://docs.google.com/spreadsheets/d/19uw4QtH8HgiAvK3toIqvF3vpF_gBdXhxAEtUU2O1tbU/edit
+ * @see https://docs.google.com/spreadsheets/d/17pmPgqtw4DNzYvczEZuZPSQg6k49lPnOURibUMpbN7s/edit
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
 const dataMeta = [];
@@ -309,8 +309,8 @@ const writeDataEntrati = async (auth) => {
   };
   sheets.spreadsheets.values.append(
     {
-      spreadsheetId: '19uw4QtH8HgiAvK3toIqvF3vpF_gBdXhxAEtUU2O1tbU',
-      range: 'Lead Entrati!A1',
+      spreadsheetId: '17pmPgqtw4DNzYvczEZuZPSQg6k49lPnOURibUMpbN7s',
+      range: 'EXPORT!A1',
       valueInputOption: 'RAW',
       resource: resource,
     },
@@ -411,8 +411,8 @@ const writeMetaReports = async (auth) => {
   };
   sheets.spreadsheets.values.append(
     {
-      spreadsheetId: '19uw4QtH8HgiAvK3toIqvF3vpF_gBdXhxAEtUU2O1tbU',
-      range: 'Meta Reports!A1',
+      spreadsheetId: '17pmPgqtw4DNzYvczEZuZPSQg6k49lPnOURibUMpbN7s',
+      range: 'EXPORT!A1',
       valueInputOption: 'RAW',
       resource: resource,
     },
@@ -603,7 +603,7 @@ const writeDataSocial = async (auth) => {
   //oggi.setDate(oggi.getDate())
   oggi.setHours(0, 0, 0, 0);
   domani.setHours(0, 0, 0, 0);
-  const ieri = new Date('2023-11-18');
+  const ieri = new Date('2023-02-20');
   ieri.setHours(0, 0, 0, 0);
 
   const todayFormatted = formatDate(oggi);
@@ -625,25 +625,22 @@ const writeDataSocial = async (auth) => {
       lead.numeroTelefono,
       lead.campagna ? lead.campagna : "",
       "meta",
-      "Lead form", 
+      "Lead form",
       lead.nameCampagna ? lead.nameCampagna.toString() : '', 
-      '',
       lead.adsets ? lead.adsets.toString() : '',
       lead.annunci ? lead.annunci.toString() : '',
-      lead.corsoDiLaurea ? lead.corsoDiLaurea : '',
-      lead.facolta ? lead.facolta : '',
-      lead.budget ? lead.budget : '',
-      lead.enrollmentTime ? lead.enrollmentTime : '',
-      lead.frequentiUni == true ? "Si" : "No",
-      lead.lavoro == true ? "Si" : "No",
-      lead.oreStudio ? lead.oreStudio : "",
-      lead.categories ? lead.categories : "",
       lead.utente ? lead.utente.nameECP : "",
       lead.orientatori && lead.orientatori !== null ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : "Non assegnato",
-      lead.università ? lead.università : "",
       lead.motivo ? lead.motivo : "",
       lead.esito === "Non interessato" ? "Lead persa" : lead.esito.toString(),
       lead.dataCambiamentoEsito ? formatDate(lead.dataCambiamentoEsito) : 'Nessuna Data', 
+      lead.tipo ? lead.tipo : "", 
+      lead.trattPrenotato ? lead.trattPrenotato : "", 
+      lead.luogo ? lead.luogo : "",
+      lead.trattamento ? lead.trattamento : "",
+      lead.tentativiChiamata ? lead.tentativiChiamata : "",
+      lead.città ? lead.città : "",
+      lead.giàSpostato ? lead.giàSpostato : "NO",
     ];
   
     dataToUpdate.push(leadData);
@@ -654,8 +651,8 @@ const writeDataSocial = async (auth) => {
   };
   sheets.spreadsheets.values.append(
     {
-      spreadsheetId: '19uw4QtH8HgiAvK3toIqvF3vpF_gBdXhxAEtUU2O1tbU',
-      range: 'Import!A1',
+      spreadsheetId: '17pmPgqtw4DNzYvczEZuZPSQg6k49lPnOURibUMpbN7s',
+      range: 'EXPORT!A1',
       valueInputOption: 'RAW',
       resource: resource,
     },
@@ -668,7 +665,7 @@ const writeDataSocial = async (auth) => {
           result.data.updates.updatedCells,
           result.data.updates.updatedRange
         );
-        runExport(writeDataManual);
+        //runExport(writeDataManual);
       }
     }
   );
@@ -930,7 +927,7 @@ const runExport = (exportFunction) => {
 //runDailyJob();
 //getRequestFromFacebook();
 
-const runDailyMeta = () => {
+/*const runDailyMeta = () => {
   getRequestFromFacebook();
 };
 
@@ -941,9 +938,9 @@ cron.schedule('0 1 * * *', () => {
 cron.schedule('10 1 * * *', () => {
   runDailyJob();
 });
-
+*/
 cron.schedule('30 1 * * *', () => {
-  runExport(writeDataMGM);
+  runExport(writeDataSocial);
 })
 
 /*cron.schedule('20 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
@@ -954,6 +951,6 @@ cron.schedule('30 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   GetSheetAffiliateChatbotData();
 });*/
 
-cron.schedule('0 2 * * *', () => {
+/*cron.schedule('0 2 * * *', () => {
   runDailyMeta();
-});
+});*/

@@ -38,7 +38,7 @@ export default function LeadHeader({
           SETtoggles({ ...toggles, opportunita: !toggles.opportunita })
         else if (type == "In valutazione")
           SETtoggles({ ...toggles, invalutazione: !toggles.invalutazione })
-        else if (type == "Venduto")
+        else if (type == "Fissato")
           SETtoggles({ ...toggles, venduto: !toggles.venduto })
           else if (type == "Non valido"){
           if (refreshate){
@@ -54,7 +54,7 @@ export default function LeadHeader({
           else if (type == "Da richiamare")
           SETtoggles({ ...toggles, irraggiungibile: !toggles.irraggiungibile })
       }}>
-      <span>{type == "Venduto" ? "Venduto" : type}</span>
+      <span>{type == "Fissato" ? "Fissato" : type}</span>
       <span className={refreshate ? 'refresh-lead' : ''}>
         {refreshate ? 
         <BiRefresh size={30} /> :

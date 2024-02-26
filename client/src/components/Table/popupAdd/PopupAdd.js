@@ -13,19 +13,22 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
   const [email, setEmail] = useState('');
   const [numeroTelefono, setNumeroTelefono] = useState('');
   const [campagna, setCampagna] = useState('');
-  const [corsoDiLaurea, setCorsoDiLaurea] = useState('');
-  const [frequentiUni, setFrequentiUni] = useState(false);
-  const [lavoro, setLavoro] = useState(false);
-  const [facolta, setFacolta] = useState('');
-  const [oreStudio, setOreStudio] = useState('');
   const [esito, setEsito] = useState('Da contattare');
-  const [orientatori, setOrientatori] = useState('');
-  const [universita, setUniversita] = useState('');
-  const [provincia, setProvincia] = useState('');
+  const [orientatori, setOrientatori] = useState(state.user.role && state.user.role === "orientatore" ? state.user._id : null);
   const [note, setNote] = useState('');
-  const [fatturato, setFatturato] = useState('0');
+  const [città, setCittà] = useState("");
   const [orientatoriOptions, setOrientatoriOptions] = useState([])
-  const [oraChiamataRichiesto, setOraChiamataRichiesto] = useState('');
+  const locations = [
+    "Desenzano Del Garda", "Melzo", "Carpi", "Lodi", "Cantù", "Mantova", "Seregno", "Milano Piazza Castelli", "Abbiategrasso",
+    "Pioltello", "Vigevano", "Milano Via Parenzo", "Settimo Milanese", "Cremona", "Milano", "Monza", "Busto Arsizio", "Brescia",
+    "Cinisello Balsamo", "Cologno Monzese", "Varese", "Como", "San Giuliano Milanese", "Milano", "Bergamo", "Roma Marconi",
+    "Roma Balduina", "Roma Prati Fiscali", "Roma Casilina", "Roma Tiburtina", "Roma Torre Angela", "Ostia", "Pomezia",
+    "Ciampino", "Capena", "Cassino", "Frosinone", "Latina", "Valmontone outlet", "Roma Tuscolana", "Civitavecchia",
+    "Terni", "Perugia", "Arezzo", "Firenze", "Lucca", "Prato", "Piacenza", "Ferrara", "Cesena", "Forlì", "Reggio Emilia",
+    "Modena", "Parma", "Bologna", "Rovigo", "Treviso", "Padova", "Verona", "Vicenza", "Mestre", "Torino Chironi",
+    "Settimo Torinese", "Biella", "Torino Botticelli", "Bari", "Genova", "Cagliari", "Sassari", "Pordenone", "Rimini",
+    "Ravenna", "Rho", "Anzio"
+  ];
 
   const handleDateChange = (date) => {
     setData(date);
@@ -35,7 +38,7 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
 
   useEffect(() => {
     const getOrientatori = async () => {
-      await axios.get(`/utenti/${userId}/orientatori`)
+      await axios.get(`/utenti/65d3110eccfb1c0ce51f7492/orientatori`)
         .then(response => {
           const data = response.data.orientatori;
 
@@ -60,23 +63,13 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
         email,
         numeroTelefono,
         campagna,
-        //opzionali
-        corsoDiLaurea,
-        frequentiUni,
-        lavoro,
-        facolta,
-        oreStudio,
         esito,
         orientatori,
-        universita,
-        provincia,
         note,
-        fatturato,
-        oraChiamataRichiesto,
         from: 'user',
       };
 
-      const response = await axios.post(`lead/create/${userId}`, newLead);
+      const response = await axios.post(`lead/create/65d3110eccfb1c0ce51f7492`, newLead);
       toast.success('Hai aggiunto il lead!');
       fetchLeads();
       setAddOpen(false);
@@ -120,6 +113,7 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
           Telefono*:
           <input type="tel" value={numeroTelefono} onChange={(e) => setNumeroTelefono(e.target.value)} required />
         </label>
+        {state.user.role && state.user.role === "orientatore" ? null :
         <label>
           Orientatori*:
           <select value={orientatori} onChange={(e) => setOrientatori(e.target.value)}>
@@ -130,7 +124,7 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
               </option>
             ))}
           </select>
-        </label>
+        </label>}
         <label>
           Campagna:
           <input type="text" value={campagna} onChange={(e) => setCampagna(e.target.value)} />
@@ -140,123 +134,20 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
           <select required value={esito} onChange={(e) => setEsito(e.target.value)}>
             <option value="" disabled>Seleziona un esito</option>
             <option value='Da contattare'>Da contattare</option>
-            <option value='In lavorazione'>In lavorazione</option>
             <option value='Non risponde'>Non risponde</option>
-            <option value="Irraggiungibile">Irraggiungibile</option>
-            <option value="Non valido">Non valido</option>
+            <option value="Da richiamare">Da richiamare</option>
             <option value='Non interessato'>Lead persa</option>
-            <option value='Opportunità'>Opportunità</option>
-            <option value='In valutazione'>In valutazione</option>
-            <option value='Venduto'>Venduto</option>
-            <option value="Iscrizione posticipata">Iscrizione posticipata</option>
-          </select>
-        </label>
-        {esito === 'Venduto' ?
-          <label id='prezzovendita'>
-            Prezzo di vendita
-            <input
-              type="text"
-              placeholder="Fatturato"
-              style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginRight: '16px' }}
-              onChange={(e) => setFatturato(e.target.value)}
-              value={fatturato}
-              required />
-          </label>
-          :
-          null}
-        <label>
-          Corso di laurea:
-          <input type='text' value={corsoDiLaurea} onChange={(e) => setCorsoDiLaurea(e.target.value)} />
-        </label>
-        <label>
-        Inizio università?:
-          <input 
-          type="text" 
-          value={facolta} 
-          onChange={(e) => setFacolta(e.target.value)} 
-          />
-        </label>
-        <label>
-          Università:
-          <select value={universita} onChange={(e) => setUniversita(e.target.value)}>
-            <option value="" disabled>Seleziona un'università</option>
-            <option value='Unimercatorum'>Unimercatorum</option>
-            <option value='Sanraffaele'>Sanraffaele</option>
-            <option value='Unipegaso'>Unipegaso</option>
-            <option value='Aulab'>Aulab</option>
+            {/*<option value='Fissato'>Fissato</option>*/}
           </select>
         </label>
         <label>
-          Ore studio:
-          <select value={oreStudio} onChange={(e) => setOreStudio(e.target.value)}>
-            <option value="" disabled>Seleziona un orario</option>
-            <option value='1'>1</option>
-            <option value='2'>2</option>
-            <option value='3'>3</option>
-            <option value='5'>5</option>
-          </select>
-        </label>
-        <label>
-          Provincia:
-          <select value={provincia} onChange={(e) => setProvincia(e.target.value)}>
-            <option value="" disabled>Seleziona una provincia</option>
-            {ProvinceItaliane.map((provincia) => (
-              <option key={provincia} value={provincia}>
-                {provincia}
-              </option>
+          Città:
+          <select required value={città} onChange={(e) => setCittà(e.target.value)}>
+            <option value="" disabled>Seleziona una città</option>
+            {locations.map((motivoOption, index) => (
+              <option key={index} value={motivoOption}>{motivoOption}</option>
             ))}
           </select>
-        </label>
-        <label>
-          Frequenta l'università?
-          <div id='newleadradios'>
-            <div>
-              <input
-                type="radio"
-                checked={frequentiUni === true}
-                onChange={() => setFrequentiUni(true)}
-              />
-              SI
-            </div>
-            <div>
-              <input
-                type="radio"
-                checked={frequentiUni === false}
-                onChange={() => setFrequentiUni(false)}
-              />
-              NO
-            </div>
-          </div>
-        </label>
-        <label>
-          Lavora già?
-          <div id='newleadradios'>
-            <div>
-              <input
-                type="radio"
-                checked={lavoro === true}
-                onChange={() => setLavoro(true)}
-              />
-              SI
-            </div>
-            <div>
-              <input
-                type="radio"
-                checked={lavoro === false}
-                onChange={() => setLavoro(false)}
-              />
-              NO
-            </div>
-          </div>
-        </label>
-        <label>
-                <p>Orario di chiamata:</p>
-                <input
-                  type='time'
-                  value={oraChiamataRichiesto}
-                  onChange={(e) => setOraChiamataRichiesto(e.target.value)}
-                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginRight: '16px' }}
-                />
         </label>
         <label>
           Note:

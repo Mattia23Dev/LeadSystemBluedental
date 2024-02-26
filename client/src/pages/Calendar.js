@@ -148,6 +148,7 @@ const CalendarM = () => {
                 recallDate: lead.recallDate ? lead.recallDate : null,
                 lastModify: lead.lastModify ? lead.lastModify : null, 
                 campagna: lead.utmCampaign ? lead.utmCampaign : "",
+                tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "",
             },
               start: dateTime,
               description: `Data: ${dateTime}, Testo`,

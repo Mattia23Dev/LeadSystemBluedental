@@ -4,7 +4,7 @@ const LeadWordpress = require("../models/leadWordpress");
 const Lead = require('../models/lead');
 var cron = require('node-cron');
 const { sendEmailLeadArrivati } = require('../middlewares');
-const { getDentistaLead, getTagLeads, getTagLeads2 } = require('./Facebook');
+const { getDentistaLead, getTagLeads, getTagLeads2, getDentistaLead2, getDentistaLead3 } = require('./Facebook');
 const Orientatore = require('../models/orientatori');
 
 let lastUserReceivedLead = null;
@@ -18,7 +18,8 @@ const calculateAndAssignLeadsEveryDay = async () => {
       { tag: "pegaso" }
     ]});
     */
-    let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] });
+    let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] }).limit(90); // Imposta il limite a 1000, o a un valore più alto se necessario
+
 
     const totalLeads = leads.length;
     console.log('Iscrizioni:', totalLeads);
@@ -441,10 +442,20 @@ const resetDailyCap = async () => {
 /*cron.schedule('30 6 * * *', () => {
   resetDailyCap();
   console.log('Eseguito il reset del daily Lead');
+});*/
+/*
+cron.schedule('10,46,20 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+  getDentistaLead();
+  console.log('Prendo i lead di Bluedental 3.0');
 });
 
-cron.schedule('10,46,20,35,50 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
-  getDentistaLead();
+cron.schedule('20,56,30 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+  getDentistaLead2();
+  console.log('Prendo i lead di Bluedental 3.0');
+});
+
+cron.schedule('5,36,15 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+  getDentistaLead3();
   console.log('Prendo i lead di Bluedental 3.0');
 });
 
@@ -463,6 +474,17 @@ cron.schedule('47 7,8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   console.log('Eseguo l\'assegnazione a Ecp solo comparatore');
   calculateAndAssignLeadsEveryDayWordpressComparatore();
 });*/
+
+async function updateAssignedField() {
+  try {
+      await LeadFacebook.updateMany({}, { assigned: false });
+      console.log('Campo "assigned" aggiornato per tutte le lead.');
+  } catch (error) {
+      console.error('Errore durante l\'aggiornamento del campo "assigned" delle lead:', error);
+  }
+}
+
+//updateAssignedField();
 
 exports.dailyCap = async (req, res) => {
   try {

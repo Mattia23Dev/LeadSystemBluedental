@@ -71,7 +71,7 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
         trattamento,
         from: 'user',
       };
-
+      console.log(newLead);
       const response = await axios.post(`lead/create/65d3110eccfb1c0ce51f7492`, newLead);
       toast.success('Hai aggiunto il lead!');
       fetchLeads();
@@ -146,7 +146,7 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
         <label>
           Città:
           <select required value={città} onChange={(e) => setCittà(e.target.value)}>
-            <option value="" disabled>Seleziona una città</option>
+            <option value="">Seleziona una città</option>
             {locations.map((motivoOption, index) => (
               <option key={index} value={motivoOption}>{motivoOption}</option>
             ))}

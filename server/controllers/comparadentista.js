@@ -42,7 +42,6 @@ exports.getDataComparaCorsi = async (req, res) => {
         const newLead = new LeadWordpress({
           data: new Date(),
           nome: nome,
-          cognome: cognome,
           email: email,
           numeroTelefono: numeroTelefono,
           corsoDiLaurea: corsoDiLaurea,
@@ -620,27 +619,27 @@ const writeDataSocial = async (auth) => {
     const leadData = [
       lead.data ? formatDate(new Date(lead.data)) : '', 
       lead.nome,
-      lead.cognome,
       lead.email,
       lead.numeroTelefono,
       lead.campagna ? lead.campagna : "",
       "meta",
       "Lead form",
-      lead.nameCampagna ? lead.nameCampagna.toString() : '', 
-      lead.adsets ? lead.adsets.toString() : '',
-      lead.annunci ? lead.annunci.toString() : '',
-      lead.utente ? lead.utente.nameECP : "",
+      lead.utmCampaign ? lead.utmCampaign.toString() : '', 
+      lead.utmAdset ? lead.utmAdset.toString() : '',
+      lead.utmContent ? lead.utmContent.toString() : '',
       lead.orientatori && lead.orientatori !== null ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : "Non assegnato",
       lead.motivo ? lead.motivo : "",
       lead.esito === "Non interessato" ? "Lead persa" : lead.esito.toString(),
       lead.dataCambiamentoEsito ? formatDate(lead.dataCambiamentoEsito) : 'Nessuna Data', 
-      lead.tipo ? lead.tipo : "", 
+      lead.tipo ? lead.tipo : "",
       lead.trattPrenotato ? lead.trattPrenotato : "", 
       lead.luogo ? lead.luogo : "",
       lead.trattamento ? lead.trattamento : "",
       lead.tentativiChiamata ? lead.tentativiChiamata : "",
       lead.città ? lead.città : "",
       lead.giàSpostato ? lead.giàSpostato : "NO",
+      lead.note ? lead.note : "",
+      "Meta web"
     ];
   
     dataToUpdate.push(leadData);

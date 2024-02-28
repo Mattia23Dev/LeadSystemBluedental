@@ -5,6 +5,7 @@ const {readdirSync} = require('fs');
 const webpush = require('web-push');
 require("dotenv").config();
 const path = require("path");
+const Lead = require('./models/lead');
 
 const app = express();
 
@@ -39,5 +40,15 @@ app.post('/api/subscribe', (req, res) => {
   webpush.sendNotification(subscription, payload).catch((err) => console.log(err));
 });
 
+const deleteAllLeads = async () => {
+  try {
+    const result = await Lead.deleteMany({});
+    console.log(`${result.deletedCount} lead eliminate.`);
+  } catch (error) {
+    console.error('Si è verificato un errore durante l\'eliminazione delle lead:', error);
+  }
+};
+
+//deleteAllLeads();
 const port = process.env.PORT || 8000;
 app.listen(port, () => console.log(`Server is running on port ${port}`));

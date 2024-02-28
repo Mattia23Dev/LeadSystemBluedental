@@ -11,8 +11,8 @@ const idCampagna2 = '23859089103880152'; //ECP - [LEAD ADS] - Master
 const fields = 'id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}';
 
 //LEADS 
-const TOKENMIO = "EAAD6mNGgHKABO0VRMoANGbKwcHT4xFBwjf1vZBEu1QwThbS8vQEEGcX8L9Yw2k99cZCIMncdZBGRm9QbbIiZCWrVzNIWvGEjeGhvUdM7eanwQZCTTOycgif5ZAvJZBQdD7sh2illondwZBIJhx1lpbZCbK7iZBIKkuwwTOK5TOAvVMzEovRdpFpmrBdvja";
-const TOKEN1 = "EAAD6mNGgHKABO0VRMoANGbKwcHT4xFBwjf1vZBEu1QwThbS8vQEEGcX8L9Yw2k99cZCIMncdZBGRm9QbbIiZCWrVzNIWvGEjeGhvUdM7eanwQZCTTOycgif5ZAvJZBQdD7sh2illondwZBIJhx1lpbZCbK7iZBIKkuwwTOK5TOAvVMzEovRdpFpmrBdvja";
+const TOKENMIO = "EAAD6mNGgHKABOZCFLOjk90nZCTiXKitChBna4fSTkgVbiehgRM3gfxaqd2AZCZCKQ7GeKMwTTaFSm9koTkW7XxSpcrxBq7dfn5qeZCMZAOd64rZCEeu09KfIlfLmxDtahUDSstNUHUXMX9bExQ7gSwuIV9CH0eNNhlzfzpdHWxZAhujnNaZAZB9yfrTQZDZD";
+const TOKEN1 = "EAAD6mNGgHKABOZCFLOjk90nZCTiXKitChBna4fSTkgVbiehgRM3gfxaqd2AZCZCKQ7GeKMwTTaFSm9koTkW7XxSpcrxBq7dfn5qeZCMZAOd64rZCEeu09KfIlfLmxDtahUDSstNUHUXMX9bExQ7gSwuIV9CH0eNNhlzfzpdHWxZAhujnNaZAZB9yfrTQZDZD";
 const { GoogleAdsApi, enums  } = require('google-ads-api');
 const Lead = require('../models/lead');
 
@@ -260,7 +260,7 @@ const Lead = require('../models/lead');
         console.error('Errore:', error);
       });
   };
-  // ACCOUNT 3 ACT_915414373405841
+  // ACCOUNT 3.0 ACT_915414373405841
   exports.getDentistaLead3 = () => {
     const url = 'https://graph.facebook.com/v17.0/act_915414373405841/campaigns';
     const params = {

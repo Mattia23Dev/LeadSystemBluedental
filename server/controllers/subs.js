@@ -18,7 +18,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
       { tag: "pegaso" }
     ]});
     */
-    let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] }).limit(90); // Imposta il limite a 1000, o a un valore più alto se necessario
+    let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] }).limit(60); // Imposta il limite a 1000, o a un valore più alto se necessario
 
 
     const totalLeads = leads.length;
@@ -477,14 +477,24 @@ cron.schedule('47 7,8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
 
 async function updateAssignedField() {
   try {
-      await LeadFacebook.updateMany({}, { assigned: false });
+      await LeadFacebook.updateMany({}, { assigned: true });
       console.log('Campo "assigned" aggiornato per tutte le lead.');
   } catch (error) {
       console.error('Errore durante l\'aggiornamento del campo "assigned" delle lead:', error);
   }
 }
-
+async function countFL(){
+  try {
+    const lead = await LeadFacebook.find();
+    console.log(lead.length)
+  } catch (error) {
+    console.error(error)
+  }
+}
+//countFL()
+//getDentistaLead3();
 //updateAssignedField();
+//calculateAndAssignLeadsEveryDay();
 
 exports.dailyCap = async (req, res) => {
   try {

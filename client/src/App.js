@@ -64,11 +64,11 @@ function App() {
             element={<AuthRouteWithLayout component={Home} />}
           />
 
-          {/*<Route
+          <Route
             exact
             path="/dashboard"
             element={<AuthRouteWithLayout component={Dashboard} />}
-            />*/}
+            />
 
           <Route
             exact

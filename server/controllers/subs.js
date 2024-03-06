@@ -86,7 +86,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
           } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
             userData.città = field.values[0].replace(/_/g, " ");
           }
-        } 
+        }
 
         const newLead = new Lead({
           data: new Date(),

@@ -20,15 +20,12 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
   const [città, setCittà] = useState("");
   const [orientatoriOptions, setOrientatoriOptions] = useState([])
   const locations = [
-    "Desenzano Del Garda", "Melzo", "Carpi", "Lodi", "Cantù", "Mantova", "Seregno", "Milano Piazza Castelli", "Abbiategrasso",
-    "Pioltello", "Vigevano", "Milano Via Parenzo", "Settimo Milanese", "Cremona", "Milano", "Monza", "Busto Arsizio", "Brescia",
-    "Cinisello Balsamo", "Cologno Monzese", "Varese", "Como", "San Giuliano Milanese", "Milano", "Bergamo", "Roma Marconi",
-    "Roma Balduina", "Roma Prati Fiscali", "Roma Casilina", "Roma Tiburtina", "Roma Torre Angela", "Ostia", "Pomezia",
-    "Ciampino", "Capena", "Cassino", "Frosinone", "Latina", "Valmontone outlet", "Roma Tuscolana", "Civitavecchia",
-    "Terni", "Perugia", "Arezzo", "Firenze", "Lucca", "Prato", "Piacenza", "Ferrara", "Cesena", "Forlì", "Reggio Emilia",
-    "Modena", "Parma", "Bologna", "Rovigo", "Treviso", "Padova", "Verona", "Vicenza", "Mestre", "Torino Chironi",
-    "Settimo Torinese", "Biella", "Torino Botticelli", "Bari", "Genova", "Cagliari", "Sassari", "Pordenone", "Rimini",
-    "Ravenna", "Rho", "Anzio"
+    "Abbiategrasso", "Anzio", "Arezzo", "Bari", "Bergamo", "Biella", "Bologna", "Brescia", "Busto Arsizio", "Cagliari", 
+    "Cantù", "Capena", "Carpi", "Cassino", "Cesena", "Ciampino", "Cinisello Balsamo", "Civitavecchia", "Cologno Monzese", 
+    "Como", "Cremona", "Desenzano del Garda", "Ferrara", "Firenze", "Forlì", "Frosinone", "Genova", "Latina", "Lodi", 
+    "Lucca", "Mantova", "Melzo", "Mestre", "Milano", "Modena", "Monza", "Ostia", "Padova", "Perugia", "Parma", "Piacenza", 
+    "Pioltello", "Pomezia", "Prato", "Ravenna", "Reggio Emilia", "Rho", "Roma", "San Giuliano Milanese", "Sassari", "Seregno", 
+    "Terni", "Torino", "Treviso", "Varese", "Verona", "Vicenza", "Vigevano"
   ];
 
   const handleDateChange = (date) => {

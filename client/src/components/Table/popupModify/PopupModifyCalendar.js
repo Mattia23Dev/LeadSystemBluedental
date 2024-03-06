@@ -53,7 +53,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
       "Ravenna", "Rho", "Anzio"
     ];
     const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
-        "Numero Errato", "Non interessato", "Fuori Zona",
+        "Numero Errato", "Non interessato", "Fuori Zona", "Già paziente"
     ]);
 
     
@@ -62,6 +62,8 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
           return 'Meta Web - Altri centri';
         } else if (nomeCampagna.includes('Meta Web')) {
           return 'Meta Web';
+        } else if (nomeCampagna.includes('Messenger') || nomeCampagna.includes("messenger")) {
+          return 'Messenger';
         } else {
           return "Meta Web";
         }
@@ -225,7 +227,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
     }, [])
 
     const updateLead = async () => {
-        if (esito === "Non valido" || esito === "Fissato" || esito === "Non interessato"){
+        if (esito === "Non valido" || esito === "Non interessato"){
             if (!motivo || motivo == ""){
               window.alert("Inserisci il motivo")
               return
@@ -238,7 +240,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                         note,
                         esito,
                         fatturato,
-                        motivo: "",
+                        motivo,
                         città,
                         trattamento,
                         tentativiChiamata
@@ -326,6 +328,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
         } else if (esito === "Fissato"){
             if (treatment === "" || location === "" || patientType === ""){
                 window.alert('Compila tutti i campi')
+                return
             } else {
                 try {
                     const modifyLead = {

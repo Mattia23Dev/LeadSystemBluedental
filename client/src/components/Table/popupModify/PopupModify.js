@@ -53,7 +53,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
       "Ravenna", "Rho", "Anzio"
     ];
     const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
-        "Numero Errato", "Non interessato", "Fuori Zona",
+        "Numero Errato", "Non interessato", "Fuori Zona", "Già paziente"
     ]);
 
     function mapCampagnaPerLeadsystem(nomeCampagna) {
@@ -61,6 +61,8 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
           return 'Meta Web - Altri centri';
         } else if (nomeCampagna.includes('Meta Web')) {
           return 'Meta Web';
+        } else if (nomeCampagna.includes('Messenger') || nomeCampagna.includes("messenger")) {
+          return 'Messenger';
         } else {
           return "Meta Web";
         }
@@ -225,7 +227,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
     }, [])
 
     const updateLead = async () => {
-        if (esito === "Non valido" || esito === "Fissato" || esito === "Non interessato"){
+        if (esito === "Non valido" || esito === "Non interessato"){
             if (!motivo || motivo == ""){
               window.alert("Inserisci il motivo")
               return
@@ -238,7 +240,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                         note,
                         esito,
                         fatturato,
-                        motivo: "",
+                        motivo,
                         città,
                         trattamento,
                         tentativiChiamata
@@ -330,6 +332,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
         } else if (esito === "Fissato"){
             if (treatment === "" || location === "" || patientType === ""){
                 window.alert('Compila tutti i campi')
+                return
             } else {
                 try {
                     const modifyLead = {
@@ -545,6 +548,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                         {esito === "Fissato" && fatturato !== "0" && <span>{fatturato}€</span>}
                                     </p>
                                     {motivo && motivo !== "" ? <p className='motivo-top'>Motivo: <span>{motivo}</span></p> : null}
+                                    {lead.esito === "Fissato" && lead.trattPrenotato ? <p className='motivo-top'>Trattamento <span>{lead.trattPrenotato}</span></p> : null}
                                 </div>
                             </div>
                             <div className='popup-middle-top2'>

@@ -73,7 +73,7 @@ export default function Table2({ onResults, searchval, setLeadsPdf }) {
   };
 
 const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
-    "Numero Errato", "Non interessato", "Fuori Zona",
+    "Numero Errato", "Non interessato", "Fuori Zona", "Già paziente"
 ]);
 
   document.addEventListener('mousedown', handleClickOutside);
@@ -791,7 +791,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         const modifyLead = {
           esito,
           fatturato,
-          tipo: patientType, 
+          tipo: patientType,
           trattPrenotato: treatment, 
           luogo: location,
         }; 

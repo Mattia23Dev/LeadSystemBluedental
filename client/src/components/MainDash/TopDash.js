@@ -5,6 +5,7 @@ import { UserContext } from "../../context";
 import { FaArrowDown, FaArrowRight, FaArrowUp } from 'react-icons/fa';
 
 const TopDash = ({ hideexport = false,
+  hideLegend = false,
   hideall = false,
   hideattivi = false,
   hidecerca = false,
@@ -57,9 +58,9 @@ const TopDash = ({ hideexport = false,
               />
             </label>
           }
-          <button className="btn-legenda-visibile" onClick={() => setShowLegenda(!showLegenda)}>
+          {!hideLegend && <button className="btn-legenda-visibile" onClick={() => setShowLegenda(!showLegenda)}>
             Legenda {showLegenda ? <FaArrowUp /> : <FaArrowRight />}
-          </button>
+          </button>}
           {hideexport &&
             <div id='attiviora' style={{ display: (hideattivi && "none") }}>
               <div className="tit">Attivi ora</div>

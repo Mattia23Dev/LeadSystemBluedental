@@ -35,7 +35,7 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
   };
 
     const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
-        "Numero Errato", "Non interessato", "Fuori Zona",
+        "Numero Errato", "Non interessato", "Fuori Zona", "Già paziente"
     ]);
     const [motivoVendutoList, setMotivoVendutoList] = useState([
         "Promozione / sconto", "Convenzione", "Prevalutazione corretta",
@@ -46,13 +46,14 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
     const motivoList = type === "Venduto" ? motivoVendutoList : motivoLeadPersaList;
 
     const saveMotivo = () => {
-        if (type === "Venduto") {
+        if (type === "Venduto" || type === "Fissato") {
              spostaLead("", leadId, importoBonificato, type, patientType, treatment, location);
             } else {
                 if (motivo !== ""){
                    spostaLead(motivo, leadId, "0", type); 
                 }else {
                     window.alert('Inserisci il motivo')
+                    return
                 }
         }
     }
@@ -61,15 +62,15 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
     <div className='popup-motivo'>
         <img onClick={onClose} src={indietro} />
         <div className='popup-motivo-top'>
-            {type === "Venduto" ? (
+            {type === "Fissato" ? (
                 <img src={vendutoImg} />
             ) : (
                 <img src={nonVendImg} />
             )}
-            {type === "Venduto" ? (
+            {type === "Fissato" ? (
              <div>   
-                <h4>Lead Venduta</h4>
-                <p>Lo stato della lead è stato cambiato, specifica la leva di vendita utilizzata con una delle seguenti opzioni:</p>   
+                <h4>Lead Fissata</h4>
+                <p>Lo stato della lead è stato cambiato, specifica queste informazioni:</p>   
              </div>
             ) : (
             <div>   

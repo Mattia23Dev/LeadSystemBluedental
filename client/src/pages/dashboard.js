@@ -166,7 +166,6 @@ ChartJS.register(
     };
 
     useEffect(() => {
-        setIsLoading(true)
         fetchLeads();
     }, []);
 
@@ -450,93 +449,16 @@ ChartJS.register(
                 </div>
                 :
                 <div>
-                    <TopDash hideexport hideattivi hidecerca generatePdf={generatePDF} />
-                    <div className='dashbody'>
-
-                        <div class="datefilter">
-                            <h5>Filtra per data</h5>
-
-                            <div id='datewrapper'>
-                                <div>
-                                    <label><u>Da</u></label>
-                                    {/* <input value={!startDate ? "" : new Date(startDate).toISOString().split('T')[0]} type="date" onChange={(e) => setStartDate(e.target.valueAsDate)} /> */}
-                                    <input type='date' value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                                </div>
-                                <div>
-                                    <label><u>A</u></label>
-                                    {/* <input value={!startDate ? "" : new Date(startDate).toISOString().split('T')[0]} type="date" onChange={(e) => setStartDate(e.target.valueAsDate)} /> */}
-                                    <input 
-                                    style={{ fontSize: "20px", border: "none", color: "#3471cc", backgroundColor: "transparent" }} 
-                                    type='date' 
-                                    value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-                                </div>
-                                <button className="button-filter" onClick={handleDateSelection}>Calcola</button>
-                                <button className="button-filter" onClick={handleRemoveFilter}>Rimuovi filtro</button>
-                            </div>
-                        </div>
-                        <div className='coming-soon'>
-                            Dashboard in Working... <br />
-                            Coming soon!
-                        </div>
-                        <div className="firstrowdash">
-                            <div className="dash2">
-                                <div className="tit">
-                                    Dasboard <font>esiti</font>
-                                </div>
-                                <div className='wrapper-maxi'>
-                                    <h4 style={{textAlign: 'center', marginBottom: '30px'}}>{leadNum ? leadNum : ''} leads totali</h4>
-                                <div className="wrapper">
-                                {data ? (
-                                    dataLoaded ? (
-                                        <div className="leftdatas">
-                                            {Entryesitileft("Da contattare", percDaCont)}
-                                            {Entryesitileft("Non risponde", percNonRisp)}
-                                            {Entryesitileft("In lavorazione", percLav)}
-                                            {Entryesitileft("Non valido", percNonValid)}
-                                            {Entryesitileft("Non interessato", percValut)}
-                                            {Entryesitileft("Opportunità", percOpp)}
-                                            {Entryesitileft("In valutazione", percNonInt)}
-                                            {Entryesitileft("Iscrizione", percVend)}
-                                        </div>
-                                    ) : (
-                                        <div className="leftdatas">
-                                            {Entryesitileft("Da contattare", prevPercDaCont)}
-                                            {Entryesitileft("Non risponde", prevPercNonRisp)}
-                                            {Entryesitileft("Irraggiungibile", prevPercIrr)}
-                                            {Entryesitileft("In lavorazione", prevPercInLav)}
-                                            {Entryesitileft("Non valido", prevPercNonValid)}
-                                            {Entryesitileft("Non interessato", prevPercNonInt)}
-                                            {Entryesitileft("Opportunità", prevPercOpp)}
-                                            {Entryesitileft("In valutazione", prevPercValut)}
-                                            {Entryesitileft("Iscrizione", prevPercVend)}
-                                            {Entryesitileft("Iscrizione posticipata", prevPercIscrPost)}
-                                        </div>
-                                    )
-                                    ) : (
-                                    <div className="leftdatas">
-                                        {Entryesitileft("In lavorazione", 0)}
-                                        {Entryesitileft("Non risponde", 0)}
-                                        {Entryesitileft("Irraggiungibile", 0)}
-                                        {Entryesitileft("Non valido", 0)}
-                                        {Entryesitileft("Opportunità", 0)}
-                                        {Entryesitileft("Lead persa", 0)}
-                                        {Entryesitileft("Iscrizione", 0)}
-                                        {Entryesitileft("Iscrizione posticipata", 0)}
-                                        {Entryesitileft("In valutazione", 0)}
-                                        {Entryesitileft("Da contattare", 0)}
-                                    </div>
-                                    )}
-                                    <div className="rightdatas">
-                                        {data ?
-                                            <Doughnut data={data} />
-                                            :
-                                            <Doughnut data={placeholdercake} />
-                                        }
-                                    </div>
-                                </div>
-                                </div>
-                            </div>
-                        </div>
+                    <TopDash hideexport hideattivi hideLegend hidecerca generatePdf={generatePDF} />
+                    <div className='dashbody'>           
+                        <iframe
+                        width="100%" 
+                        height="680" 
+                        src="https://lookerstudio.google.com/embed/reporting/1e19fb08-acd2-4dac-843a-fafe7bff31ee/page/p_lbamx3ried" 
+                        frameborder="0" 
+                        allowfullscreen 
+                        sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"> 
+                        </iframe>   
                     </div>
                 </div>
             }

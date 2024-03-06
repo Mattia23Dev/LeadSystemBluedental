@@ -106,7 +106,7 @@ exports.createOrientatore = async (req, res) => {
         utente.monthlyLeadCounter -= 1;
         const leadData = {
           data: req.body.data,
-          nome: req.body.nome,
+          nome: req.body.nome + ' ' + req.body.cognome,
           cognome: req.body.cognome,
           email: req.body.email,
           numeroTelefono: req.body.numeroTelefono,
@@ -127,7 +127,7 @@ exports.createOrientatore = async (req, res) => {
     } else {
       const leadData = {
         data: req.body.data,
-        nome: req.body.nome,
+        nome: req.body.nome + ' ' + req.body.cognome,
         cognome: req.body.cognome,
         email: req.body.email,
         numeroTelefono: req.body.numeroTelefono,

@@ -118,7 +118,7 @@ exports.createOrientatore = async (req, res) => {
           trattamento: req.body.trattamento,
           città: req.body.città,
           manualLead: true,
-          utmCampagin: req.body.campagna,
+          utmCampaign: req.body.campagna,
         };
     
         const lead = new Lead(leadData);
@@ -139,7 +139,7 @@ exports.createOrientatore = async (req, res) => {
         trattamento: req.body.trattamento,
         città: req.body.città,
         manualLead: true,
-        utmCampagin: req.body.campagna
+        utmCampaign: req.body.campagna
       };
   
       const lead = new Lead(leadData);

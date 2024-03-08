@@ -612,7 +612,7 @@ const writeDataSocial = async (auth) => {
 
   const assegnatiLeadsComp = leads.filter((lead) => {
     const leadDate = new Date(lead.data);
-    return leadDate >= ieri && leadDate <= domani && lead.campagna === "Social";
+    return leadDate >= ieri && leadDate <= domani;
   });
 
   assegnatiLeadsComp.forEach((lead) => {
@@ -624,9 +624,9 @@ const writeDataSocial = async (auth) => {
       lead.campagna ? lead.campagna : "",
       "meta",
       "Lead form",
-      lead.utmCampaign ? lead.utmCampaign.toString() : '', 
-      lead.utmAdset ? lead.utmAdset.toString() : '',
-      lead.utmContent ? lead.utmContent.toString() : '',
+      lead.utmCampaign ? lead.utmCampaign.toString() : lead.campagna.trim().toLocaleLowerCase() === 'messenger' ? "Messenger" : '', 
+      lead.utmAdset ? lead.utmAdset.toString() : lead.campagna.trim().toLocaleLowerCase() === "messenger" ? 'Messenger' : '',
+      lead.utmContent ? lead.utmContent.toString() : lead.campagna.trim().toLocaleLowerCase() === "messenger" ? 'Messenger' : '',
       lead.orientatori && lead.orientatori !== null ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : "Non assegnato",
       lead.motivo ? lead.motivo : "",
       lead.esito === "Non interessato" ? "Lead persa" : lead.esito.toString(),
@@ -942,6 +942,7 @@ cron.schedule('30 1 * * *', () => {
   runExport(writeDataSocial);
 })
 
+//runExport(writeDataSocial);
 /*cron.schedule('20 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   GetSheetAffiliateData();
 });

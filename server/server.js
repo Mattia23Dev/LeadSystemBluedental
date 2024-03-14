@@ -62,8 +62,9 @@ app.get('/email-marketing', async (req,res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Grazie per averci contattato!</title>
         <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap');
             body {
-                font-family: Arial, sans-serif;
+                font-family: 'Poppins', sans-serif;
                 background-color: #f9f9f9;
                 margin: 0;
                 padding: 0;
@@ -178,8 +179,9 @@ app.post('/submit', async (req, res) => {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Grazie per averci contattato!</title>
       <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap');
           body {
-              font-family: Arial, sans-serif;
+              font-family: 'Poppins', sans-serif;
               background-color: #f9f9f9;
               margin: 0;
               padding: 0;

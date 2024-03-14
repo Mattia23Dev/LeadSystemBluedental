@@ -872,18 +872,18 @@ exports.sendEmail = async (req, res) => {
  const sendEmailTemplateMarketing = async (leadEmail, leadName) => {
 
     const transporter = nodemailer.createTransport({
-      host: 'mail.comparacorsi.it',
+      host: 'mail.dentista-vicinoame.it',
       port: 465,
       secure: true,
       auth: {
-        user: "info@comparacorsi.it",
-        pass: "x7t4Ej&j6Y9^",
+        user: "info@dentista-vicinoame.it",
+        pass: "9HPkxLx4m32xX94",
       }
     });
     const subject = "Il tuo impianto dentale ha un rigetto";
   
     const mailOptions = {
-      from: "info@comparacorsi.it",
+      from: "info@dentista-vicinoame.it",
       to: leadEmail,
       subject: subject,
       html: `
@@ -893,7 +893,7 @@ exports.sendEmail = async (req, res) => {
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap');
           body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Poppins', sans-serif !important;
             background-color: #ffffff !important;
           }
           .container {
@@ -1091,5 +1091,5 @@ exports.sendEmail = async (req, res) => {
     }
   }
 
-  //sendEmailTemplateMarketing("mattianoris23@gmail.com", "Mattia");
+  sendEmailTemplateMarketing("mattianoris23@gmail.com", "Mattia");
 

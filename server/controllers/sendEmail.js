@@ -1006,7 +1006,7 @@ exports.sendEmail = async (req, res) => {
             Se ancora le interessa, cliccando qui sotto e fornendoci il numero corretto la farò chiamare da uno specialista.</p>
             <p class="message">Le ricordo che la prima visita è totalmente gratuita e che abbiamo stipulato degli accordi che permettono ai nostri utenti di accedere a pagamenti agevolati e personalizzati.</p>
             <br /><br />
-            <a class='button' href="https://leadsystemfunnel-production.up.railway.app/email-marketing?leadEmail=${leadEmail}&leadName=${leadName}">Voglio parlare con uno specialista</a>
+            <a class='button' href="https://leadsystembluedental-production.up.railway.app/email-marketing?leadEmail=${leadEmail}&leadName=${leadName}">Voglio parlare con uno specialista</a>
             <br /><br /><br />
             <p class="message">A presto, <br />Lucia
             </p>
@@ -1091,5 +1091,5 @@ exports.sendEmail = async (req, res) => {
     }
   }
 
-  sendEmailTemplateMarketing("mattianoris23@gmail.com", "Mattia");
+  //sendEmailTemplateMarketing("mattianoris23@gmail.com", "Mattia");
 

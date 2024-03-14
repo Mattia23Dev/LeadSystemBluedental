@@ -6,6 +6,7 @@ const webpush = require('web-push');
 require("dotenv").config();
 const path = require("path");
 const Lead = require('./models/lead');
+const bodyParser = require("body-parser")
 
 const app = express();
 
@@ -16,6 +17,7 @@ mongoose
   .catch((err) => console.log("DB Connection Error ", err));
 
   app.use(express.static(path.join(__dirname, 'client', 'public')));
+  app.use(bodyParser.urlencoded({ extended: true }));
 
  const publicVapidKey = "BA4JFmsO2AigZr9o4BH8lqQerqz2NKytP2nsxOcHIKbl5g98kbOzLECvxXYrQyMTfV_W7sHTUG6_GuWtTzwLlCw";
  const privateVapidKey = "f33Ot0HGNfYCJRR69tW_LwRsbDQtS0Jk9Ya57l0XWQQ";
@@ -87,15 +89,33 @@ app.get('/email-marketing', async (req,res) => {
                 max-width: 200px;
                 margin: 0 auto;
             }
+            .button{
+              padding: 8px 20px;
+              border: 1px solid #000;
+              cursor: pointer;
+              border-radius: 20px;
+            }
+            input{
+              padding: 3px 7px;
+              border-radius: 10px;
+              border: 1px solid #000;
+              outline: none;
+              margin: 20px 0;
+            }
+            select{
+              padding: 3px 7px;
+              border-radius: 10px;
+              margin-bottom: 20px;
+            }
         </style>
     </head>
     <body>
         <div class="container">
             <img class="logo" src="https://www.comparacorsi.it/wp-content/uploads/2024/03/comparadentisti_logo_Tavola-disegno-1-copia-3.png" alt="dentistavicinoame">
             <h1>Compila il modulo per essere ricontattato!</h1>
-            <form action="/submit" method="post">
-              <input type="hidden" name="leadEmail" value=${leadEmail}>
-              <input type="hidden" name="leadName" value=${leadName}>
+            <form id="contactForm" action="/submit" method="post">
+              <input type="hidden" name="leadEmail" value="${leadEmail}">
+              <input type="hidden" name="leadName" value="${leadName}">
               <label for="telefono">Numero di Telefono:</label>
               <input type="tel" id="telefono" name="telefono" required><br><br>
               <label for="orario">Orario di Contatto:</label>
@@ -112,7 +132,7 @@ app.get('/email-marketing', async (req,res) => {
                 <option value="17:00">17:00</option>
                 <option value="18:00">18:00</option>
               </select><br><br>
-              <input type="submit" value="Prenota chiamata gratuita">
+              <input class='button' type="submit" value="Prenota chiamata gratuita">
             </form>
         </div>
     </body>
@@ -124,34 +144,104 @@ app.get('/email-marketing', async (req,res) => {
 })
 
 app.post('/submit', async (req, res) => {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, '0');
+  const month = String(today.getMonth() + 1).padStart(2, '0'); 
+  const year = today.getFullYear();
+
+  const formattedDate = `${day}/${month}/${year}`;
+  console.log(req.body)
   const telefono = req.body.telefono;
+  const email = req.body.leadEmail;
+  const nome = req.body.leadName;
   const orario = req.body.orario;
-  await fetch("https://sheet.best/api/sheets/4070a63e-91a2-42d2-aa8f-ae61f2b20875", {
+  try {
+    await fetch("https://sheet.best/api/sheets/4070a63e-91a2-42d2-aa8f-ae61f2b20875", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      Nome: leadName,
-      Cognome: leadSurname,
-      Email: leadEmail,
-      Cellulare: leadPhone,
-      Richiesta: "Si",
+      Nome: nome,
+      Email: email,
+      Cellulare: telefono,
+      Orario: orario,
       Data: formattedDate,
-      Ecp: leadEcp || "",
-      Orientatore: leadOrientatore || "",
     })
   })
   .then(response => {
+    res.send(`
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Grazie per averci contattato!</title>
+      <style>
+          body {
+              font-family: Arial, sans-serif;
+              background-color: #f9f9f9;
+              margin: 0;
+              padding: 0;
+          }
+          .container {
+              max-width: 600px;
+              margin: 50px auto;
+              padding: 20px;
+              background-color: #fff;
+              border-radius: 10px;
+              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+              text-align: center;
+          }
+          h1 {
+              color: #333;
+              margin-bottom: 20px;
+          }
+          p {
+              color: #666;
+              margin-bottom: 20px;
+          }
+          .logo {
+              max-width: 200px;
+              margin: 0 auto;
+          }
+          .button{
+            padding: 8px 20px;
+            border: 1px solid #000;
+            cursor: pointer;
+            border-radius: 20px;
+          }
+          input{
+            padding: 3px 7px;
+            border-radius: 10px;
+            border: 1px solid #000;
+            outline: none;
+            margin: 20px 0;
+          }
+          select{
+            padding: 3px 7px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+          }
+      </style>
+  </head>
+  <body>
+      <div class="container">
+          <img class="logo" src="https://www.comparacorsi.it/wp-content/uploads/2024/03/comparadentisti_logo_Tavola-disegno-1-copia-3.png" alt="dentistavicinoame">
+          <h1>Grazie, sarai ricontattato al più presto!</h1>
+      </div>
+  </body>
+  </html>
+`); 
     if (response.ok) {
       console.log("Lead salvata con successo");
     } else {
       console.error("Errore durante il salvataggio della lead:", response);
     }
   })
-  console.log('Numero di Telefono:', telefono);
-  console.log('Orario di Contatto:', orario);
-  res.send('Grazie per aver compilato il modulo! Verrai ricontattato presto.');
+  } catch (error) {
+    console.error(error)
+  }
 });
 
 //deleteAllLeads();

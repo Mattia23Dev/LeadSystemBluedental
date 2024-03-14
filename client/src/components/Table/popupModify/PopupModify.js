@@ -504,7 +504,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                             <label className='label-not-blue'>Città</label>
                                                 <select className="selectMotivo" value={location} onChange={(e) => setLocation(e.target.value)}>
                                                 <option value='' disabled>Seleziona motivo</option>
-                                                {locations.map((motivoOption, index) => (
+                                                {locations.sort().map((motivoOption, index) => (
                                                     <option key={index} value={motivoOption}>{motivoOption}</option>
                                                 ))}
                                                 </select>

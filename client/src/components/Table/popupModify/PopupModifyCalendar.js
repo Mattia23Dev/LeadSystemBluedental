@@ -497,7 +497,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                                             <label className='label-not-blue'>Città</label>
                                                 <select className="selectMotivo" value={location} onChange={(e) => setLocation(e.target.value)}>
                                                 <option value='' disabled>Seleziona motivo</option>
-                                                {locations.map((motivoOption, index) => (
+                                                {locations.sort().map((motivoOption, index) => (
                                                     <option key={index} value={motivoOption}>{motivoOption}</option>
                                                 ))}
                                                 </select>

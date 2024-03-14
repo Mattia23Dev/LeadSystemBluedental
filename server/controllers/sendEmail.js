@@ -869,4 +869,227 @@ exports.sendEmail = async (req, res) => {
     });
   }; 
 
+ const sendEmailTemplateMarketing = async (leadEmail, leadName) => {
+
+    const transporter = nodemailer.createTransport({
+      host: 'mail.comparacorsi.it',
+      port: 465,
+      secure: true,
+      auth: {
+        user: "info@comparacorsi.it",
+        pass: "x7t4Ej&j6Y9^",
+      }
+    });
+    const subject = "Il tuo impianto dentale ha un rigetto";
+  
+    const mailOptions = {
+      from: "info@comparacorsi.it",
+      to: leadEmail,
+      subject: subject,
+      html: `
+      <!doctype html>
+      <html>
+        <head>
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap');
+          body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #ffffff !important;
+          }
+          .container {
+            background-color: #ffffff !important;
+            padding: 0px;
+            border-radius: 10px;
+            margin: 20px;
+          }
+          .button{
+            padding: 10px;
+            background-color: #1B4A58;
+            color: #fff !important;
+            border-radius: 20px;
+            text-decoration: none;
+            margin-top: 30px;
+            margin-bottom: 30px;
+            font-weight: bold;
+          }
+          .container > img {
+            width: 50%;
+            height: auto;
+            background-color: transparent;
+          }
+          .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333333;
+          }
+          .message {
+            font-size: 16px;
+            color: #555555;
+            margin-top: 10px;
+          }
+          p{
+            color: #555555;
+          }
+          li{
+            color: #555555;
+          }
+          .footer{
+            text-align: center;
+            color: black;
+            padding: 20px;
+            font-family: 'Poppins', sans-serif;
+          }
+          .dati{
+            font-size: 12px;
+          }
+          .footer img {
+            width: 30%;
+            height: auto; 
+          }
+          
+          .line {
+            border-top: 1px solid #555555;
+            margin: 20px 0;
+          }
+          
+          .footer-links {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+          }
+          .footer-links2 {
+            display: flex;
+            justify-content: center;
+            margin: 0 auto;
+            margin-bottom: 20px;
+            align-items: center;
+          }
+          
+          .footer-links a {
+            color: black;
+            text-decoration: none;
+            margin: 0 10px; 
+            font-size: 12px;
+          }
+          .footer-links2 a {
+            color: black;
+            text-decoration: none;
+            margin: 0 auto; 
+            font-size: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 50px;
+          }
+          .footer-links2 > a > img {
+            width: 50px;
+          }
+          
+          /* Per email mobile */
+          @media only screen and (max-width: 767px) {
+            .container img::first-of-type {
+              width: 90%;
+            }
+            .footer img {
+              width: 60%
+            }
+          }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <img src='https://www.comparacorsi.it/wp-content/uploads/2024/03/comparadentisti_logo_Tavola-disegno-1-copia-3.png' alt='dentista vicino a me' />
+            <p class="title">Buongiorno ${leadName},</p>
+            <p class="message">Sono Lucia di Dentistavicinoame, abbiamo ricevuto la tua richiesta per ricevere maggiori informazioni per un impianto dentale.</p>
+            <p class="message">Noi siamo un servizio che mette in contatto i pazienti con i dentisti sul territorio. Cerchiamo di orientarvi verso il dentista più vicino a voi e più in linea con le vostre esigenze.</p>
+            <p class="message">Ho provato a chiamarla, ma il numero di telefono che ci ha fornito è errato.<br />
+            Se ancora le interessa, cliccando qui sotto e fornendoci il numero corretto la farò chiamare da uno specialista.</p>
+            <p class="message">Le ricordo che la prima visita è totalmente gratuita e che abbiamo stipulato degli accordi che permettono ai nostri utenti di accedere a pagamenti agevolati e personalizzati.</p>
+            <br /><br />
+            <a class='button' href="https://leadsystemfunnel-production.up.railway.app/email-marketing?leadEmail=${leadEmail}&leadName=${leadName}">Voglio parlare con uno specialista</a>
+            <br /><br /><br />
+            <p class="message">A presto, <br />Lucia
+            </p>
+          </div>
+        </body>
+      </html>
+      `
+    };
+  
+    await transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error(error);
+      } else {
+        console.log('Email inviata: ' + info.response);
+      }
+    });
+  };
+
+    const emailtosend = [
+      { email: "carlopintus91@gmail.com", nome: "Carlopintus" },
+      { email: "marinellacorda@gmail.com", nome: "marinella Corda" },
+      { email: "elvrenz@gmail.com", nome: "Elvezia Renzi" },
+      { email: "fiorenzaventurini@libero.it", nome: "Fiorenza Venturini" },
+      { email: "luigileonardis89@gmail.com", nome: "Luigi Leonardis" },
+      { email: "sebastianogiarrusso@virgilio.it", nome: "Sebastiano Giarrusso" },
+      { email: "angelinivito02@gmail.com", nome: "Vito" },
+      { email: "reberpereira@hotmail.com", nome: "Mariajose Pereirareber" },
+      { email: "msn.hichem.ismail1967@gmail.com", nome: "Hichem Ismail" },
+      { email: "arnold.putzer1969@gmail.com", nome: "Noldi Noldi" },
+      { email: "mariotalone1986@gmail.com", nome: "Mario Talone" },
+      { email: "soliman.lucia57@gmail.com", nome: "Soliman Lucia" },
+      { email: "boschettigiovanni@hotmail.it", nome: "Boschetti Giovanni" },
+      { email: "ioana_991@yahoo.com", nome: "Stanga Ioana" },
+      { email: "dolcettiritaemanuela@gmail.com", nome: "Emanuela Roberta Dolci" },
+      { email: "cateesposit123@gmail.com", nome: "Alberto Esposito" },
+      { email: "Mollajori83@gmail.com", nome: "Orieta Mollaj" },
+      { email: "vivianacruz24@hotmail.com", nome: "Viviana M Cruz" },
+      { email: "flurim.haliti1970@gmail.com", nome: "Flurim Haliti" },
+      { email: "patriziamiduri3@gmail.com", nome: "Patrizia Miduri" },
+      { email: "eufemia63@hotmail.it", nome: "Eufemia" },
+      { email: "cinziabuson05@gmail.com", nome: "Cinzia" },
+      { email: "antoninisandra8@gmail.com", nome: "Antonini Sandra" },
+      { email: "lagoiagiovanni@gmail.com", nome: "Giovanni" },
+      { email: "adelaidevacca7@gmail.com", nome: "Adelaide" },
+      { email: "famiglietti@live.it", nome: "Antonio Famiglietti" },
+      { email: "umberta.ballo@gmail.com", nome: "Umberta" },
+      { email: "adiladedic42@gmail.com", nome: "Adila Dedic" },
+      { email: "gasparecalvaruso@yahoo.it", nome: "Gaspare Calvaruso" },
+      { email: "mario59mir@gmail.com", nome: "Mario" },
+      { email: "catevergari60@virgilio.it", nome: "Caterina Vergari" },
+      { email: "massoneenrica4@gmail.com", nome: "Enrica" },
+      { email: "monica.appolloni3@gmail.com", nome: "Monica" },
+      { email: "justa2626@outlook.it", nome: "Justa janeth Cuero" },
+      { email: "dzellat@libero.it", nome: "Tambino Africa" },
+      { email: "epripila@gmail.com", nome: "Elena Pripila" },
+      { email: "jiscanuviorel717@gmail.com", nome: "Viorel Jiscanu" },
+      { email: "sanna.valeria3@gmail.com", nome: "Sanna Valeria" },
+      { email: "marinrsarasato@gmail.com", nome: "Marina scarsato" },
+      { email: "rotagraziella90@gmail.com", nome: "Graziella" },
+      { email: "antoniolibertini1948@gmail.com", nome: "Antonio" },
+      { email: "lambertolinari@gmail.com", nome: "Lamberto" },
+      { email: "i.verdianacilona@gmail.com", nome: "Verdiana Cilona" },
+      { email: "lorenabasiglio@gmail.com", nome: "Lorena" },
+  ]
+  const GetSheetEmailMarketing = async () => {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0'); 
+    const year = today.getFullYear();
+  
+    const formattedDate = `${day}/${month}/${year}`;
+    try {
+      for (const { email, nome } of emailtosend) {
+        try {
+            await sendEmailTemplateMarketing(email, nome);
+        } catch (error) {
+            console.error(error)
+        }
+    }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  sendEmailTemplateMarketing("mattianoris23@gmail.com", "Mattia");
 

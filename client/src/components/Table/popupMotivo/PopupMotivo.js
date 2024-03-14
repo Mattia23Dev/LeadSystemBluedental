@@ -125,7 +125,7 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
                <label htmlFor="locationSelect">Luogo Prenotazione:</label>
                <select id="locationSelect" onChange={handleLocationChange} value={location}>
                  <option value="">Seleziona</option>
-                 {locations.map(location => (
+                 {locations.sort().map(location => (
                    <option key={location} value={location}>{location}</option>
                  ))}
                </select>

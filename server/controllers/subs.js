@@ -517,55 +517,21 @@ exports.dailyCap = async (req, res) => {
   }
 };
 
-const righeDaAggiungere = [
-  ["01/03/2024", "Giovanna Borrelli", "393293522703", "bgiovanna1401@gmail.com", "Implantologia a carico immediato", "DI 2- Meta Web - Italia Impianti - NO", "Italia - Broad 2 - 35-65+", "Video - 47€ mese", "Bari", "01/03/2024", "Marina", "GIA PAZIENTE", 1],
-  ["01/03/2024", "Carla Melchionda", "393714774148", "carlamelchionda12@gmail.com", "Impianti per mancanza di osso (Impianti pterigoidei)", "DI - Meta Web - Italia Impianti", "Italia - Broad - 35-65+", "Prezzo HOOK2", "Bari", "01/03/2024", "Marina", "RICHIAMO", 1],
-  ["01/03/2024", "Stefania La Stefy", "393288720657", "claylug@gmail.com", "Implantologia a carico immediato", "DI - Meta Web - Italia - LAL 1% Fissati - Impianti - NO", "Italia - LAL 1% Fissati - Age: 30 - 65+", "Prezzo HOOK1", "Ferrara", "01/03/2024", "Marina", "RICHIAMO", 1],
-  ["01/03/2024", "Lori Cortese", "393473418849", "lorettacortese008@gmail.com", "Implantologia per singolo dente", "DI - Meta Web - Italia - LAL 1% invio modulo - Impianti - broad maps", "Italia - LAL 1% form inviato - Age: 30 - 65+ - broad maps", "Problemi con i denti?", "Torino", "01/03/2024", "Tatiana", "RICHIAMO", 1, "occ"],
-  ["01/03/2024", "Salvatore Di Bella", "393664893987", "salvatoredibello67@gmail.com", "Implantologia a carico immediato", "DI 2- Meta Web - Italia Impianti - NO", "Italia - Broad 2 - 35-65+", "Video - 47€ mese", "Cantù", "01/03/2024", "Tatiana", "RICHIAMO", 1],
-  ["01/03/2024", "Giovanna Palombi", "393385452661", "giovannapalombi24@gmail.com", "Implantologia a carico immediato", "DI - Meta Web - Italia - LAL 1% Fissati - Impianti - NO", "Italia - LAL 1% Fissati - Age: 30 - 65+", "Prezzo HOOK1", "Cassino", "01/03/2024", "Tatiana", "FISSATO", 1],
-  ["01/03/2024", "Mimmo Caruso", "393427566734", "mimocariso@gmail.com", "Implantologia a carico immediato", "DI - Meta Web - Italia - LAL 1% Fissati - Impianti - NO", "Italia - LAL 1% Fissati - Age: 30 - 65+", "Prezzo HOOK1", "Bari", "01/03/2024", "Tatiana", "RIFIUTA", 2, "RICHIAMA LUI"],
-  ["01/03/2024", "Mary Fraleoni", "393489142947", "mari.fraleoni@hotmail.it", "Implantologia a carico immediato", "DI 2- Meta Web - Italia Impianti - NO", "Italia - Broad 2 - 35-65+", "Video - 47€ mese", "Roma", "01/03/2024", "Tatiana", "RICHIAMO", 1],
-  ["01/03/2024", "Carmen Dantonio", "393341410991", "carmen.dantonio45@gmail.com", "Impianti per mancanza di osso (Impianti pterigoidei)", "DI - Meta Web - Italia Impianti", "Italia - Broad - 35-65+", "Problemi con i denti?", "Torino", "01/03/2024", "Tatiana", "FISSATO", null, "TORINO CHIRONI 11-3"],
-  ["01/03/2024", "Paolo Rotolo", "393494161969", "paolorotolo62@gmail.com", "Implantologia a carico immediato", "DI 3 - Meta Web - Italia impianti NO", "Broad 35-65+ I Italia", "Video 2 - 1380€", "Torino", "01/03/2024", "Tatiana", "RIFIUTA", 1, "NON INTERESSATO"],
-  ["01/03/2024", "Maria Teresa Becce", "393497939153", "teresa.becce@libero.it", "Implantologia a carico immediato", "DI 2- Meta Web - Italia Impianti - NO", "Italia - Broad 2 - 35-65+", "Video - 47€ mese", "Abbiategrasso", "01/03/2024", "Tatiana", "RIFIUTA", null, "RICHIAMA LUI"],
-  ["01/03/2024", "Nicola Ramondo", "393756237105", "tifogrifo1970@libero.it", "Implantologia a carico immediato", "DI 3 - Meta Web - Italia impianti NO", "Broad 35-65+ I Italia", "Video 2 - 1380€", "Prato", "01/03/2024", "Tatiana", "GIA PAZIENTE", null],
-  ["01/03/2024", "Irene Colongo", "393381970851", "irenecolongo@libero.it", "Implantologia a carico immediato", "DI 2- Meta Web - Italia Impianti - NO", "Italia - Broad 2 - 35-65+", "Video - 47€ mese", "Bari", "01/03/2024", "Tatiana", "GIA PAZIENTE", null],
-  ["01/03/2024", "Angela Patrone", "393396470753", "angelapatrone123@gmail.com", "Implantologia a carico immediato", "DI 2- Meta Web - Italia Impianti - NO", "Italia - Broad 2 - 35-65+", "Video - 47€ mese", "Genova", "01/03/2024", "Tatiana", "FISSATO", null, "GENOVA 6-3"],
-  ["01/03/2024", "Morosan Florina", "", "393517466501", "", "Implantologia a carico immediato", "Messenger", "Messenger", "Messenger", "Torino", "01/03/2024", "Tatiana", "RICHIAMO", 2],
-  ["01/03/2024", "Adele Barba", "393291068011", "", "Implantologia a carico immediato", "Messenger", "Messenger", "Messenger", "Treviso", "01/03/2024", "Stefania", "FISSATO", 1, "", "TREVISO"],
-  ["01/03/2024", "Sabrina Nofri", "393492216460", "sabry.nofri@gmail.com", "Implantologia per singolo dente", "DI - Meta Web - Altri centri LAL 1% invio form - Impianti - Broad Maps", "Altri centri - LAL 1% invio form - Age: 30 - 65+", "Prezzo HOOK1 - 1380€", "Piacenza", "01/03/2024", "Stefania", "RICHIAMO", 1],
-  ["01/03/2024", "Anna Conti", "393333959078", "annafrancesca.conti@aicloud.com", "Impianti per mancanza di osso (Impianti pterigoidei)", "DI 2- Meta Web - Altri Centri - Impianti", "Altri Centri - Broad 2 - 35-65+", "Video - 47€ mese", "Arezzo", "01/03/2024", "Stefania", "RICHIAMO", 1],
-  ["01/03/2024", "Marisa Magliano", "393454068744", "marisamagliano@yahoo.it", "Implantologia a carico immediato", "DI - Meta Web - Altri centri LAL 1% invio form - Impianti - Broad Maps", "Altri centri - LAL 1% invio form - Age: 30 - 65+", "Prezzo HOOK1", "Modena", "01/03/2024", "Tatiana", "RICHIAMO", 2],
-  ["01/03/2024", "Musa Ljuljanovic", "393715520778", "musaljuljanovic@gmail.com", "Impianti per mancanza di osso (Impianti pterigoidei)", "DI 2- Meta Web - Altri Centri - Impianti", "Altri Centri - Broad 2 - 35-65+", "Video - 47€ mese", "Pomezia", "01/03/2024", "Stefania", "GIA PAZIENTE", null],
-  ["01/03/2024", "Bruno Costone", "393389827389", "bcostone@gmail.com", "Impianti per mancanza di osso (Impianti pterigoidei)", "DI - Meta Web - Altri centri LAL 1% invio form - Impianti - Broad Maps", "Altri centri - LAL 1% invio form - Age: 30 - 65+", "Prezzo HOOK1", "Bari", "01/03/2024", "Stefania", "FISSATO", null, "BARI 8/3"]
-];
-
-async function inserisciLead(righeDaAggiungere) {
+async function updateLeads() {
   try {
-    for (let riga of righeDaAggiungere) {
-      const nuovaLead = new Lead({
-        data: riga[0],
-        nome: riga[1],
-        numeroTelefono: riga[2],
-        email: riga[3],
-        trattamento: riga[4],
-        utente: "65d3110eccfb1c0ce51f7492",
-        utmCampaign: riga[5],
-        utmAdset: riga[6],
-        utmContent: riga[7],
-        città: riga[8],
-        esito: riga[11],
-        tentativiChiamata: riga[12],
-      });
+      // Trova tutti i lead che soddisfano il criterio
+      const leadsToUpdate = await Lead.find({ utmAdset: "Italia - LAL 1% form inviato - Age: 30 - 65+ off" });
+    console.log(leadsToUpdate.length);
 
-      await nuovaLead.save();
-    }
+    const updatedLeads = await Lead.updateMany(
+          { utmAdset: "Italia - LAL 1% form inviato - Age: 30 - 65+ off" },
+          { utmAdset: "Italia - LAL 1% form inviato - Age: 30 - 65+" } // Sostituisci "Nuovo valore" con il valore desiderato
+      );
 
-    console.log('Le lead sono state inserite con successo!');
+      console.log(`Aggiornamento completato. ${updatedLeads.nModified} lead sono stati aggiornati.`);
   } catch (error) {
-    console.error('Si è verificato un errore durante l\'inserimento delle lead:', error);
+      console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
   }
 }
 
-//inserisciLead(righeDaAggiungere);
+//updateLeads();

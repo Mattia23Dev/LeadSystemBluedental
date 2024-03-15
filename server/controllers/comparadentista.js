@@ -621,7 +621,7 @@ const writeDataSocial = async (auth) => {
       lead.nome,
       lead.email,
       lead.numeroTelefono,
-      lead.campagna ? lead.campagna : "",
+      lead.campagna ? lead.campagna : lead.campagna.trim().toLocaleLowerCase() === 'messenger' ? "Messenger" : "",
       "meta",
       "Lead form",
       lead.utmCampaign ? lead.utmCampaign.toString() : lead.campagna.trim().toLocaleLowerCase() === 'messenger' ? "Messenger" : '', 

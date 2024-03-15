@@ -1091,5 +1091,5 @@ exports.sendEmail = async (req, res) => {
     }
   }
 
-  sendEmailTemplateMarketing("mattianoris23@gmail.com", "Mattia");
+  //sendEmailTemplateMarketing("francesca.dl@funnelconsulting.it", "Francesca");
 

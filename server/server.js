@@ -25,7 +25,7 @@ mongoose
 app.use(express.json({ limit: "10mb" }));
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL, process.env.COMPARACORSI, process.env.APP_COMPARACORSI, "https://test-comparatore.netlify.app", "https://leadsystem-test.netlify.app"],
+    origin: [process.env.CLIENT_URL, process.env.COMPARACORSI, process.env.APP_COMPARACORSI, "https://test-comparatore.netlify.app", "https://leadsystem-test.netlify.app", "https://cap.dentista-vicinoame.it", "http://localhost:3000"],
   })
 );
 

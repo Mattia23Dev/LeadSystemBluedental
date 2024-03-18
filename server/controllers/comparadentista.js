@@ -26,19 +26,25 @@ exports.getDataCap = async (req, res) => {
       const existingLeadAss = await Lead.findOne({ $or: [{ email }, { numeroTelefono }] });
 
       if (!existingLead || !existingLeadAss) {
-        const newLead = new LeadWordpress({
+        const newLead = new Lead({
           data: new Date(),
           nome: nome,
           email: email,
           numeroTelefono: numeroTelefono,
           campagna: 'Meta Web G',
+          utente: "65d3110eccfb1c0ce51f7492",
           utmCampaign: utmCampaign,
           città: città,
           utmSource: utmSource,
           utmContent: utmContent,
+          esito: "Da contattare",
           utmAdset: utmAdset,
           utmAdgroup: utmAdgroup,
-          trattamento: 'Implantologia a carico immediato'
+          trattamento: 'Implantologia a carico immediato',
+          tentativiChiamata: '0',
+          giàSpostato: false,
+          note: "",
+          fatturato: "",
         });
   
           await newLead.save();

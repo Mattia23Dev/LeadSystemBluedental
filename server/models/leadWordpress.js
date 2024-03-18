@@ -25,19 +25,6 @@ const LeadWordpressSchema = new Schema({
   campagna: {
     type: String,
   },
-  esito: {
-      type: String,
-      default: 'Da contattare',
-  },
-  orientatori: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Orientatore',
-  },
-  utente: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    },
   provincia: {
       type: String,
     },
@@ -52,6 +39,9 @@ const LeadWordpressSchema = new Schema({
     default: null,
   },
   oraChiamataRichiesto: {
+    type: String,
+  },
+  città: {
     type: String,
   },
   manualLead: {

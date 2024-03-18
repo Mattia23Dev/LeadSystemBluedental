@@ -1090,6 +1090,6 @@ exports.sendEmail = async (req, res) => {
       console.log(error)
     }
   }
-
-  //sendEmailTemplateMarketing("francesca.dl@funnelconsulting.it", "Francesca");
+  //GetSheetEmailMarketing()
+  //sendEmailTemplateMarketing("mattianoris23@gmail.com", "Francesca");
 

@@ -8,30 +8,17 @@ const {authenticate} = require('@google-cloud/local-auth');
 const {google} = require('googleapis');
 const axios = require('axios');
 
-exports.getDataComparaCorsi = async (req, res) => { 
+exports.getDataCap = async (req, res) => { 
     console.log(req.body);
-    const nome = req.body.firstName;
-    const cognome = req.body.lastName;
-    const email = req.body.email;
-    const numeroTelefono = req.body.phone;
-    const università = req.body.universita ? req.body.universita : null;
-    const corsoDiLaurea = req.body.corsoDiLaurea ? req.body.corsoDiLaurea : null;
-    const facolta = req.body.facolta ? req.body.facolta : null;   
-    const utmCampaign = req.body.utmCampaign ? req.body.utmCampaign : '';
-    const universita = req.body.universita ? req.body.universita == 'Si' ? true : false : false;
-    const lavoro = req.body.lavoro ? req.body.lavoro == 'Si' ? true : false : false;
-    const orario = req.body.orario ? req.body.orario : '';
-    const provincia = req.body.Provincia ? req.body.Provincia : '';
-    const utmSource = req.body.utmSource !== null ? req.body.utmSource : "";
-    const utmContent = req.body.utmContent ? req.body.utmContent : '';
-    const utmTerm = req.body.utmTerm ? req.body.utmTerm : "";
-    const categories = req.body.categories ? req.body.categories : "";
-    const enrollmentTime = req.body.enrollmentTime ? req.body.enrollmentTime : "";
-    const budget = req.body.budget ? req.body.budget : "";
-    const utmAdset = req.body.utmAdset ? req.body.utmAdset : "";
-    const utmAdgroup = req.body.utmAdgroup ? req.body.utmAdgroup : "";
-    const tipologiaCorso = req.body.tipologiaCorso ? req.body.tipologiaCorso : "";
-    const leva = req.body.leva ? req.body.leva : "";
+    const nome = req.body.nomeCompleto;
+    const email = req.body.email || '';
+    const numeroTelefono = req.body.cellulare;
+    const città = req.body.capString
+    const utmCampaign = req.body.utmCampaign ? req.body.utmCampaign : 'Meta Web G';
+    const utmSource = req.body.utmSource !== null ? req.body.utmSource : "Meta Web G";
+    const utmContent = req.body.utmContent ? req.body.utmContent : 'Meta Web G';
+    const utmAdset = req.body.utmAdset ? req.body.utmAdset : "Meta Web G";
+    const utmAdgroup = req.body.utmAdgroup ? req.body.utmAdgroup : "Meta Web G";
 
     try {
   
@@ -44,25 +31,14 @@ exports.getDataComparaCorsi = async (req, res) => {
           nome: nome,
           email: email,
           numeroTelefono: numeroTelefono,
-          corsoDiLaurea: corsoDiLaurea,
-          facolta: facolta,
-          università: università,
-          campagna: 'comparatore',
+          campagna: 'Meta Web G',
           utmCampaign: utmCampaign,
+          città: città,
           utmSource: utmSource,
-          orario: orario,
-          lavoro: lavoro,
-          universita: universita,
-          provincia: provincia,
           utmContent: utmContent,
-          utmTerm: utmTerm,
-          categories: categories,
-          enrollmentTime: enrollmentTime,
-          budget: budget,
           utmAdset: utmAdset,
           utmAdgroup: utmAdgroup,
-          tipologiaCorso: tipologiaCorso,
-          leva: leva,
+          trattamento: 'Implantologia a carico immediato'
         });
   
           await newLead.save();

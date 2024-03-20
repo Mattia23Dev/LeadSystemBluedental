@@ -16,8 +16,8 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
   const treatments = ["Impianti", "Pulizia dei denti", "Protesi Mobile", "Sbiancamento", "Ortodonzia", "Faccette dentali"];
   const locations = [
     "Desenzano Del Garda", "Melzo", "Carpi", "Lodi", "Cantù", "Mantova", "Seregno", "Milano Piazza Castelli", "Abbiategrasso",
-    "Pioltello", "Vigevano", "Milano Via Parenzo", "Settimo Milanese", "Cremona", "Milano", "Monza", "Busto Arsizio", "Brescia",
-    "Cinisello Balsamo", "Cologno Monzese", "Varese", "Como", "San Giuliano Milanese", "Milano", "Bergamo", "Roma Marconi",
+    "Pioltello", "Vigevano", "Milano Via Parenzo", "Settimo Milanese", "Cremona", "Milano Brianza", "Monza", "Busto Arsizio", "Brescia",
+    "Cinisello Balsamo", "Cologno Monzese", "Varese", "Como", "San Giuliano Milanese", "Milano Lomellina", "Bergamo", "Roma Marconi",
     "Roma Balduina", "Roma Prati Fiscali", "Roma Casilina", "Roma Tiburtina", "Roma Torre Angela", "Ostia", "Pomezia",
     "Ciampino", "Capena", "Cassino", "Frosinone", "Latina", "Valmontone outlet", "Roma Tuscolana", "Civitavecchia",
     "Terni", "Perugia", "Arezzo", "Firenze", "Lucca", "Prato", "Piacenza", "Ferrara", "Cesena", "Forlì", "Reggio Emilia",
@@ -35,7 +35,7 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
   };
 
     const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
-        "Numero Errato", "Non interessato", "Fuori Zona", "Già paziente"
+        "Numero Errato", "Non interessato", "Fuori Zona", "Doppio contatto", "⁠Nessuna risposta (6)", "Già paziente"
     ]);
     const [motivoVendutoList, setMotivoVendutoList] = useState([
         "Promozione / sconto", "Convenzione", "Prevalutazione corretta",

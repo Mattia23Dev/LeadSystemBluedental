@@ -10,7 +10,7 @@ const axios = require('axios');
 
 exports.getDataCap = async (req, res) => { 
     console.log(req.body);
-    const nome = req.body.nomeCompleto;
+    const nome = req.body.nomeCompleto || '';
     const email = req.body.email || '';
     const numeroTelefono = req.body.cellulare;
     const città = req.body.capString

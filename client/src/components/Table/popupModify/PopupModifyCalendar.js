@@ -43,8 +43,8 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
     const treatments = ["Impianti", "Pulizia dei denti", "Protesi Mobile", "Sbiancamento", "Ortodonzia", "Faccette dentali"];
     const locations = [
       "Desenzano Del Garda", "Melzo", "Carpi", "Lodi", "Cantù", "Mantova", "Seregno", "Milano Piazza Castelli", "Abbiategrasso",
-      "Pioltello", "Vigevano", "Milano Via Parenzo", "Settimo Milanese", "Cremona", "Milano", "Monza", "Busto Arsizio", "Brescia",
-      "Cinisello Balsamo", "Cologno Monzese", "Varese", "Como", "San Giuliano Milanese", "Milano", "Bergamo", "Roma Marconi",
+      "Pioltello", "Vigevano", "Milano Via Parenzo", "Settimo Milanese", "Cremona", "Milano Lomellina", "Monza", "Busto Arsizio", "Brescia",
+      "Cinisello Balsamo", "Cologno Monzese", "Varese", "Como", "San Giuliano Milanese", "Milano Brianza", "Bergamo", "Roma Marconi",
       "Roma Balduina", "Roma Prati Fiscali", "Roma Casilina", "Roma Tiburtina", "Roma Torre Angela", "Ostia", "Pomezia",
       "Ciampino", "Capena", "Cassino", "Frosinone", "Latina", "Valmontone outlet", "Roma Tuscolana", "Civitavecchia",
       "Terni", "Perugia", "Arezzo", "Firenze", "Lucca", "Prato", "Piacenza", "Ferrara", "Cesena", "Forlì", "Reggio Emilia",
@@ -53,7 +53,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
       "Ravenna", "Rho", "Anzio"
     ];
     const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
-        "Numero Errato", "Non interessato", "Fuori Zona", "Già paziente"
+        "Numero Errato", "Non interessato", "Fuori Zona", "Doppio contatto", "⁠Nessuna risposta (6)", "Già paziente"
     ]);
 
     
@@ -61,7 +61,9 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
         if (nomeCampagna.includes('Altri centri')) {
           return 'Meta Web - Altri centri';
         } else if (nomeCampagna.includes('Meta Web')) {
-          return 'Meta Web';
+            if (nomeCampagna === "Meta Web G"){
+                return 'Meta Web G'
+            } else return 'Meta Web';
         } else if (nomeCampagna.includes('Messenger') || nomeCampagna.includes("messenger")) {
           return 'Messenger';
         } else {

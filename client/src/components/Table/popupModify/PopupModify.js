@@ -43,8 +43,8 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
     const treatments = ["Impianti", "Pulizia dei denti", "Protesi Mobile", "Sbiancamento", "Ortodonzia", "Faccette dentali"];
     const locations = [
       "Desenzano Del Garda", "Melzo", "Carpi", "Lodi", "Cantù", "Mantova", "Seregno", "Milano Piazza Castelli", "Abbiategrasso",
-      "Pioltello", "Vigevano", "Milano Via Parenzo", "Settimo Milanese", "Cremona", "Milano", "Monza", "Busto Arsizio", "Brescia",
-      "Cinisello Balsamo", "Cologno Monzese", "Varese", "Como", "San Giuliano Milanese", "Milano", "Bergamo", "Roma Marconi",
+      "Pioltello", "Vigevano", "Milano Via Parenzo", "Settimo Milanese", "Cremona", "Milano Lomellina", "Monza", "Busto Arsizio", "Brescia",
+      "Cinisello Balsamo", "Cologno Monzese", "Varese", "Como", "San Giuliano Milanese", "Milano Brianza", "Bergamo", "Roma Marconi",
       "Roma Balduina", "Roma Prati Fiscali", "Roma Casilina", "Roma Tiburtina", "Roma Torre Angela", "Ostia", "Pomezia",
       "Ciampino", "Capena", "Cassino", "Frosinone", "Latina", "Valmontone outlet", "Roma Tuscolana", "Civitavecchia",
       "Terni", "Perugia", "Arezzo", "Firenze", "Lucca", "Prato", "Piacenza", "Ferrara", "Cesena", "Forlì", "Reggio Emilia",
@@ -53,14 +53,16 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
       "Ravenna", "Rho", "Anzio"
     ];
     const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
-        "Numero Errato", "Non interessato", "Fuori Zona", "Già paziente"
+        "Numero Errato", "Non interessato", "Fuori Zona", "Doppio contatto", "⁠Nessuna risposta (6)", "Già paziente"
     ]);
 
     function mapCampagnaPerLeadsystem(nomeCampagna) {
         if (nomeCampagna.includes('Altri centri')) {
           return 'Meta Web - Altri centri';
         } else if (nomeCampagna.includes('Meta Web')) {
-          return 'Meta Web';
+            if (nomeCampagna === "Meta Web G"){
+                return 'Meta Web G'
+            } else return 'Meta Web';
         } else if (nomeCampagna.includes('Messenger') || nomeCampagna.includes("messenger")) {
           return 'Messenger';
         } else {
@@ -542,7 +544,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                     </p>
                                     }
                                     <p><FiClock color='#30978B' /> Data di <b>creazione lead</b>: <span>{formatDate(lead.date)}</span></p>
-                                    <p>{lead.lastModify && lead.lastModify !== null ? <><FiClock color='#3471CC' /> Data <b>ultima modifica</b>: <span>{formatDate(lead.date)}</span></> : ""}</p>
+                                    <p>{lead.lastModify && lead.lastModify !== null ? <><FiClock color='#3471CC' /> Data <b>ultima modifica</b>: <span>{formatDate(lead.lastModify)}</span></> : ""}</p>
                                     <p style={{margin: '17px 0 10px 0'}}>Stato lead: 
                                         <span onClick={() => setChooseMotivo(true)}>{esito == "Non interessato" ? "Lead persa" : esito} <FaPencilAlt size={12} style={{marginLeft: '3px', cursor: 'pointer'}} /></span>
                                         {esito === "Fissato" && fatturato !== "0" && <span>{fatturato}€</span>}

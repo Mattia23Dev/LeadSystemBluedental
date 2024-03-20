@@ -73,7 +73,7 @@ export default function Table2({ onResults, searchval, setLeadsPdf }) {
   };
 
 const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
-    "Numero Errato", "Non interessato", "Fuori Zona", "Già paziente"
+    "Numero Errato", "Non interessato", "Fuori Zona", "Doppio contatto", "⁠Nessuna risposta (6)", "Già paziente"
 ]);
 
   document.addEventListener('mousedown', handleClickOutside);
@@ -148,8 +148,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
   const treatments = ["Impianti", "Pulizia dei denti", "Protesi Mobile", "Sbiancamento", "Ortodonzia", "Faccette dentali"];
   const locations = [
     "Desenzano Del Garda", "Melzo", "Carpi", "Lodi", "Cantù", "Mantova", "Seregno", "Milano Piazza Castelli", "Abbiategrasso",
-    "Pioltello", "Vigevano", "Milano Via Parenzo", "Settimo Milanese", "Cremona", "Milano", "Monza", "Busto Arsizio", "Brescia",
-    "Cinisello Balsamo", "Cologno Monzese", "Varese", "Como", "San Giuliano Milanese", "Milano", "Bergamo", "Roma Marconi",
+    "Pioltello", "Vigevano", "Milano Via Parenzo", "Settimo Milanese", "Cremona", "Milano Lomellina", "Monza", "Busto Arsizio", "Brescia",
+    "Cinisello Balsamo", "Cologno Monzese", "Varese", "Como", "San Giuliano Milanese", "Milano Brianza", "Bergamo", "Roma Marconi",
     "Roma Balduina", "Roma Prati Fiscali", "Roma Casilina", "Roma Tiburtina", "Roma Torre Angela", "Ostia", "Pomezia",
     "Ciampino", "Capena", "Cassino", "Frosinone", "Latina", "Valmontone outlet", "Roma Tuscolana", "Civitavecchia",
     "Terni", "Perugia", "Arezzo", "Firenze", "Lucca", "Prato", "Piacenza", "Ferrara", "Cesena", "Forlì", "Reggio Emilia",
@@ -1409,7 +1409,10 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
               refreshate={false}
               toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
             <div className="entries">
-              {toggles.nonRisponde && filteredData && filteredData.filter(x => x.status == "Non risponde").reverse().map((row, k) =>
+              {toggles.nonRisponde && filteredData && filteredData.filter(x => x.status == "Non risponde")
+              .reverse()
+              .sort((a, b) => parseInt(a.tentativiChiamata) - parseInt(b.tentativiChiamata))
+              .map((row, k) =>
                 <LeadEntry
                   id={JSON.stringify(row)}
                   index={k}

@@ -6,18 +6,13 @@ var cron = require('node-cron');
 const { sendEmailLeadArrivati } = require('../middlewares');
 const { getDentistaLead, getTagLeads, getTagLeads2, getDentistaLead2, getDentistaLead3 } = require('./Facebook');
 const Orientatore = require('../models/orientatori');
+const LastLeadUser = require('../models/lastLeadUser');
 
 let lastUserReceivedLead = null;
 
 const calculateAndAssignLeadsEveryDay = async () => {
   try {
     let users = await Orientatore.find();
-    /*
-    let users = await Orientatore.find({ $and: [
-      { monthlyLeadCounter: { $gt: 0 } },
-      { tag: "pegaso" }
-    ]});
-    */
     let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] }).limit(60); // Imposta il limite a 1000, o a un valore più alto se necessario
 
 
@@ -31,25 +26,22 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
     console.log( 'Utenti:'+ users.length);
 
+    const lastUserLeadData = await LastLeadUser.findOne({});
+    if (lastUserLeadData) {
+      lastUserReceivedLead = lastUserLeadData.userId;
+    }
+
     let userIndex = 0;
-    //(leads.length > 0 && users.some(user => user.monthlyLeadCounter > 0)
+
+    const lastUser = users.find(user => user._id.toString() === lastUserReceivedLead.toString());
+
+    if (lastUser) {
+      console.log('ultimo utente' + lastUser.nome);
+      userIndex = users.indexOf(lastUser) + 1;
+      lastUserReceivedLead = null;
+    }
     while (leads.length > 0) {
-      const user = users[userIndex];
-
-      /*if (!user || user.monthlyLeadCounter == 0) {
-        console.log('Tutti gli utenti hanno il contatore a 0');
-        break;
-      }*/
-
-      /*if (user.dailyCap !== undefined && user.dailyCap !== null) {
-    
-        if (user.dailyLead >= user.dailyCap) {
-          console.log(`L'utente ${user.nameECP} ha raggiunto il dailyCap per oggi.`);
-          userIndex++;
-          continue;
-        }
-      }*/
-
+      const user = users[userIndex || 0];
       const leadsNeeded = Math.min(leads.length, 1); //Math.min(user.monthlyLeadCounter, 1);
 
       if (leadsNeeded === 0) {
@@ -112,9 +104,6 @@ const calculateAndAssignLeadsEveryDay = async () => {
           await newLead.save();
 
           lastUserReceivedLead = user._id;
-
-          //user.monthlyLeadCounter -= 1;
-          //user.dailyLead += 1;
           await user.save();
 
           leadWithoutUser.assigned = true;
@@ -133,7 +122,6 @@ const calculateAndAssignLeadsEveryDay = async () => {
         if (leadIndex !== -1) {
           leads.splice(leadIndex, 1);
         }
-
       }
 
       userIndex++;
@@ -144,6 +132,11 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
     if (totalLeads === 0) {
       console.log('LeadFacebook terminati prima che tutti gli utenti abbiano il contatore a 0');
+    }
+    if (lastUserReceivedLead == null || lastUserReceivedLead == undefined) {
+      await LastLeadUser.findOneAndUpdate({}, { userId: '65ddbe8676b468245d701bc2' }, { upsert: true });
+    } else {
+       await LastLeadUser.findOneAndUpdate({}, { userId: lastUserReceivedLead }, { upsert: true });
     }
 
   } catch (error) {

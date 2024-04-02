@@ -12,9 +12,10 @@ import LeadEntry from "./LeadEntry.jsx";
 import LeadHeader from "./LeadHeader.jsx";
 import PopupModify from "./popupModify/PopupModify";
 import AddLeadPopup from "./popupAdd/PopupAdd";
+import moment from "moment";
 const PopupMotivo = React.lazy(() => import("./popupMotivo/PopupMotivo.js"));
 
-export default function Table2({ onResults, searchval, setLeadsPdf }) {
+export default function Table2({ onResults, searchval, setLeadsPdf, setNextSchedule }) {
   const [state, setState, headerIndex, SETheaderIndex] = useContext(UserContext);
   const [filterValue, setFilterValue] = useState('');
   const [filteredData, setFilteredData] = useState([]);
@@ -251,6 +252,33 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       onResults(leadNum, leadNumVenduti.length);
       setOriginalData(filteredTableLead);
       setLeadsPdf(filteredTableLead);
+
+      const filteredLead = response.data
+      .filter(lead => {
+        return lead.recallDate && lead.recallHours; // Assicurati che entrambi siano definiti
+      })
+      .map(lead => {
+        // Combina la data e l'ora per ottenere una data completa
+        const combinedDateTime = moment(lead.recallDate + ' ' + lead.recallHours, 'YYYY-MM-DD HH:mm');
+        return {
+          ...lead,
+          combinedDateTime: combinedDateTime // Aggiungi la data completa come proprietà aggiuntiva
+        };
+      })
+      .filter(lead => {
+        // Filtra solo le lead con una data futura o uguale all'ora attuale
+        return lead.combinedDateTime.isSameOrAfter(moment());
+      })
+      .sort((leadA, leadB) => {
+        // Ordina in base alla data completa
+        return leadA.combinedDateTime - leadB.combinedDateTime;
+      });
+    
+    let nextAppointmentLead = null;
+    if (filteredLead.length > 0) {
+      nextAppointmentLead = filteredLead[0];
+    }
+      setNextSchedule(nextAppointmentLead);
     } catch (error) {
       console.error(error.message);
     }
@@ -339,7 +367,33 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       onResults(leadNum, leadNumVenduti.length);
       setOriginalData(filteredTableLead);
       setLeadsPdf(filteredTableLead);
-      //return filteredTableLead;
+
+      const filteredLead = response.data
+      .filter(lead => {
+        return lead.recallDate && lead.recallHours; // Assicurati che entrambi siano definiti
+      })
+      .map(lead => {
+        // Combina la data e l'ora per ottenere una data completa
+        const combinedDateTime = moment(lead.recallDate + ' ' + lead.recallHours, 'YYYY-MM-DD HH:mm');
+        return {
+          ...lead,
+          combinedDateTime: combinedDateTime // Aggiungi la data completa come proprietà aggiuntiva
+        };
+      })
+      .filter(lead => {
+        // Filtra solo le lead con una data futura o uguale all'ora attuale
+        return lead.combinedDateTime.isSameOrAfter(moment());
+      })
+      .sort((leadA, leadB) => {
+        // Ordina in base alla data completa
+        return leadA.combinedDateTime - leadB.combinedDateTime;
+      });
+    
+    let nextAppointmentLead = null;
+    if (filteredLead.length > 0) {
+      nextAppointmentLead = filteredLead[0];
+    }
+      setNextSchedule(nextAppointmentLead);
     } catch (error) {
       console.error(error.message);
     }

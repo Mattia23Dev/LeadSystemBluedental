@@ -13,7 +13,7 @@ let lastUserReceivedLead = null;
 const calculateAndAssignLeadsEveryDay = async () => {
   try {
     let users = await Orientatore.find();
-    let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] }).limit(60); // Imposta il limite a 1000, o a un valore più alto se necessario
+    let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] }).limit(100); // Imposta il limite a 1000, o a un valore più alto se necessario
 
 
     const totalLeads = leads.length;
@@ -33,19 +33,18 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
     let userIndex = 0;
 
-    const lastUser = users.find(user => user._id.toString() === lastUserReceivedLead.toString());
+    const lastUser = lastUserReceivedLead && users.find(user => user._id.toString() === lastUserReceivedLead.toString());
 
     if (lastUser) {
-      console.log('ultimo utente' + lastUser.nome);
       userIndex = users.indexOf(lastUser) + 1;
       lastUserReceivedLead = null;
     }
     while (leads.length > 0) {
-      const user = users[userIndex || 0];
+      const user = users[userIndex && userIndex < 3 ? userIndex : 0];
       const leadsNeeded = Math.min(leads.length, 1); //Math.min(user.monthlyLeadCounter, 1);
 
       if (leadsNeeded === 0) {
-        console.log(`Il contatore mensile dell'utente ${user._id} è insufficiente. Non vengono assegnati ulteriori lead.`);
+        console.log(`Il contatore mensile dell'utente ${user.nameECP} è insufficiente. Non vengono assegnati ulteriori lead.`);
         userIndex++;
         continue;
       }
@@ -54,7 +53,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
       for (const leadWithoutUser of leadsForUser) {
         if (leadWithoutUser.assigned) {
-          console.log(`Il lead ${leadWithoutUser._id} è già stato assegnato.`);
+          console.log(`Il lead ${leadWithoutUser?._id} è già stato assegnato.`);
           continue;
         }
 
@@ -103,7 +102,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
         try {
           await newLead.save();
 
-          lastUserReceivedLead = user._id;
+          lastUserReceivedLead = user?._id;
           await user.save();
 
           leadWithoutUser.assigned = true;
@@ -113,7 +112,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
           //await sendEmailLeadArrivati(user._id);
 
-          console.log(`Assegnato il lead ${leadWithoutUser._id} all'utente ${user.nome}`);
+          console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);
         } catch (error) {
           console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
         }
@@ -513,15 +512,28 @@ exports.dailyCap = async (req, res) => {
 async function updateLeads() {
   try {
       // Trova tutti i lead che soddisfano il criterio
-      const leadsToUpdate = await Lead.find({ utmAdset: "Italia - LAL 1% form inviato - Age: 30 - 65+ off" });
+      const leadsToUpdate = await Lead.find({ esito: "Da contattare" });
+      const orientatori = await Orientatore.find();
+      const numLeads = leadsToUpdate.length;
+      const numOrientatori = orientatori.length;
     console.log(leadsToUpdate.length);
 
-    const updatedLeads = await Lead.updateMany(
-          { utmAdset: "Italia - LAL 1% form inviato - Age: 30 - 65+ off" },
-          { utmAdset: "Italia - LAL 1% form inviato - Age: 30 - 65+" } // Sostituisci "Nuovo valore" con il valore desiderato
-      );
+    const numLeadsPerOrientatore = Math.ceil(numLeads / numOrientatori);
 
-      console.log(`Aggiornamento completato. ${updatedLeads.nModified} lead sono stati aggiornati.`);
+    let startIndex = 0;
+    for (const orientatore of orientatori) {
+      const endIndex = Math.min(startIndex + numLeadsPerOrientatore, numLeads);
+      const leadsToAssign = leadsToUpdate.slice(startIndex, endIndex);
+
+      for (const lead of leadsToAssign) {
+        lead.orientatori = orientatore._id; // Assegna l'ID dell'orientatore alla lead
+        await lead.save();
+      }
+
+      startIndex = endIndex;
+    }
+
+      console.log(`Aggiornamento completato. lead sono stati aggiornati.`);
   } catch (error) {
       console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
   }

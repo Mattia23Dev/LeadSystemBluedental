@@ -53,7 +53,112 @@ button, a {
   padding-bottom: 40px;
   transition: 'width 0.3s ease',
 }
-
+.notification-schedule{
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background-color: white;
+  z-index: 100;
+  border: 2px solid #3471CC;
+  border-radius: 10px;
+  padding: 10px;
+  min-width: 20%;
+}
+.notification-schedule h2 {
+  font-size: 17px;
+}
+.notification-schedule > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.notification-schedule > div > p {
+  font-weight: 700;
+  font-size: 18px;
+  background-color: #3471CC;
+  border-radius: 50%;
+  color: white;
+  min-width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  min-height: 30px;
+  transition: 0.2s all;
+}
+.notification-schedule-close{
+  transform: translateX(20%);
+  transition: 0.2s all;
+}
+.open-schedule-notif{
+  height: 50px;
+  padding: 20px;
+  position: fixed;
+  right: 0;
+  bottom: 2rem;
+  transition: 0.2s all;
+  background-color: #3471CC;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.open-schedule-notif > * {
+  color: white;
+}
+@media screen and (max-width: 1400px) {
+  .notification-schedule{
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background-color: white;
+    z-index: 100;
+    border: 2px solid #3471CC;
+    border-radius: 10px;
+    padding: 10px;
+    min-width: 20%;
+  }
+  .notification-schedule h2 {
+    font-size: 15px;
+  }
+  .notification-schedule >p {
+    font-size: 13px;
+  }
+  .notification-schedule > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .notification-schedule > div > p {
+    font-weight: 700;
+    font-size: 16px;
+    background-color: #3471CC;
+    border-radius: 50%;
+    color: white;
+    min-width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    min-height: 30px;
+    transition: 0.2s all;
+  }
+  .notification-schedule-close{
+    transform: translateX(20%);
+    transition: 0.2s all;
+  }
+  .open-schedule-notif{
+    height: 50px;
+    padding: 20px;
+    position: fixed;
+    right: 0;
+    bottom: 2rem;
+    transition: 0.2s all;
+    background-color: #3471CC;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+}
 @media screen and (max-width: 500px) {
   body{
     overflow-y: auto;

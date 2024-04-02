@@ -27,7 +27,7 @@ async function notifyUser(notificationText){
   }
 };
 
-const MainDash = ({showLegenda, setShowLegenda}) => {
+const MainDash = ({showLegenda, setShowLegenda, setNextSchedule}) => {
   const [state, setState] = useContext(UserContext);
   const [result, setResult] = useState(null);
   const [leadNum, setLeadNum] = useState('');
@@ -194,7 +194,7 @@ const handleEnableNotifications = async () => {
       <hr className="linea-filtri" />
       <div className="table-main-mobile">
         <Suspense fallback={<div>Loading...</div>}>
-          <LazyTable2 onResults={handleResults} searchval={search} setLeadsPdf={setLeadsPdf} />
+          <LazyTable2 setNextSchedule={setNextSchedule} onResults={handleResults} searchval={search} setLeadsPdf={setLeadsPdf} />
         </Suspense>
       </div>
     </>

@@ -6,7 +6,7 @@ import LeggendaEsiti from "../components/MainDash/LeggendaEsiti";
 import '../components/MainDash/MainDash.scss';
 import '../components/Table/Table2.scss';
 const LazyMainDash = React.lazy(() => import('../components/MainDash/MainDash'));
-const Home = ({ history }) => {
+const Home = ({ history, setNextSchedule }) => {
   const [state, setState] = useContext(UserContext);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,7 +37,7 @@ const Home = ({ history }) => {
               <LeggendaEsiti handleNotShow={() => setShowLegenda(false)} />
           </div>
           <Suspense fallback={<div>Loading...</div>}>
-            <LazyMainDash showLegenda={showLegenda} setShowLegenda={setShowLegenda} />
+            <LazyMainDash setNextSchedule={setNextSchedule} showLegenda={showLegenda} setShowLegenda={setShowLegenda} />
           </Suspense>
         </div>
       </div>

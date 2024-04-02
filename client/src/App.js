@@ -1,4 +1,4 @@
-import React, {Suspense} from "react";
+import React, {Suspense, useState} from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import AuthRoute from "./components/routes/AuthRoute";
@@ -15,6 +15,8 @@ import './components/SideBar/Sidebar.scss';
 import './App.css';
 import './pages/loginRegister.css';
 import Login from "./pages/Login";
+import { FaArrowLeft } from "react-icons/fa";
+import moment from "moment";
 
 const LazyRegister = React.lazy(() => import("./pages/Register"));
 const LazyLoginSuperAdmin = React.lazy(() => import("./pages/LoginSuperAdmin"));
@@ -22,6 +24,12 @@ const LazyLogin = React.lazy(() => import("./pages/Login"));
 const LazyHomeSuper = React.lazy(() => import("./pages/superAdmin/HomeSuper"));
 
 function App() {
+  const [scheduleView, setScheduleView] = useState(false)
+  const [nextSchedule, setNextSchedule] = useState()
+  const nextScheduleSettaggio = (lead) => {
+    setNextSchedule(lead)
+    setScheduleView(true)
+  }
   return (
     <Router>
       <Toaster
@@ -30,6 +38,17 @@ function App() {
           duration: 3000,
         }}
       />
+      {nextSchedule ? 
+      scheduleView ? <div className={scheduleView ? "notification-schedule" : "notification-schedule-close"}>
+        <div>
+          <h2>Prossima chiamata</h2>
+          <p onClick={() => setScheduleView(false)}>x</p>
+        </div>
+        <p>{nextSchedule?.nome} - {nextSchedule?.numeroTelefono}</p>
+        <p>{moment(nextSchedule?.recallDate).format('DD-MM-YY')} - {nextSchedule?.recallHours}</p>
+      </div> : <div onClick={() => setScheduleView(true)} className="open-schedule-notif">
+        <FaArrowLeft />
+        </div> : null}
         <Routes>
           <Route
             exact
@@ -61,7 +80,7 @@ function App() {
           <Route
             exact
             path="/"
-            element={<AuthRouteWithLayout component={Home} />}
+            element={<AuthRouteWithLayout component={Home} setNextSchedule={nextScheduleSettaggio} />}
           />
 
           <Route

@@ -12,9 +12,9 @@ let lastUserReceivedLead = null;
 
 const calculateAndAssignLeadsEveryDay = async () => {
   try {
-    let users = await Orientatore.find();
-    let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] }).limit(100); // Imposta il limite a 1000, o a un valore più alto se necessario
-
+    const excludedOrientatoreId = '660fc6b59408391f561edc1a';
+    let users = await Orientatore.find({ _id: { $ne: excludedOrientatoreId }});
+    let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] }).limit(150); // Imposta il limite a 1000, o a un valore più alto se necessario
 
     const totalLeads = leads.length;
     console.log('Iscrizioni:', totalLeads);
@@ -511,12 +511,12 @@ exports.dailyCap = async (req, res) => {
 
 async function updateLeads() {
   try {
-      // Trova tutti i lead che soddisfano il criterio
+    const excludedOrientatoreId = '660fc6b59408391f561edc1a';
       const leadsToUpdate = await Lead.find({ esito: "Da contattare" });
-      const orientatori = await Orientatore.find();
+      const orientatori = await Orientatore.find({ _id: { $ne: excludedOrientatoreId }});
       const numLeads = leadsToUpdate.length;
       const numOrientatori = orientatori.length;
-    console.log(leadsToUpdate.length);
+    console.log(numOrientatori);
 
     const numLeadsPerOrientatore = Math.ceil(numLeads / numOrientatori);
 
@@ -536,6 +536,23 @@ async function updateLeads() {
       console.log(`Aggiornamento completato. lead sono stati aggiornati.`);
   } catch (error) {
       console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
+  }
+}
+async function updateLeadsData() {
+  try {
+    // Trova le lead da aggiornare con data compresa tra il 1° maggio e il 2 maggio
+    const leadsToUpdate = await Lead.find({
+      data: "Wed May 01 2024 02:00:00 GMT+0200 (Ora legale dell’Europa centrale)"
+    });
+    console.log(leadsToUpdate.length)
+    for (const lead of leadsToUpdate) {
+      lead.data = new Date('2024-04-02');
+      await lead.save();
+    }
+
+    console.log(`Aggiornamento completato. ${leadsToUpdate.length} lead sono state aggiornate.`);
+  } catch (error) {
+    console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
   }
 }
 

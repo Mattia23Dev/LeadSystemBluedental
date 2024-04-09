@@ -452,10 +452,10 @@ cron.schedule('5,36,15 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () 
   console.log('Prendo i lead di Bluedental 3.0');
 });
 
-/*cron.schedule('8,49,18 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+cron.schedule('8,49,18 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getBludentalLead();
   console.log('Prendo i lead di Bluedental nuovo');
-});*/
+});
 
 cron.schedule('15,58,25,40 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   calculateAndAssignLeadsEveryDay();

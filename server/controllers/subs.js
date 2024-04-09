@@ -4,7 +4,7 @@ const LeadWordpress = require("../models/leadWordpress");
 const Lead = require('../models/lead');
 var cron = require('node-cron');
 const { sendEmailLeadArrivati } = require('../middlewares');
-const { getDentistaLead, getTagLeads, getTagLeads2, getDentistaLead2, getDentistaLead3 } = require('./Facebook');
+const { getDentistaLead, getTagLeads, getTagLeads2, getDentistaLead2, getDentistaLead3, getBludentalLead } = require('./Facebook');
 const Orientatore = require('../models/orientatori');
 const LastLeadUser = require('../models/lastLeadUser');
 
@@ -12,8 +12,9 @@ let lastUserReceivedLead = null;
 
 const calculateAndAssignLeadsEveryDay = async () => {
   try {
-    const excludedOrientatoreId = '660fc6b59408391f561edc1a';
-    let users = await Orientatore.find({ _id: { $ne: excludedOrientatoreId }});
+    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', '65ddbe8676b468245d701bc2'];
+
+    let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }});
     let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] }).limit(150); // Imposta il limite a 1000, o a un valore più alto se necessario
 
     const totalLeads = leads.length;
@@ -451,6 +452,11 @@ cron.schedule('5,36,15 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () 
   console.log('Prendo i lead di Bluedental 3.0');
 });
 
+/*cron.schedule('8,49,18 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+  getBludentalLead();
+  console.log('Prendo i lead di Bluedental nuovo');
+});*/
+
 cron.schedule('15,58,25,40 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   calculateAndAssignLeadsEveryDay();
   console.log('Assegno i lead di bludental');
@@ -484,7 +490,7 @@ async function countFL(){
   }
 }
 //countFL()
-//getDentistaLead3();
+//getBludentalLead();
 //updateAssignedField();
 //calculateAndAssignLeadsEveryDay();
 
@@ -538,6 +544,57 @@ async function updateLeads() {
       console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
   }
 }
+async function updateLeadsRec() {
+  const startDate = new Date('2024-03-24T00:00:00.000Z');
+  const endDate = new Date('2024-03-30T23:59:59.999Z');
+  try {
+    const excludedOrientatoreId = '660fc6b59408391f561edc1a';
+      const leadsToUpdate = await Lead.find({ esito: "Non risponde" });
+      const filteredLeads = leadsToUpdate.filter((lead) => {
+        const leadDate = new Date(lead.data);
+        return (
+          leadDate >= startDate &&         // Verifica che la data della lead sia dopo o uguale alla data di inizio
+          leadDate <= endDate             // Verifica che la data della lead sia prima o uguale alla data di fine
+        );
+      });
+      const orientatori = await Orientatore.findById(excludedOrientatoreId);
+      const numLeads = filteredLeads.length;
+    console.log(numLeads);
+
+      for (const lead of filteredLeads) {
+        lead.orientatori = orientatori._id;
+        await lead.save();
+      }
+
+      console.log(`Aggiornamento completato. lead sono stati aggiornati.`);
+  } catch (error) {
+      console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
+  }
+}
+
+async function updateLeadsEsito() {
+  try {
+    const excludedOrientatoreId = '6613a0ff9408391f56215305';
+      const leadsToUpdate = await Lead.find({ orientatori: "65ddbe8676b468245d701bc2" });
+      const filteredLeads = leadsToUpdate.filter((lead) => {
+        return (
+          lead.esito === "Da contattare"
+        );
+      });
+      const orientatori = await Orientatore.findById(excludedOrientatoreId);
+      const numLeads = filteredLeads.length;
+    console.log(numLeads);
+
+      for (const lead of filteredLeads) {
+        lead.orientatori = orientatori._id;
+        await lead.save();
+      }
+
+      console.log(`Aggiornamento completato. lead sono stati aggiornati.`);
+  } catch (error) {
+      console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
+  }
+}
 async function updateLeadsData() {
   try {
     // Trova le lead da aggiornare con data compresa tra il 1° maggio e il 2 maggio
@@ -557,3 +614,5 @@ async function updateLeadsData() {
 }
 
 //updateLeads();
+//updateLeadsEsito();
+//updateLeadsRec(); //DEI NON RISPONDE OGNI INIZIO SETTIMANA

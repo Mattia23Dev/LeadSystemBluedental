@@ -11,6 +11,7 @@ const idCampagna2 = '23859089103880152'; //ECP - [LEAD ADS] - Master
 const fields = 'id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}';
 
 //LEADS 
+const TOKENBLUDENTAL = "EAAQEkt9HVpsBO00ZAjI4OWYr1KfpyttYYnEnxXMJQAILFZAZCdZAsRuVKH2RdAZCx9iB7OjVnQQ8diHwdEvmvPmySDVgaSKn4YZAdGdp1Ne5NBSh2JMpbME5zeJ05eoQdJWmR1bmIWix7hJ6ygZAZBgYQlFrznOX4W8GbgnD0fEwf7BcxC41aac1KzdZC";
 const TOKENMIO = "EAAD6mNGgHKABOZCFLOjk90nZCTiXKitChBna4fSTkgVbiehgRM3gfxaqd2AZCZCKQ7GeKMwTTaFSm9koTkW7XxSpcrxBq7dfn5qeZCMZAOd64rZCEeu09KfIlfLmxDtahUDSstNUHUXMX9bExQ7gSwuIV9CH0eNNhlzfzpdHWxZAhujnNaZAZB9yfrTQZDZD";
 const TOKEN1 = "EAAD6mNGgHKABOZCFLOjk90nZCTiXKitChBna4fSTkgVbiehgRM3gfxaqd2AZCZCKQ7GeKMwTTaFSm9koTkW7XxSpcrxBq7dfn5qeZCMZAOd64rZCEeu09KfIlfLmxDtahUDSstNUHUXMX9bExQ7gSwuIV9CH0eNNhlzfzpdHWxZAhujnNaZAZB9yfrTQZDZD";
 const { GoogleAdsApi, enums  } = require('google-ads-api');
@@ -267,6 +268,62 @@ const Lead = require('../models/lead');
       fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
       effective_status: "['ACTIVE']",
       access_token: TOKEN1,
+    };
+
+    axios.get(url, { params })
+      .then(response => {
+        const dataFromFacebook = response.data.data;
+        const logs = [];
+        if (Array.isArray(dataFromFacebook)) {
+          for (const element of dataFromFacebook) {
+            const excludedCampaignIds = [idCampagna, idCampagna2];
+            //PER ESCLUDERE LE CAMPAGNE
+            /*if (excludedCampaignIds.includes(element.id)) {
+              console.log('Ho escluso:', element.id);
+              continue;
+            }*/
+
+            const { account_id, ads, effective_status, id, name, objective, adsets, status } = element;
+
+            if (ads && ads.data && ads.data.length > 0) {
+              for (const ad of ads.data) {
+                if (ad.leads && ad.leads.data && ad.leads.data.length > 0) {
+                  for (const lead of ad.leads.data) {
+                    if (lead && lead.field_data && Array.isArray(lead.field_data)) {
+                      const fieldData = lead.field_data;
+                      const id = lead.id;
+                      const formId = lead.form_id;
+                      const log = {
+                        fieldData: fieldData,
+                        name: name,
+                        id: id,
+                        formId: formId,
+                        annunci: ad.name,
+                        adsets: adsets.data[0].name,
+                      };
+                      logs.push(log);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          console.error("dataFromFacebook non è un array");
+        }
+        saveLeadFromFacebookAndInstagram(logs);
+      })
+      .catch(error => {
+        console.error('Errore:', error);
+      });
+  };
+
+  exports.getBludentalLead = () => {
+    const url = 'https://graph.facebook.com/v17.0/act_982532079362123/campaigns';
+    const params = {
+      fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
+      effective_status: "['ACTIVE']",
+      access_token: TOKENBLUDENTAL,
     };
 
     axios.get(url, { params })

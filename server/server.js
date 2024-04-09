@@ -246,6 +246,23 @@ app.post('/submit', async (req, res) => {
   }
 });
 
+const checkLeadDoppie = async () => {
+  const leadDuplicate = await Lead.aggregate([
+    { 
+      $group: {
+        _id: {nome: "$nome", email: "$email" },
+        count: { $sum: 1 }
+      }
+    },
+    { $match: { count: 2 } },
+    { $match: { esito: "Da contattare" } },
+  ]);
+  console.log(leadDuplicate)
+
+  const idsToRemove = leadDuplicate.map(lead => lead._id); // Ottieni gli ID delle lead duplicate
+}
+//checkLeadDoppie()
+
 //deleteAllLeads();
 const port = process.env.PORT || 8000;
 app.listen(port, () => console.log(`Server is running on port ${port}`));

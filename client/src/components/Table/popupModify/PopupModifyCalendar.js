@@ -58,7 +58,11 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
 
     
     function mapCampagnaPerLeadsystem(nomeCampagna) {
-        if (nomeCampagna.includes('Altri centri')) {
+        if (nomeCampagna.includes('Gold')){
+            return 'Gold';
+        } else if (nomeCampagna.includes('Ambra')){
+            return 'Ambra';
+        } else if (nomeCampagna.includes('Altri centri')) {
           return 'Meta Web - Altri centri';
         } else if (nomeCampagna.includes('Meta Web')) {
             if (nomeCampagna === "Meta Web G"){

@@ -41,7 +41,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
       lastUserReceivedLead = null;
     }
     while (leads.length > 0) {
-      const user = users[userIndex && userIndex < 3 ? userIndex : 0];
+      const user = users[userIndex && userIndex < 11 ? userIndex : 0];
       const leadsNeeded = Math.min(leads.length, 1); //Math.min(user.monthlyLeadCounter, 1);
 
       if (leadsNeeded === 0) {
@@ -517,12 +517,13 @@ exports.dailyCap = async (req, res) => {
 
 async function updateLeads() {
   try {
-    const excludedOrientatoreId = '660fc6b59408391f561edc1a';
-      const leadsToUpdate = await Lead.find({ esito: "Da contattare" });
-      const orientatori = await Orientatore.find({ _id: { $ne: excludedOrientatoreId }});
+      const leadsToUpdate = await Lead.find({ esito: "Da contattare", orientatori: { $ne: '660fc6b59408391f561edc1a' } });
+      const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', '65ddbe8676b468245d701bc2'];
+
+      let orientatori = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }});
       const numLeads = leadsToUpdate.length;
       const numOrientatori = orientatori.length;
-    console.log(numOrientatori);
+    console.log(numLeads);
 
     const numLeadsPerOrientatore = Math.ceil(numLeads / numOrientatori);
 
@@ -574,14 +575,14 @@ async function updateLeadsRec() {
 
 async function updateLeadsEsito() {
   try {
-    const excludedOrientatoreId = '6613a0ff9408391f56215305';
-      const leadsToUpdate = await Lead.find({ orientatori: "65ddbe8676b468245d701bc2" });
+    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', '65ddbe8676b468245d701bc2'];
+    let orientatori = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }});
+      const leadsToUpdate = await Lead.find({});
       const filteredLeads = leadsToUpdate.filter((lead) => {
         return (
           lead.esito === "Da contattare"
         );
       });
-      const orientatori = await Orientatore.findById(excludedOrientatoreId);
       const numLeads = filteredLeads.length;
     console.log(numLeads);
 
@@ -595,24 +596,32 @@ async function updateLeadsEsito() {
       console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
   }
 }
-async function updateLeadsData() {
+async function deleteLeadsGold() {
   try {
-    // Trova le lead da aggiornare con data compresa tra il 1° maggio e il 2 maggio
-    const leadsToUpdate = await Lead.find({
-      data: "Wed May 01 2024 02:00:00 GMT+0200 (Ora legale dell’Europa centrale)"
-    });
-    console.log(leadsToUpdate.length)
-    for (const lead of leadsToUpdate) {
-      lead.data = new Date('2024-04-02');
-      await lead.save();
-    }
-
-    console.log(`Aggiornamento completato. ${leadsToUpdate.length} lead sono state aggiornate.`);
+      await Lead.deleteMany({ utmCampaign: { $regex: /ambra/i } });
+      const count = await Lead.countDocuments({ utmCampaign: { $regex: /gold/i } });
+      console.log("Numero di lead con utmCampaign 'gold':", count);
+      console.log(`Aggiornamento completato. lead sono stati aggiornati.`);
   } catch (error) {
-    console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
+      console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
+  }
+}
+async function updateLeadsByPhoneNumber(phoneNumbers) {
+  for (const telefono of phoneNumbers) {
+      const lead = await Lead.findOne({ numeroTelefono: telefono });
+      if (lead) {
+          console.log('Lead trovata per il numero di telefono:', telefono);
+          lead.orientatori = '660fc6b59408391f561edc1a';
+          await lead.save();
+          console.log('Campo orientatori aggiornato per la lead con numero di telefono:', telefono);
+      } else {
+          console.log('Lead non trovata per il numero di telefono:', telefono);
+      }
   }
 }
 
+//updateLeadsByPhoneNumber(phoneNumbers)
+//deleteLeadsGold()
 //updateLeads();
 //updateLeadsEsito();
 //updateLeadsRec(); //DEI NON RISPONDE OGNI INIZIO SETTIMANA

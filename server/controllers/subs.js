@@ -28,20 +28,20 @@ const calculateAndAssignLeadsEveryDay = async () => {
     console.log( 'Utenti:'+ users.length);
 
     const lastUserLeadData = await LastLeadUser.findOne({});
-    if (lastUserLeadData) {
+    /*if (lastUserLeadData) {
       lastUserReceivedLead = lastUserLeadData.userId;
-    }
+    }*/
 
     let userIndex = 0;
 
-    const lastUser = lastUserReceivedLead && users.find(user => user._id.toString() === lastUserReceivedLead.toString());
+    //const lastUser = lastUserReceivedLead && users.find(user => user?._id.toString() === lastUserReceivedLead.toString());
 
-    if (lastUser) {
+    /*if (lastUser) {
       userIndex = users.indexOf(lastUser) + 1;
       lastUserReceivedLead = null;
-    }
+    }*/
     while (leads.length > 0) {
-      const user = users[userIndex && userIndex < 11 ? userIndex : 0];
+      const user = users[userIndex]; //users[userIndex && userIndex < 11 ? userIndex : 0];
       const leadsNeeded = Math.min(leads.length, 1); //Math.min(user.monthlyLeadCounter, 1);
 
       if (leadsNeeded === 0) {
@@ -143,6 +143,8 @@ const calculateAndAssignLeadsEveryDay = async () => {
     console.log(error.message);
   }
 };
+
+//calculateAndAssignLeadsEveryDay()
 
 const calculateAndAssignLeadsEveryDayWordpress = async () => {
   try {
@@ -550,12 +552,13 @@ async function updateLeadsRec() {
   const endDate = new Date('2024-03-30T23:59:59.999Z');
   try {
     const excludedOrientatoreId = '660fc6b59408391f561edc1a';
-      const leadsToUpdate = await Lead.find({ esito: "Non risponde" });
+      const leadsToUpdate = await Lead.find({ esito: "Da contattare" });
       const filteredLeads = leadsToUpdate.filter((lead) => {
-        const leadDate = new Date(lead.data);
+        //const leadDate = new Date(lead.data);
         return (
-          leadDate >= startDate &&         // Verifica che la data della lead sia dopo o uguale alla data di inizio
-          leadDate <= endDate             // Verifica che la data della lead sia prima o uguale alla data di fine
+          //leadDate >= startDate &&
+          //leadDate <= endDate
+          Number(lead.tentativiChiamata) > 0
         );
       });
       const orientatori = await Orientatore.findById(excludedOrientatoreId);
@@ -576,8 +579,9 @@ async function updateLeadsRec() {
 async function updateLeadsEsito() {
   try {
     const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', '65ddbe8676b468245d701bc2'];
-    let orientatori = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }});
-      const leadsToUpdate = await Lead.find({});
+    let orientatori = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }}); 
+      const leadsToUpdate = await Lead.find({orientatori: "6613a1389408391f56215308"});
+
       const filteredLeads = leadsToUpdate.filter((lead) => {
         return (
           lead.esito === "Da contattare"
@@ -587,7 +591,7 @@ async function updateLeadsEsito() {
     console.log(numLeads);
 
       for (const lead of filteredLeads) {
-        lead.orientatori = orientatori._id;
+        lead.orientatori = "660fc6b59408391f561edc1a";
         await lead.save();
       }
 
@@ -596,6 +600,7 @@ async function updateLeadsEsito() {
       console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
   }
 }
+
 async function deleteLeadsGold() {
   try {
       await Lead.deleteMany({ utmCampaign: { $regex: /ambra/i } });

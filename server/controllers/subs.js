@@ -28,18 +28,18 @@ const calculateAndAssignLeadsEveryDay = async () => {
     console.log( 'Utenti:'+ users.length);
 
     const lastUserLeadData = await LastLeadUser.findOne({});
-    /*if (lastUserLeadData) {
+    if (lastUserLeadData) {
       lastUserReceivedLead = lastUserLeadData.userId;
-    }*/
+    }
 
     let userIndex = 0;
 
-    //const lastUser = lastUserReceivedLead && users.find(user => user?._id.toString() === lastUserReceivedLead.toString());
+    const lastUser = lastUserReceivedLead && users.find(user => user?._id.toString() === lastUserReceivedLead.toString());
 
-    /*if (lastUser) {
+    if (lastUser) {
       userIndex = users.indexOf(lastUser) + 1;
-      lastUserReceivedLead = null;
-    }*/
+      //lastUserReceivedLead = null;
+    }
     while (leads.length > 0) {
       const user = users[userIndex]; //users[userIndex && userIndex < 11 ? userIndex : 0];
       const leadsNeeded = Math.min(leads.length, 1); //Math.min(user.monthlyLeadCounter, 1);

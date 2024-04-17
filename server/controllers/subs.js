@@ -36,17 +36,23 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
     const lastUser = lastUserReceivedLead && users.find(user => user?._id.toString() === lastUserReceivedLead.toString());
 
-    if (lastUser) {
-      userIndex = users.indexOf(lastUser) + 1;
-      //lastUserReceivedLead = null;
+    if (!lastUser) {
+      userIndex = 0;
+    } else {
+        userIndex = users.indexOf(lastUser) + 1;
     }
     while (leads.length > 0) {
-      const user = users[userIndex]; //users[userIndex && userIndex < 11 ? userIndex : 0];
+      const user = users[userIndex % users.length]; //users[userIndex && userIndex < 11 ? userIndex : 0];
       const leadsNeeded = Math.min(leads.length, 1); //Math.min(user.monthlyLeadCounter, 1);
 
       if (leadsNeeded === 0) {
         console.log(`Il contatore mensile dell'utente ${user.nameECP} è insufficiente. Non vengono assegnati ulteriori lead.`);
         userIndex++;
+        continue;
+      }
+
+      if (!user) {
+        console.error('Nessun utente disponibile per l\'indice', userIndex);
         continue;
       }
 
@@ -144,7 +150,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
   }
 };
 
-//calculateAndAssignLeadsEveryDay()
+calculateAndAssignLeadsEveryDay()
 
 const calculateAndAssignLeadsEveryDayWordpress = async () => {
   try {

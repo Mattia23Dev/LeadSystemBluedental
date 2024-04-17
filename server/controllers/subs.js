@@ -150,7 +150,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
   }
 };
 
-calculateAndAssignLeadsEveryDay()
+//calculateAndAssignLeadsEveryDay()
 
 const calculateAndAssignLeadsEveryDayWordpress = async () => {
   try {

@@ -12,20 +12,19 @@ let lastUserReceivedLead = null;
 
 const calculateAndAssignLeadsEveryDay = async () => {
   try {
-    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', '65ddbe8676b468245d701bc2'];
+    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', '65ddbe8676b468245d701bc2', '6613a0ff9408391f56215305' /*ELISABETTA*/, '6602bc55a9b03d142783d965' /*BENEDETTA*/];
 
     let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }});
     let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] }).limit(150); // Imposta il limite a 1000, o a un valore più alto se necessario
 
     const totalLeads = leads.length;
     console.log('Iscrizioni:', totalLeads);
+    console.log( 'Utenti:'+ users.length);
 
     if (totalLeads === 0) {
       console.log('Nessun lead disponibile');
       return;
     }
-
-    console.log( 'Utenti:'+ users.length);
 
     const lastUserLeadData = await LastLeadUser.findOne({});
     if (lastUserLeadData) {
@@ -149,8 +148,6 @@ const calculateAndAssignLeadsEveryDay = async () => {
     console.log(error.message);
   }
 };
-
-//calculateAndAssignLeadsEveryDay()
 
 const calculateAndAssignLeadsEveryDayWordpress = async () => {
   try {

@@ -551,16 +551,16 @@ async function updateLeads() {
   }
 }
 async function updateLeadsRec() {
-  const startDate = new Date('2024-03-24T00:00:00.000Z');
-  const endDate = new Date('2024-03-30T23:59:59.999Z');
+  const startDate = new Date('2024-04-01T00:00:00.000Z');
+  const endDate = new Date('2024-04-14T23:59:59.999Z');
   try {
     const excludedOrientatoreId = '660fc6b59408391f561edc1a';
-      const leadsToUpdate = await Lead.find({ esito: "Da contattare" });
+      const leadsToUpdate = await Lead.find({ esito: "Non risponde" });
       const filteredLeads = leadsToUpdate.filter((lead) => {
-        //const leadDate = new Date(lead.data);
+        const leadDate = new Date(lead.data);
         return (
-          //leadDate >= startDate &&
-          //leadDate <= endDate
+          leadDate >= startDate &&
+          leadDate <= endDate &&
           Number(lead.tentativiChiamata) > 0
         );
       });
@@ -570,6 +570,7 @@ async function updateLeadsRec() {
 
       for (const lead of filteredLeads) {
         lead.orientatori = orientatori._id;
+        lead.esito = 'Da contattare';
         await lead.save();
       }
 

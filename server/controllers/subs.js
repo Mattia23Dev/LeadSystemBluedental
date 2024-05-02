@@ -12,7 +12,7 @@ let lastUserReceivedLead = null;
 
 const calculateAndAssignLeadsEveryDay = async () => {
   try {
-    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', '65ddbe8676b468245d701bc2', '6613a0bd9408391f562152f5' /*ALESSIA*/];
+    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', '6613a0bd9408391f562152f5' /*ALESSIA*/]; //65ddbe8676b468245d701bc2 MICHELA
 
     let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }});
     let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] }).limit(150); // Imposta il limite a 1000, o a un valore più alto se necessario

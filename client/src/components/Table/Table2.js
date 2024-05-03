@@ -44,6 +44,7 @@ export default function Table2({ onResults, searchval, setLeadsPdf, setNextSched
   const [leadMancantiPopup, setLeadMancantiPopup] = useState(true);
   const [filtroDiRiserva, setFiltroDiRiserva] = useState([]);
   const [selectedCity, setSelectedCity] = useState('');
+  const [selectedCampagna, setSelectedCampagna] = useState('');
   const cities = [
     "Abbiategrasso", "Anzio", "Arezzo", "Bari", "Bergamo", "Biella", "Bologna", "Brescia", "Busto Arsizio", "Cagliari", 
     "Cantù", "Capena", "Carpi", "Cassino", "Cesena", "Ciampino", "Cinisello Balsamo", "Civitavecchia", "Cologno Monzese", 
@@ -52,7 +53,9 @@ export default function Table2({ onResults, searchval, setLeadsPdf, setNextSched
     "Pioltello", "Pomezia", "Prato", "Ravenna", "Reggio Emilia", "Rho", "Roma", "San Giuliano Milanese", "Sassari", "Seregno", 
     "Terni", "Torino", "Treviso", "Varese", "Verona", "Vicenza", "Vigevano"
   ];
-
+  const campagne = [
+    "Gold", "Ambra", "Meta Web - Altri centri", "Meta Web", "Messenger"
+  ]
   const [motivo, setMotivo] = useState();
   const ori = localStorage.getItem("Ori");
   const popupRef = useRef(null);
@@ -71,6 +74,9 @@ export default function Table2({ onResults, searchval, setLeadsPdf, setNextSched
 
   const handleCityChange = (event) => {
     setSelectedCity(event.target.value);
+  };
+  const handleCampagnaChange = (event) => {
+    setSelectedCampagna(event.target.value);
   };
 
 const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
@@ -146,7 +152,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
   }, [])
 
   const patientTypes = ["Nuovo paziente", "Gia’ paziente"];
-  const treatments = ["Impianti", "Pulizia dei denti", "Protesi Mobile", "Sbiancamento", "Ortodonzia", "Faccette dentali"];
+  const treatments = ["Impianti", "Pulizia dei denti", "Protesi Mobile", "Sbiancamento", "Ortodonzia", "Faccette dentali", "Generico"];
   const locations = [
     "Desenzano Del Garda", "Melzo", "Carpi", "Lodi", "Cantù", "Mantova", "Seregno", "Milano Piazza Castelli", "Abbiategrasso",
     "Pioltello", "Vigevano", "Milano Via Parenzo", "Settimo Milanese", "Cremona", "Milano Lomellina", "Monza", "Busto Arsizio", "Brescia",
@@ -500,6 +506,9 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
     setRecallFilter(false);
   };
 
+  function mapCampagnaPerLeadsystem(nomeCampagna, filtro) {
+    return nomeCampagna.includes(filtro);
+}
   const [recallFilter, setRecallFilter] = useState(false);
   useEffect(() => {
     // Filtra per recall
@@ -536,6 +545,9 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
      if (selectedCity) {
       combinedFilteredData = combinedFilteredData.filter(row => row.città.toLowerCase() === selectedCity.toLowerCase());
     }
+    if (selectedCampagna){
+      combinedFilteredData = combinedFilteredData.filter(row => mapCampagnaPerLeadsystem(row.campagna,selectedCampagna));
+    }
      setFilteredData(combinedFilteredData);
      setFiltroDiRiserva(combinedFilteredData);
     } else {
@@ -543,12 +555,15 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       if (selectedCity) {
         combinedFilteredData = combinedFilteredData.filter(row => row.città.toLowerCase() === selectedCity.toLowerCase());
       }
+      if (selectedCampagna){
+        combinedFilteredData = combinedFilteredData.filter(row => mapCampagnaPerLeadsystem(row.campagna,selectedCampagna));
+      }
       setFilteredData(combinedFilteredData);
       setFiltroDiRiserva(combinedFilteredData);
     }
     
     
-  }, [recallFilter, selectedOrientatore, startDate, endDate, selectedCity]);
+  }, [recallFilter, selectedOrientatore, startDate, endDate, selectedCity, selectedCampagna]);
 
   const getOtherLeads = async () => {
     try {
@@ -1159,7 +1174,15 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
               ))}
             </select>
           </div>
-          <button onClick={handleClearFilter} className="button-filter rimuovi-button">Rimuovi filtri</button>
+          <div className="filter-etichette">
+            <p style={{ color: "gray", fontSize: '13px' }} htmlFor="citySelect">Campagna:</p>
+            <select id="citySelect" onChange={handleCampagnaChange} value={selectedCampagna}>
+              <option value="">Seleziona</option>
+              {campagne.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
       <hr className="linea-filtri" />
@@ -1180,6 +1203,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
                   Aggiungi lead
                 </span>
               </button>
+              <button onClick={handleClearFilter} className="button-filter rimuovi-button">Rimuovi filtri</button>
             </div>          
         </div>
       </div>

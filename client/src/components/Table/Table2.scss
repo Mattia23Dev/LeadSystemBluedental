@@ -397,13 +397,14 @@ thead {
   cursor: pointer;
   padding: 4px 18px;
   border-radius: 5px;
-  border: 1px solid #3471CC;
-  color: #3471CC;
+  background-color: transparent !important;
+  border: 1px solid #3471CC !important;
+  color: #3471CC !important;
   margin: 0 10px;
   font-weight: 500;
 }
 .rimuovi-button{
-  margin-top: 20px;
+  margin-top: 0px;
 }
 
 .table-body-container .status {

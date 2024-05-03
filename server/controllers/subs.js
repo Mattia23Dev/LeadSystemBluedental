@@ -523,7 +523,7 @@ exports.dailyCap = async (req, res) => {
 async function updateLeads() {
   try {
       const leadsToUpdate = await Lead.find({ esito: "Da contattare", orientatori: { $ne: '660fc6b59408391f561edc1a' } });
-      const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', '65ddbe8676b468245d701bc2'];
+      const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', '6613a0bd9408391f562152f5'];
 
       let orientatori = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }});
       const numLeads = leadsToUpdate.length;
@@ -550,6 +550,7 @@ async function updateLeads() {
       console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
   }
 }
+
 async function updateLeadsRec() {
   const startDate = new Date('2024-04-01T00:00:00.000Z');
   const endDate = new Date('2024-04-14T23:59:59.999Z');

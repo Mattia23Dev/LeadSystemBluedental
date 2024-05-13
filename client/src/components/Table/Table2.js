@@ -74,9 +74,11 @@ export default function Table2({ onResults, searchval, setLeadsPdf, setNextSched
 
   const handleCityChange = (event) => {
     setSelectedCity(event.target.value);
+    localStorage.setItem("cityFilter", event.target.value)
   };
   const handleCampagnaChange = (event) => {
     setSelectedCampagna(event.target.value);
+    localStorage.setItem("campagnaFilter", event.target.value)
   };
 
 const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
@@ -117,6 +119,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
     const startDate = localStorage.getItem("startDate");
     const endDate = localStorage.getItem("endDate");
     const recall = localStorage.getItem("recallFilter");
+    const cityFilt = localStorage.getItem("cityFilter")
+    const campFilt = localStorage.getItem("campagnaFilter")
     if (ori && ori !== null && ori !== undefined) {
       setSelectedOrientatore(ori);
       console.log('HO cambiat ori')
@@ -132,6 +136,12 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
 
     if (endDate && endDate !== null && endDate !== undefined){
       setEndDate(endDate)
+    }
+    if (cityFilt){
+      setSelectedCity(cityFilt)
+    }
+    if (campFilt){
+      setSelectedCampagna(campFilt)
     }
   }, [])
 
@@ -244,6 +254,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
 
       const startDate = localStorage.getItem("startDate");
       const endDate = localStorage.getItem("endDate");
+      const cityFilt = localStorage.getItem("cityFilter")
+      const campFilt = localStorage.getItem("campagnaFilter")
       if (startDate !== null && endDate !== null && startDate !== undefined && endDate !== undefined){
         const filteredByDate = filterDataByDate(filteredByRecall, startDate, endDate); 
         setFilteredData(filteredByDate);
@@ -331,6 +343,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
 
       const ori = localStorage.getItem("Ori");
       const recall = localStorage.getItem("recallFilter");
+      const cityFilt = localStorage.getItem("cityFilter")
+      const campFilt = localStorage.getItem("campagnaFilter")
 
       const filteredByOrientatore = filteredTableLead.filter((row) => {
         if (ori && ori !== null && ori !== undefined && orin.length > 0) {
@@ -498,8 +512,11 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
     setFilteredData(originalData);
     setSelectedFilter('');
     setSelectedCity("");
+    setSelectedCampagna("")
     setSelectedOrientatore("");
     localStorage.removeItem("Ori");
+    localStorage.removeItem("cityFilter");
+    localStorage.removeItem("campagnaFilter");
     localStorage.removeItem("startDate");
     localStorage.removeItem("endDate");
     localStorage.removeItem("recallFilter");
@@ -606,6 +623,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
 
       const ori = localStorage.getItem("Ori");
       const recall = localStorage.getItem("recallFilter");
+      const cityFilt = localStorage.getItem("cityFilter")
+      const campFilt = localStorage.getItem("campagnaFilter")
       const filteredByOrientatore = filteredTableLead.filter((row) => {
         if (ori && ori !== null && ori !== undefined && orientatoriOptions.length > 0) {
           const selectedOrientatoreObj = orientatoriOptions.find(option => option._id === ori);
@@ -686,7 +705,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       });
 
       const recall = localStorage.getItem("recallFilter");
-
+      const cityFilt = localStorage.getItem("cityFilter")
+      const campFilt = localStorage.getItem("campagnaFilter")
       const filteredByRecall = filteredTableLead.filter((lead) => {
         if (lead.recallDate && recall && recall === "true") {
           const recallDate = new Date(lead.recallDate);
@@ -866,7 +886,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         }; 
         const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
         setPopupModifyEsito(false);
-        SETheaderIndex(999);             
+        SETheaderIndex(999);
         }
       } else {
         const motivo = "";

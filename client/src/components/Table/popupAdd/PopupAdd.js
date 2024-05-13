@@ -24,7 +24,7 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
     "Cantù", "Capena", "Carpi", "Cassino", "Cesena", "Ciampino", "Cinisello Balsamo", "Civitavecchia", "Cologno Monzese", 
     "Como", "Cremona", "Desenzano del Garda", "Ferrara", "Firenze", "Forlì", "Frosinone", "Genova", "Latina", "Lodi", 
     "Lucca", "Mantova", "Melzo", "Mestre", "Milano", "Modena", "Monza", "Ostia", "Padova", "Perugia", "Parma", "Piacenza", 
-    "Pioltello", "Pomezia", "Pordenone", "Prato", "Ravenna", "Reggio Emilia", "Rho", "Rimini", "Roma", "San Giuliano Milanese", "Sassari", "Seregno", 
+    "Pioltello", "Pomezia", "Pordenone", "Prato", "Ravenna", "Reggio Emilia", "Rho", "Rimini", "Roma", "Rovigo", "San Giuliano Milanese", "Sassari", "Seregno", 
     "Terni", "Torino", "Treviso", "Varese", "Verona", "Vicenza", "Vigevano"
   ];
 

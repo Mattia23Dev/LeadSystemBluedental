@@ -552,8 +552,8 @@ async function updateLeads() {
 }
 
 async function updateLeadsRec() {
-  const startDate = new Date('2024-04-01T00:00:00.000Z');
-  const endDate = new Date('2024-04-14T23:59:59.999Z');
+  const startDate = new Date('2024-04-15T00:00:00.000Z');
+  const endDate = new Date('2024-04-28T23:59:59.999Z');
   try {
     const excludedOrientatoreId = '660fc6b59408391f561edc1a';
       const leadsToUpdate = await Lead.find({ esito: "Non risponde" });

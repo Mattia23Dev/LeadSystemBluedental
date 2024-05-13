@@ -60,6 +60,8 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
     function mapCampagnaPerLeadsystem(nomeCampagna) {
         if (nomeCampagna.includes('Gold')){
             return 'Gold';
+        } else if (nomeCampagna.includes('Estetica')){
+            return 'Estetica';
         } else if (nomeCampagna.includes('Ambra')){
             return 'Ambra';
         } else if (nomeCampagna.includes('Altri centri')) {

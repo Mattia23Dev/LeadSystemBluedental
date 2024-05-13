@@ -7,6 +7,7 @@ require("dotenv").config();
 const path = require("path");
 const Lead = require('./models/lead');
 const bodyParser = require("body-parser")
+const axios = require('axios')
 
 const app = express();
 
@@ -246,6 +247,65 @@ app.post('/submit', async (req, res) => {
   }
 });
 
+const trigger = () => {
+  const url = 'https://app.chaticmedia.com/api/users';
+
+const data = {
+  phone: "+393356145157",
+  email: "alessandro@gmail.com",
+  first_name: "Alessandro",
+  last_name: "Grandoni",
+  gender: "male",
+  actions: [
+    {
+      action: "send_flow",
+      flow_id: 1715091478491,
+    },
+    {
+      action: "add_tag",
+      tag_name: "Human Alert"
+    },
+    {
+      action: "set_field_value",
+      field_name: "conversation_summary",
+      value: "Dajeeeeeeeeee"
+    }
+  ]
+}
+
+const headers = {
+  'Content-Type': 'application/json',
+  'X-ACCESS-TOKEN': '1099113.cLsOisMrC8yUje3XROuIksvZGZeDSfwSYZXFOV'
+};
+
+axios.post(url, data, { headers })
+  .then(response => {
+    console.log('Response:', response.data);
+  })
+  .catch(error => {
+    console.error('Error:', error.response ? error.response.data : error.message);
+  });
+}
+//trigger()
+
+const getUser = () => {
+  const url = 'https://app.chaticmedia.com/api/users/393409610597';
+
+const headers = {
+  'Content-Type': 'application/json',
+  'X-ACCESS-TOKEN': '1099113.cLsOisMrC8yUje3XROuIksvZGZeDSfwSYZXFOV'
+};
+
+axios.get(url, { headers })
+  .then(response => {
+    console.log('Response:', response.data);
+  })
+  .catch(error => {
+    console.error('Error:', error.response ? error.response.data : error.message);
+  });
+}
+//getUser()
+
 const checkLeadDoppie = async () => {
   const leadDuplicate = await Lead.aggregate([
     { 
@@ -259,7 +319,7 @@ const checkLeadDoppie = async () => {
   ]);
   console.log(leadDuplicate)
 
-  const idsToRemove = leadDuplicate.map(lead => lead._id); // Ottieni gli ID delle lead duplicate
+  const idsToRemove = leadDuplicate.map(lead => lead._id);
 }
 //checkLeadDoppie()
 

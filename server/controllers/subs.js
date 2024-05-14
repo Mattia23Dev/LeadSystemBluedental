@@ -74,11 +74,11 @@ const calculateAndAssignLeadsEveryDay = async () => {
         for (const field of leadWithoutUser.fieldData) {
           if (field.name === "full_name") {
             userData.first_name = field.values[0];
-          } else if (field.name === "email") {
+          } else if (field.name === "email" || field.name === "e-mail") {
             userData.email = field.values[0];
           } else if (field.name === "phone_number") {
             userData.phone_number = field.values[0];
-          } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni"){
+          } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_"){
             userData.trattamento = field.values[0].replace(/_/g, " ");
           } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
             userData.città = field.values[0].replace(/_/g, " ");

@@ -251,7 +251,7 @@ const trigger = () => {
   const url = 'https://app.chaticmedia.com/api/users';
 
 const data = {
-  phone: "+393400559975",
+  phone: "3313869850",
   email: "francesca@gmail.com",
   first_name: "Francesca",
   last_name: "Di lallo",

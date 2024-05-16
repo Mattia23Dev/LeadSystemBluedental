@@ -10,6 +10,68 @@ const LastLeadUser = require('../models/lastLeadUser');
 
 let lastUserReceivedLead = null;
 
+
+const trigger = (lead, orientatore) => {
+  const url = 'https://app.chaticmedia.com/api/users';
+
+const data = {
+  phone: lead?.numeroTelefono,
+  email: lead?.email,
+  first_name: lead?.nome,
+  last_name: lead?.nome,
+  full_name: lead?.nome,
+  gender: "male",
+  actions: [
+    {
+      action: "add_tag",
+      tag_name: "Da contattare"
+    },
+    {
+      action: "set_field_value",
+      field_name: "City",
+      value: lead?.città,
+    },
+    {
+      action: "set_field_value",
+      field_name: "Numero Operatore",
+      value: orientatore?.telefono,
+    },
+    {
+      action: "set_field_value",
+      field_name: "Operatore",
+      value: orientatore?.nome,
+    },
+    {
+      action: "set_field_value",
+      field_name: "Trattamento",
+      value: lead?.trattamento,
+    },
+  ]
+}
+
+const headers = {
+  'Content-Type': 'application/json',
+  'X-ACCESS-TOKEN': '1114716.GhZ5kU8ZaFOGZ4YXnpZbX4cHWg6Y5zXJ80hxdRr28Mb'
+};
+
+axios.post(url, data, { headers })
+  .then(response => {
+    console.log('Response:', response.data);
+    if (response.data.success){
+      const id = response.data.data.id;
+      axios.post(url+`/${id}/send/1715849419797`, null, {headers}).then((res) => {
+        console.log(res)
+      })
+      .catch(error => console.log(error))
+    } else {
+      console.log("Nientee")
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error.response ? error.response.data : error.message);
+  });
+}
+
 const calculateAndAssignLeadsEveryDay = async () => {
   try {
     const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
@@ -110,7 +172,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
         try {
           await newLead.save();
-
+          await trigger(newLead, user)
           lastUserReceivedLead = user?._id;
           await user.save();
 

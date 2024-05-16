@@ -69,6 +69,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
           phone_number: "",
           trattamento: "",
           città: '',
+          quando: "",
         };
 
         for (const field of leadWithoutUser.fieldData) {
@@ -82,6 +83,8 @@ const calculateAndAssignLeadsEveryDay = async () => {
             userData.trattamento = field.values[0].replace(/_/g, " ");
           } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
             userData.città = field.values[0].replace(/_/g, " ");
+          } else if (field.name == "quando_preferiresti_essere_contattata?_"){
+            userData.quando = field.values[0];
           }
         }
 
@@ -523,7 +526,7 @@ exports.dailyCap = async (req, res) => {
 async function updateLeads() {
   try {
       const leadsToUpdate = await Lead.find({ esito: "Da contattare", orientatori: { $ne: '660fc6b59408391f561edc1a' } });
-      const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
+      const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', '6602bc55a9b03d142783d965'];
 
       let orientatori = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }});
       const numLeads = leadsToUpdate.length;

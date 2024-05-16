@@ -54,7 +54,7 @@ export default function Table2({ onResults, searchval, setLeadsPdf, setNextSched
     "Terni", "Torino", "Treviso", "Varese", "Verona", "Vicenza", "Vigevano"
   ];
   const campagne = [
-    "Gold", "Ambra", "Meta Web - Altri centri", "Meta Web", "Messenger"
+    "Gold", "Ambra", "Meta Web - Altri centri", "Meta Web", "Messenger", "Estetica"
   ]
   const [motivo, setMotivo] = useState();
   const ori = localStorage.getItem("Ori");
@@ -524,7 +524,11 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
   };
 
   function mapCampagnaPerLeadsystem(nomeCampagna, filtro) {
-    return nomeCampagna.includes(filtro);
+    if (selectedCampagna === "Estetica"){
+      return nomeCampagna.toLowerCase().includes("estetica")
+    } else {
+      return nomeCampagna.includes(filtro);
+    }
 }
   const [recallFilter, setRecallFilter] = useState(false);
   useEffect(() => {

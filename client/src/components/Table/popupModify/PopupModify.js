@@ -61,7 +61,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
             return 'Gold';
         } else if (nomeCampagna.includes('Ambra')){
             return 'Ambra';
-        } else if (nomeCampagna.includes('Estetica')){
+        } else if (nomeCampagna.toLowerCase().includes("estetica")){
             return 'Estetica';
         } else if (nomeCampagna.includes('Altri centri')) {
           return 'Meta Web - Altri centri';

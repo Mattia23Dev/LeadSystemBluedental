@@ -251,36 +251,57 @@ const trigger = () => {
   const url = 'https://app.chaticmedia.com/api/users';
 
 const data = {
-  phone: "+393356145157",
-  email: "alessandro@gmail.com",
-  first_name: "Alessandro",
-  last_name: "Grandoni",
-  gender: "male",
+  phone: "+393400559975",
+  email: "francesca@gmail.com",
+  first_name: "Francesca",
+  last_name: "Di lallo",
+  full_name: "Francesca",
+  gender: "female",
   actions: [
     {
-      action: "send_flow",
-      flow_id: 1715091478491,
-    },
-    {
       action: "add_tag",
-      tag_name: "Human Alert"
+      tag_name: "Da contattare"
     },
     {
       action: "set_field_value",
-      field_name: "conversation_summary",
-      value: "Dajeeeeeeeeee"
-    }
+      field_name: "City",
+      value: "Nepal"
+    },
+    {
+      action: "set_field_value",
+      field_name: "Numero Operatore",
+      value: "3313869850"
+    },
+    {
+      action: "set_field_value",
+      field_name: "Operatore",
+      value: "Gian nicola"
+    },
+    {
+      action: "set_field_value",
+      field_name: "Trattamento",
+      value: "Operazione estetica"
+    },
   ]
 }
 
 const headers = {
   'Content-Type': 'application/json',
-  'X-ACCESS-TOKEN': '1099113.cLsOisMrC8yUje3XROuIksvZGZeDSfwSYZXFOV'
+  'X-ACCESS-TOKEN': '1114716.GhZ5kU8ZaFOGZ4YXnpZbX4cHWg6Y5zXJ80hxdRr28Mb'
 };
 
 axios.post(url, data, { headers })
   .then(response => {
     console.log('Response:', response.data);
+    if (response.data.success){
+      const id = response.data.data.id;
+      axios.post(url+`/${id}/send/1715849419797`, null, {headers}).then((res) => {
+        console.log(res)
+      })
+      .catch(error => console.log(error))
+    } else {
+      console.log("Nientee")
+    }
   })
   .catch(error => {
     console.error('Error:', error.response ? error.response.data : error.message);
@@ -289,7 +310,7 @@ axios.post(url, data, { headers })
 //trigger()
 
 const getUser = () => {
-  const url = 'https://app.chaticmedia.com/api/users/393409610597';
+  const url = 'https://app.chaticmedia.com/api/users/3333333';
 
 const headers = {
   'Content-Type': 'application/json',

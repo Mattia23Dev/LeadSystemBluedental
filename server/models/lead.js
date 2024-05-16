@@ -33,6 +33,7 @@ const LeadSchema = new Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Orientatore',
     },
+    quando: {String},
     utente: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

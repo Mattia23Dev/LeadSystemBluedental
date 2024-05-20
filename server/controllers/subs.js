@@ -173,7 +173,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
         try {
           await newLead.save();
-          await trigger(newLead, user)
+          //await trigger(newLead, user)
           lastUserReceivedLead = user?._id;
           await user.save();
 

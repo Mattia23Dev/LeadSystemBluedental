@@ -104,7 +104,7 @@ exports.saveLeadChatbotDentista = async (req, res) => {
 
       await lead.save();
       console.log('Lead aggiornata con successo nel database!');
-      if (conversation_summary && specificFieldApp?.value && specificFieldApp?.value !== ""){
+      if (conversation_summary && città !== ''){
         const userId = '664c5b2f3055d6de1fcaa22b'; //'65d3110eccfb1c0ce51f7492'; JESSICA
         let user = await User.findById(userId);
         const newLead = new Lead({
@@ -183,7 +183,7 @@ exports.saveLeadChatbotDentista = async (req, res) => {
 
       await lead.save();
       console.log('Lead salvato con successo nel database!');
-      if (conversation_summary && specificFieldApp?.value && specificFieldApp?.value !== ""){
+      if (conversation_summary && città !== ''){
         const userId ='664c5b2f3055d6de1fcaa22b'; //'65d3110eccfb1c0ce51f7492'; JESSICA
         let user = await User.findById(userId);
         const newLead = new Lead({

@@ -116,7 +116,7 @@ exports.saveLeadChatbotDentista = async (req, res) => {
           esito: 'Da contattare',
           città: città || "",
           trattamento: "Implantologia per singolo dente",
-          orientatori: nextUser._id,
+          orientatori: nextUser ? nextUser._id : null,
           utente: "664c5b2f3055d6de1fcaa22b", //'65d3110eccfb1c0ce51f7492'; JESSICA
           note: "",
           fatturato: "",
@@ -195,7 +195,7 @@ exports.saveLeadChatbotDentista = async (req, res) => {
           esito: 'Da contattare',
           città: città || '',
           trattamento: "Implantologia per singolo dente",
-          orientatori: nextUser._id,
+          orientatori: nextUser ? nextUser._id : null,
           utente: "664c5b2f3055d6de1fcaa22b", //'65d3110eccfb1c0ce51f7492'; JESSICA
           note: "",
           fatturato: "",

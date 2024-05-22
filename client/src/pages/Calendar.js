@@ -18,7 +18,11 @@ function MyCalendar({leads, setSelectedLead, setOpenInfoCal, saveNewRecall, setO
   const calendarRef = useRef(null);
   console.log(leads);
   const initialView = localStorage.getItem('calendarioVisualizzazione') || 'timeGridWeek';
-
+  const formatDateString = (inputDate) => {
+    const parsedDate = moment(inputDate, 'YY-MM-DD HH:mm');
+    const formattedDate = parsedDate.format('DD-MM-YYYY HH:mm');
+    return formattedDate;
+  };
   useEffect(() => {
     const calendarEl = calendarRef.current;
 
@@ -37,12 +41,12 @@ function MyCalendar({leads, setSelectedLead, setOpenInfoCal, saveNewRecall, setO
       events: leads,
       eventContent: function (arg, createElement) {
         var titleText = arg.event.title;
-        var descriptionText = arg.event.extendedProps.recallHours; 
+        var descriptionText = (arg.event.extendedProps.appDate && arg.event.extendedProps.appDate.trim() !== "") && !arg.event.extendedProps.doppio ? formatDateString(arg.event.extendedProps.appDate) : arg.event.extendedProps.recallHours;
         
         return createElement(
           'div',
           {
-            class: 'event-content-container',
+            class: (arg.event.extendedProps.appDate && arg.event.extendedProps.appDate.trim() !== "") && !arg.event.extendedProps.doppio ? 'event-content-container chatbot-calendar' : 'event-content-container',
           },
           //createElement('span', {class: 'iniziali-icon-calendar'}, iniziali),
           createElement('span', { class: 'event-title' }, titleText),
@@ -93,18 +97,16 @@ function MyCalendar({leads, setSelectedLead, setOpenInfoCal, saveNewRecall, setO
 }
 
 const CalendarM = () => {
-    const { isSidebarOpen } = useContext(SidebarContext);
     const [state] = useContext(UserContext);
     const [orientatoriOptions, setOrientatoriOptions] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [originalData, setOriginalData] = useState([]);
 
-    const containerStyle = {
-        transition: 'width 0.3s ease',
-    }
-
-    const formatDate = (date) => {
-        return moment(date).format('LL'); 
+    const formatDateString = (inputDate) => {
+      const parsedDate = moment(inputDate, 'YY-MM-DD HH:mm');
+      const formattedDate = parsedDate.format('DD/MM/YYYY HH:mm');
+      const data = moment(formattedDate, 'DD/MM/YYYY HH:mm').toDate()
+      return data;
     };
     
     const fetchLeads = async (orin) => {
@@ -115,26 +117,29 @@ const CalendarM = () => {
             //_id: "655f707143a59f06d5d4dc3b"
           });
     
-    
-          const filteredTableLead = response.data.map((lead) => {
+          const doppioAppuntamento = response.data.filter(lead => (lead.appDate && lead.appDate !== "") && lead.recallDate);
+          const filteredDoppione = doppioAppuntamento.map((lead) => {
             const telephone = lead.numeroTelefono ? lead.numeroTelefono.toString() : '';
             const cleanedTelephone =
               telephone.startsWith('+39') && telephone.length === 13
                 ? telephone.substring(3)
                 : telephone;
     
-          const dateTime = moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate();
+          const dateTime = moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate()
           const inizialiNome = lead.orientatori ? lead.orientatori.nome.charAt(0).toUpperCase() : '';
-    
+          const inizialiCognome = lead.orientatori ? lead.orientatori.cognome.charAt(0).toUpperCase() : '';
+
             return {
               id: lead._id,
-              title: lead.nome,
+              title: lead.nome + ' ' + lead.cognome,
               extendedProps : {
                 name: lead.nome,
+                surname: lead.cognome,
                 email: lead.email,
                 date: lead.data,
                 telephone: cleanedTelephone,
                 status: lead.esito,
+                doppio: true,
                 orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
                 fatturato: lead.fatturato ? lead.fatturato : '',
                 provenienza: lead.campagna,
@@ -149,16 +154,63 @@ const CalendarM = () => {
                 lastModify: lead.lastModify ? lead.lastModify : null, 
                 campagna: lead.utmCampaign ? lead.utmCampaign : "",
                 tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "",
+                summary: lead.summary ? lead.summary : "",
+                appDate: lead.appDate ? lead.appDate : "",
             },
               start: dateTime,
               description: `Data: ${dateTime}, Testo`,
             };
           });
+          const filteredTableLead = response.data.map((lead) => {
+            const telephone = lead.numeroTelefono ? lead.numeroTelefono.toString() : '';
+            const cleanedTelephone =
+              telephone.startsWith('+39') && telephone.length === 13
+                ? telephone.substring(3)
+                : telephone;
     
+          const inizialiNome = lead.orientatori ? lead.orientatori.nome.charAt(0).toUpperCase() : '';
+          const dateTime = (lead.campagna === "AI chatbot" || (lead.appDate && lead.appDate?.trim()  !== '')) ?
+          formatDateString(lead.appDate) :
+          moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate();
+            return {
+              id: lead._id,
+              title: lead.nome + ' ' + lead.cognome,
+              extendedProps : {
+                name: lead.nome,
+                surname: lead.cognome,
+                email: lead.email,
+                date: lead.data,
+                telephone: cleanedTelephone,
+                status: lead.esito,
+                doppio: false,
+                orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
+                fatturato: lead.fatturato ? lead.fatturato : '',
+                provenienza: lead.campagna,
+                città: lead.città ? lead.città : '',
+                trattamento: lead.trattamento ? lead.trattamento : '',
+                note: lead.note ? lead.note : '',
+                id: lead._id,
+                etichette: lead.etichette ? lead.etichette : null,
+                motivo: lead.motivo ? lead.motivo : null,
+                recallHours: lead.recallHours ? lead.recallHours : null,
+                recallDate: lead.recallDate ? lead.recallDate : null,
+                lastModify: lead.lastModify ? lead.lastModify : null, 
+                campagna: lead.utmCampaign ? lead.utmCampaign : "",
+                tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "",
+                summary: lead.summary ? lead.summary : "",
+                appDate: lead.appDate ? lead.appDate : "",
+            },
+              start: dateTime,
+              description: `Data: ${dateTime}, Testo`,
+            };
+          });
+          console.log(filteredTableLead)
+          const mergedArray = filteredTableLead.concat(filteredDoppione);
+          console.log(mergedArray)
           const ori = localStorage.getItem("Ori");
 
-          const filteredByRecall = filteredTableLead.filter((lead) => {
-            return lead.extendedProps.recallDate && lead.extendedProps.recallHours && lead.extendedProps.recallDate !== null;
+          const filteredByRecall = mergedArray.filter((lead) => {
+            return (lead.extendedProps.recallDate && lead.extendedProps.recallHours && lead.extendedProps.recallDate !== null) || (lead.extendedProps.appDate);
           });
     
           const filteredByOrientatore = filteredByRecall.filter((row) => {
@@ -190,22 +242,27 @@ const CalendarM = () => {
             _id: state.user._id
           });
     
-          const filteredTableLead = response.data.map((lead) => {
+          const doppioAppuntamento = response.data.filter(lead => (lead.appDate && lead.appDate !== "") && lead.recallDate);
+          const filteredDoppione = doppioAppuntamento.map((lead) => {
             const telephone = lead.numeroTelefono ? lead.numeroTelefono.toString() : '';
             const cleanedTelephone =
               telephone.startsWith('+39') && telephone.length === 13
                 ? telephone.substring(3)
                 : telephone;
-
-                const dateTime = moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate();
     
+          const dateTime = moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate()
+          const inizialiNome = lead.orientatori ? lead.orientatori.nome.charAt(0).toUpperCase() : '';
+          const inizialiCognome = lead.orientatori ? lead.orientatori.cognome.charAt(0).toUpperCase() : '';
+
             return {
               id: lead._id,
-              title: lead.nome,
-              extendedProps: {
+              title: lead.nome + ' ' + lead.cognome,
+              extendedProps : {
                 name: lead.nome,
+                surname: lead.cognome,
                 email: lead.email,
                 date: lead.data,
+                doppio: true,
                 telephone: cleanedTelephone,
                 status: lead.esito,
                 orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
@@ -222,15 +279,61 @@ const CalendarM = () => {
                 lastModify: lead.lastModify ? lead.lastModify : null, 
                 campagna: lead.utmCampaign ? lead.utmCampaign : "",
                 tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "",
+                summary: lead.summary ? lead.summary : "",
+                appDate: lead.appDate ? lead.appDate : "",
+            },
+              start: dateTime,
+              description: `Data: ${dateTime}, Testo`,
+            };
+          });
+          const filteredTableLead = response.data.map((lead) => {
+            const telephone = lead.numeroTelefono ? lead.numeroTelefono.toString() : '';
+            const cleanedTelephone =
+              telephone.startsWith('+39') && telephone.length === 13
+                ? telephone.substring(3)
+                : telephone;
+
+                const dateTime = (lead.campagna === "AI chatbot" || (lead.appDate && lead.appDate?.trim()  !== '')) ?
+                formatDateString(lead.appDate) :
+                moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate();
+              console.log(dateTime)
+            return {
+              id: lead._id,
+              title: lead.nome + ' ' + lead.cognome,
+              extendedProps: {
+                name: lead.nome,
+                surname: lead.cognome,
+                email: lead.email,
+                date: lead.data,
+                telephone: cleanedTelephone,
+                status: lead.esito,
+                doppio: false,
+                orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
+                fatturato: lead.fatturato ? lead.fatturato : '',
+                provenienza: lead.campagna,
+                città: lead.città ? lead.città : '',
+                trattamento: lead.trattamento ? lead.trattamento : '',
+                note: lead.note ? lead.note : '',
+                id: lead._id,
+                etichette: lead.etichette ? lead.etichette : null,
+                motivo: lead.motivo ? lead.motivo : null,
+                recallHours: lead.recallHours ? lead.recallHours : null,
+                recallDate: lead.recallDate ? lead.recallDate : null,
+                lastModify: lead.lastModify ? lead.lastModify : null, 
+                campagna: lead.utmCampaign ? lead.utmCampaign : "",
+                tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "",
+                summary: lead.summary ? lead.summary : "",
+                appDate: lead.appDate ? lead.appDate : "",
               },
               start: dateTime,
               description: `Data: ${dateTime}, Testo`,
             };
           });
     
+          const mergedArray = filteredTableLead.concat(filteredDoppione);
           const recall = localStorage.getItem("recallFilter");
     
-          const filteredByRecall = filteredTableLead.filter((lead) => {
+          const filteredByRecall = mergedArray.filter((lead) => {
             if (lead.recallDate && recall && recall === "true") {
               const recallDate = new Date(lead.recallDate);
               const today = new Date();

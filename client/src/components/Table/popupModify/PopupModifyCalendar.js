@@ -56,7 +56,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
         "Numero Errato", "Non interessato", "Fuori Zona", "Doppio contatto", "⁠Nessuna risposta (6)", "Già paziente"
     ]);
 
-    
+    const userFixId = state.user.role && state.user.role === "orientatore" ? state.user.utente : state.user._id;
     function mapCampagnaPerLeadsystem(nomeCampagna) {
         if (nomeCampagna.includes('Gold')){
             return 'Gold';
@@ -214,7 +214,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
 
     useEffect(() => {
         const getOrientatori = async () => {
-            await axios.get(`/utenti/65d3110eccfb1c0ce51f7492/orientatori`)
+            await axios.get(`/utenti/${userFixId}/orientatori`)
                 .then(response => {
                     const data = response.data.orientatori;
 
@@ -253,7 +253,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                         trattamento,
                         tentativiChiamata
                     };
-                    const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+                    const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
                     fetchLeads();
                     setPopupModify(false);
                     toast.success('Il lead è stato modificato con successo.')
@@ -275,7 +275,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                     trattamento,
                     tentativiChiamata
                 };
-                const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+                const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
                 fetchLeads();
                 setPopupModify(false);
                 toast.success('Il lead è stato modificato con successo.')
@@ -293,7 +293,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                 nome,
                 cognome,
             };
-            const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+            const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
             onUpdateLead({
                 ...lead,
                 name,
@@ -319,7 +319,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                         fatturato,
                         motivo,
                       };   
-                      const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+                      const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
                       onUpdateLead({
                         ...lead,
                         status: esito,
@@ -346,7 +346,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                         trattPrenotato: treatment, 
                         luogo: location,
                       };   
-                      const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+                      const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
                       onUpdateLead({
                         ...lead,
                         status: esito,
@@ -368,7 +368,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
             fatturato,
             motivo,
             };   
-            const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+            const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
             onUpdateLead({
                 ...lead,
                 status: esito,

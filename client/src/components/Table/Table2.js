@@ -88,6 +88,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
   document.addEventListener('mousedown', handleClickOutside);
 
   const userId = state.user._id;
+  const userFixId = state.user.role && state.user.role === "orientatore" ? state.user.utente : state.user._id;
   const handleRowClick = (lead) => {
      setSelectedLead(lead);
      setDeleting(true);
@@ -236,6 +237,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           lastModify: lead.lastModify ? lead.lastModify : null, 
           campagna: lead.utmCampaign ? lead.utmCampaign : "",
           tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
+          summary: lead.summary ? lead.summary : "",
+          appDate: lead.appDate ? lead.appDate : "",
         };
       });
 
@@ -338,6 +341,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           lastModify: lead.lastModify ? lead.lastModify : null, 
           campagna: lead.utmCampaign ? lead.utmCampaign : "",
           tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
+          summary: lead.summary ? lead.summary : "",
+          appDate: lead.appDate ? lead.appDate : "",
         };
       });
 
@@ -390,25 +395,50 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
 
       const filteredLead = response.data
       .filter(lead => {
-        return lead.recallDate && lead.recallHours; // Assicurati che entrambi siano definiti
+        return (lead.recallDate && lead.recallHours) || lead.appDate;
       })
       .map(lead => {
-        // Combina la data e l'ora per ottenere una data completa
-        const combinedDateTime = moment(lead.recallDate + ' ' + lead.recallHours, 'YYYY-MM-DD HH:mm');
-        return {
-          ...lead,
-          combinedDateTime: combinedDateTime // Aggiungi la data completa come proprietà aggiuntiva
-        };
+        if (lead.recallDate && lead.recallHours && lead.appDate && lead.appDate?.trim() !== ""){
+          const combinedDateTime = moment(lead.recallDate + ' ' + lead.recallHours, 'YYYY-MM-DD HH:mm');
+          const appDateTime = moment(lead.appDate, 'DD-MM-YY HH:mm');      
+          const now = moment();
+        
+          let nearestFutureDate;
+          if (combinedDateTime.isAfter(now) && (combinedDateTime.isBefore(appDateTime) || !appDateTime.isAfter(now))) {
+            nearestFutureDate = combinedDateTime;
+          } else if (appDateTime.isAfter(now) && (appDateTime.isBefore(combinedDateTime) || !combinedDateTime.isAfter(now))) {
+            nearestFutureDate = appDateTime;
+          } else {
+            nearestFutureDate = combinedDateTime;
+          }
+        
+          return {
+            ...lead,
+            nearestFutureDate: nearestFutureDate
+          };        
+        } else if (lead.recallDate && lead.recallHours && lead.appDate?.trim() === ""){
+          console.log("trovato")
+          const combinedDateTime = moment(lead.recallDate + ' ' + lead.recallHours, 'YYYY-MM-DD HH:mm');
+          return {
+            ...lead,
+            combinedDateTime: combinedDateTime
+          }; 
+        } else {
+          const appDateTime = moment(lead.appDate, 'DD-MM-YY HH:mm');
+          return {
+            ...lead,
+            combinedDateTime: appDateTime
+          };           
+        }
       })
       .filter(lead => {
-        // Filtra solo le lead con una data futura o uguale all'ora attuale
         return lead.combinedDateTime.isSameOrAfter(moment());
       })
       .sort((leadA, leadB) => {
-        // Ordina in base alla data completa
         return leadA.combinedDateTime - leadB.combinedDateTime;
       });
     
+      console.log(filteredLead)
     let nextAppointmentLead = null;
     if (filteredLead.length > 0) {
       nextAppointmentLead = filteredLead[0];
@@ -526,6 +556,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
   function mapCampagnaPerLeadsystem(nomeCampagna, filtro) {
     if (selectedCampagna === "Estetica"){
       return nomeCampagna.toLowerCase().includes("estetica")
+    } else if (selectedCampagna === "Messenger") {
+      return nomeCampagna.toLowerCase().includes("messenger");
     } else {
       return nomeCampagna.includes(filtro);
     }
@@ -776,7 +808,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         orientatori
       };
   
-      const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+      const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
       const updatedLead = response.data.updatedLead;
 
       setOriginalData((prevData) =>
@@ -872,7 +904,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           fatturato,
           motivo,
         }; 
-        const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+        const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
         setPopupModifyEsito(false);
         SETheaderIndex(999);             
         }
@@ -888,7 +920,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           trattPrenotato: treatment, 
           luogo: location,
         }; 
-        const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+        const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
         setPopupModifyEsito(false);
         SETheaderIndex(999);
         }
@@ -899,7 +931,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           fatturato,
           motivo,
         };   
-        const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+        const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
         setPopupModifyEsito(false);
         SETheaderIndex(999); 
       }
@@ -1048,7 +1080,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         esito,
         fatturato,
       };
-      const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId.id}`, modifyLead);
+      const response = await axios.put(`/lead/${userFixId}/update/${leadId.id}`, modifyLead);
 
       toast.success('Il lead è stato modificato con successo.');
       if (state.user.role && state.user.role === "orientatore"){
@@ -1070,11 +1102,11 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         esito,
         fatturato,
         motivo,
-        tipo, 
+        tipo,
         trattPrenotato, 
         luogo
       };
-      const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId.id}`, modifyLead);
+      const response = await axios.put(`/lead/${userFixId}/update/${leadId.id}`, modifyLead);
 
       toast.success('Il lead è stato modificato con successo.');
       if (state.user.role && state.user.role === "orientatore"){

@@ -33,10 +33,10 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
   };
 
   const userId = state.user._id;
-
+  const userFixId = state.user.role && state.user.role === "orientatore" ? state.user.utente : state.user._id;
   useEffect(() => {
     const getOrientatori = async () => {
-      await axios.get(`/utenti/65d3110eccfb1c0ce51f7492/orientatori`)
+      await axios.get(`/utenti/${userFixId}/orientatori`)
         .then(response => {
           const data = response.data.orientatori;
 
@@ -69,7 +69,7 @@ const AddLeadPopup = ({ setAddOpen, popupRef, fetchLeads }) => {
         from: 'user',
       };
       console.log(newLead);
-      const response = await axios.post(`lead/create/65d3110eccfb1c0ce51f7492`, newLead);
+      const response = await axios.post(`lead/create/${userFixId}`, newLead);
       toast.success('Hai aggiunto il lead!');
       fetchLeads();
       setAddOpen(false);

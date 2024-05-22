@@ -56,6 +56,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
         "Numero Errato", "Non interessato", "Fuori Zona", "Doppio contatto", "⁠Nessuna risposta (6)", "Già paziente"
     ]);
 
+    const userFixId = state.user.role && state.user.role === "orientatore" ? state.user.utente : state.user._id;
     function mapCampagnaPerLeadsystem(nomeCampagna) {
         if (nomeCampagna.includes('Gold')){
             return 'Gold';
@@ -214,7 +215,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
 
     useEffect(() => {
         const getOrientatori = async () => {
-            await axios.get(`/utenti/65d3110eccfb1c0ce51f7492/orientatori`)
+            await axios.get(`/utenti/${userFixId}/orientatori`)
                 .then(response => {
                     const data = response.data.orientatori;
 
@@ -253,7 +254,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                         trattamento,
                         tentativiChiamata
                     };
-                    const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+                    const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
                     fetchLeads();
                     setRefreshate(true)
                     setPopupModify(false);
@@ -276,7 +277,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                     trattamento,
                     tentativiChiamata
                 };
-                const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+                const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
                 fetchLeads();
                 setPopupModify(false);
                 setRefreshate(true)
@@ -295,7 +296,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                 nome,
                 cognome,
             };
-            const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+            const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
             onUpdateLead({
                 ...lead,
                 name,
@@ -322,7 +323,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                         fatturato,
                         motivo,
                       };   
-                      const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+                      const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
                       onUpdateLead({
                         ...lead,
                         status: esito,
@@ -350,7 +351,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                         trattPrenotato: treatment, 
                         luogo: location,
                       };   
-                      const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+                      const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
                       onUpdateLead({
                         ...lead,
                         status: esito,
@@ -373,7 +374,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
             fatturato,
             motivo,
             };   
-            const response = await axios.put(`/lead/65d3110eccfb1c0ce51f7492/update/${leadId}`, modifyLead);
+            const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
             onUpdateLead({
                 ...lead,
                 status: esito,

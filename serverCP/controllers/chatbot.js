@@ -101,6 +101,7 @@ exports.saveLeadChatbotDentista = async (req, res) => {
       lead.last_interaction = formattedDate;
       lead.conversation_summary = conversation_summary;
       lead.appointment_date = specificFieldApp.value;
+      lead.città = città;
 
       await lead.save();
       console.log('Lead aggiornata con successo nel database!');
@@ -178,6 +179,7 @@ exports.saveLeadChatbotDentista = async (req, res) => {
         last_interaction: formattedDate,
         conversation_summary: conversation_summary,
         appointment_date: specificFieldApp.value,
+        città: città,
         tag: "unusual",
       });
 

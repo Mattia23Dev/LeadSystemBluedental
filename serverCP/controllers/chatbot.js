@@ -13,11 +13,10 @@ function isValidPhoneNumber(phoneNumber) {
   }
 
   function day10ago(dataV) {
-    const data = moment(dataV, 'ddd MMM DD YYYY HH:mm:ss [GMT]ZZ (zz)');
-  
+    const datanuova = new Date(dataV);
+    const data = moment(datanuova, 'ddd MMM DD YYYY HH:mm:ss');
     const dieciGiorniFa = moment().subtract(10, 'days');
-  
-    return data.isAfter(dieciGiorniFa);
+    return data.isBefore(dieciGiorniFa);
   }
 
 exports.saveLeadChatbotDentista = async (req, res) => {

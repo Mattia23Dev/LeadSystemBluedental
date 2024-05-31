@@ -62,6 +62,10 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
             return 'Gold';
         } else if (nomeCampagna.toLowerCase().includes("estetica")){
             return 'Estetica';
+        } else if (nomeCampagna.toLowerCase().includes("chatbot")){
+            return 'Conversazionale';
+        } else if (nomeCampagna.toLowerCase().includes("chat")){
+            return 'Messenger bludental';
         } else if (nomeCampagna.includes('Ambra')){
             return 'Ambra';
         } else if (nomeCampagna.includes('Altri centri')) {
@@ -284,6 +288,11 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
             }            
         }
     };
+    const formatDateString = (inputDate) => {
+        const parsedDate = moment(inputDate, 'YY-MM-DD HH:mm');                
+        const formattedDate = parsedDate.format('DD/MM/YYYY HH:mm');        
+        return formattedDate;
+      };
 
     const handleSaveName = async () => {
         const name = nome;
@@ -544,6 +553,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                                     }
                                     <p><FiClock color='#30978B' /> Data di <b>creazione lead</b>: <span>{formatDate(lead.date)}</span></p>
                                     <p>{lead.lastModify && lead.lastModify !== null ? <><FiClock color='#3471CC' /> Data <b>ultima modifica</b>: <span>{formatDate(lead.date)}</span></> : ""}</p>
+                                    {lead.appDate && lead?.appDate?.trim() !== "" && <h6><FiClock color='#3471CC' /> Data <b>appuntamento:</b> <span>{formatDateString(lead.appDate)}</span></h6>}
                                     <p style={{margin: '17px 0 10px 0'}}>Stato lead: 
                                         <span onClick={() => setChooseMotivo(true)}>{esito == "Non interessato" ? "Lead persa" : esito} <FaPencilAlt size={12} style={{marginLeft: '3px', cursor: 'pointer'}} /></span>
                                         {esito === "Fissato" && fatturato !== "0" && <span>{fatturato}€</span>}

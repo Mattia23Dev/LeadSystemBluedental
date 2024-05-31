@@ -42,6 +42,26 @@
         margin-top: -5px;
         margin-bottom: 10px;
     }
+    .calendario-icon{
+        background-color: green;
+        color: white;
+        min-width: 33px;
+        min-height: 33px;
+        margin-top: 0;
+        padding: 3px;
+        border-radius: 50%;
+        max-width: 33px;
+        max-height: 33px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .top-bollettino > div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+      }
     .date-recall > p:first-of-type{
         color: #000000B2;
         padding: 0px 0px;

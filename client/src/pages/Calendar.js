@@ -131,7 +131,7 @@ const CalendarM = () => {
 
             return {
               id: lead._id,
-              title: lead.nome + ' ' + lead.cognome,
+              title: lead.nome,
               extendedProps : {
                 name: lead.nome,
                 surname: lead.cognome,
@@ -174,7 +174,7 @@ const CalendarM = () => {
           moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate();
             return {
               id: lead._id,
-              title: lead.nome + ' ' + lead.cognome,
+              title: lead.nome,
               extendedProps : {
                 name: lead.nome,
                 surname: lead.cognome,
@@ -256,7 +256,7 @@ const CalendarM = () => {
 
             return {
               id: lead._id,
-              title: lead.nome + ' ' + lead.cognome,
+              title: lead.nome,
               extendedProps : {
                 name: lead.nome,
                 surname: lead.cognome,
@@ -299,7 +299,7 @@ const CalendarM = () => {
               console.log(dateTime)
             return {
               id: lead._id,
-              title: lead.nome + ' ' + lead.cognome,
+              title: lead.nome,
               extendedProps: {
                 name: lead.nome,
                 surname: lead.cognome,

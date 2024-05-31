@@ -5,6 +5,7 @@ import recGreen from '../../imgs/recPegGreen.png';
 import recRed from '../../imgs/recPegRed.png';
 import recYellow from '../../imgs/recPegYellow.png';
 import '../MainDash/MainDash.scss';
+import { FaCalendarAlt } from 'react-icons/fa';
 //import { useDrag, useDrop } from 'react-dnd';
 //import { MyDnDContext } from '../../context/MyDnDcontext';
 
@@ -54,7 +55,7 @@ export default function LeadEntry({ secref, id, index, data, handleModifyPopup, 
 
   if (data)
     return (
-      <div key={index} className={data.campagna === "Mgm" ? "leadentry mgm-lead" : "leadentry"}
+      <div key={index} className={data.appDate && data.appDate !== "" ? "leadentry mgm-lead" : "leadentry"}
         ref={ref}
         draggable="true"
         onDragStart={handleDragStart}
@@ -66,6 +67,8 @@ export default function LeadEntry({ secref, id, index, data, handleModifyPopup, 
           <p className='topnomelead'>Nome lead</p>
           <div className="top-bollettino">
             <p className='name'>{data.name}</p>
+            <div>
+            {(data.appDate && data?.appDate?.trim() !== "") && <p className='calendario-icon'><FaCalendarAlt size={18}/></p>}
             <p 
             onClick={data?.orientatore ? null : () => selezionOrientatore(data)} 
             className={data?.orientatore ? 'iniziali' : 'iniziali redIniz'}
@@ -87,6 +90,7 @@ export default function LeadEntry({ secref, id, index, data, handleModifyPopup, 
                     "+"
                   )}
               </p>
+            </div>
           </div>
           <div className="modifica" onClick={() => handleModifyPopup(data)}>+ Info</div>
           <hr style={{width: '70%'}}/>

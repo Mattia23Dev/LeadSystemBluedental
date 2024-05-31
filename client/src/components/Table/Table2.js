@@ -54,7 +54,7 @@ export default function Table2({ onResults, searchval, setLeadsPdf, setNextSched
     "Terni", "Torino", "Treviso", "Varese", "Verona", "Vicenza", "Vigevano"
   ];
   const campagne = [
-    "Gold", "Ambra", "Meta Web - Altri centri", "Meta Web", "Messenger", "Estetica"
+    "Gold", "Ambra", "Meta Web - Altri centri", "Meta Web", "Messenger", "Estetica", "Messenger Bludental"
   ]
   const [motivo, setMotivo] = useState();
   const ori = localStorage.getItem("Ori");
@@ -243,8 +243,24 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       });
 
       const recall = localStorage.getItem("recallFilter");
+      const cityFilt = localStorage.getItem("cityFilter")
+      const campFilt = localStorage.getItem("campagnaFilter")
+      const filteredByCity = filteredTableLead.filter((lead) => {
+        if (cityFilt && cityFilt !== null && cityFilt !== undefined) {
+          return lead.città === cityFilt;
+        } else {
+          return true;
+        }
+      });
 
-      const filteredByRecall = filteredTableLead.filter((lead) => {
+      const filteredByCampaign = filteredByCity.filter((lead) => {
+        if (campFilt && campFilt !== null && campFilt !== undefined) {
+          return mapCampagnaPerLeadsystemFetch(lead.campagna, campFilt)
+        } else {
+          return true;
+        }
+      });
+      const filteredByRecall = filteredByCampaign.filter((lead) => {
         if (lead.recallDate && recall && recall === "true") {
           const recallDate = new Date(lead.recallDate);
           const today = new Date();
@@ -257,8 +273,6 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
 
       const startDate = localStorage.getItem("startDate");
       const endDate = localStorage.getItem("endDate");
-      const cityFilt = localStorage.getItem("cityFilter")
-      const campFilt = localStorage.getItem("campagnaFilter")
       if (startDate !== null && endDate !== null && startDate !== undefined && endDate !== undefined){
         const filteredByDate = filterDataByDate(filteredByRecall, startDate, endDate); 
         setFilteredData(filteredByDate);
@@ -365,7 +379,23 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         }
       });
 
-      const filteredByRecall = filteredByOrientatore.filter((lead) => {
+      const filteredByCity = filteredByOrientatore.filter((lead) => {
+        if (cityFilt && cityFilt !== null && cityFilt !== undefined) {
+          return lead.città === cityFilt;
+        } else {
+          return true;
+        }
+      });
+
+      const filteredByCampaign = filteredByCity.filter((lead) => {
+        if (campFilt && campFilt !== null && campFilt !== undefined) {
+          return mapCampagnaPerLeadsystemFetch(lead.campagna, campFilt)
+        } else {
+          return true;
+        }
+      });
+
+      const filteredByRecall = filteredByCampaign.filter((lead) => {
         if (lead.recallDate && recall && recall === "true") {
           const recallDate = new Date(lead.recallDate);
           const today = new Date();
@@ -558,9 +588,22 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       return nomeCampagna.toLowerCase().includes("estetica")
     } else if (selectedCampagna === "Messenger") {
       return nomeCampagna.toLowerCase().includes("messenger");
+    } else if (selectedCampagna === "Messenger Bludental") {
+      return nomeCampagna.toLowerCase().includes("chat");
     } else {
       return nomeCampagna.includes(filtro);
     }
+}
+function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
+  if (filtro === "Estetica"){
+    return nomeCampagna.toLowerCase().includes("estetica")
+  } else if (filtro === "Messenger") {
+    return nomeCampagna.toLowerCase().includes("messenger");
+  } else if (filtro === "Messenger Bludental") {
+    return nomeCampagna.toLowerCase().includes("chat");
+  } else {
+    return nomeCampagna.includes(filtro);
+  }
 }
   const [recallFilter, setRecallFilter] = useState(false);
   useEffect(() => {
@@ -675,7 +718,23 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         }
       });
 
-      const filteredByRecall = filteredByOrientatore.filter((lead) => {
+      const filteredByCity = filteredByOrientatore.filter((lead) => {
+        if (cityFilt && cityFilt !== null && cityFilt !== undefined) {
+          return lead.città === cityFilt;
+        } else {
+          return true;
+        }
+      });
+
+      const filteredByCampaign = filteredByCity.filter((lead) => {
+        if (campFilt && campFilt !== null && campFilt !== undefined) {
+          return mapCampagnaPerLeadsystemFetch(lead.campagna, campFilt)
+        } else {
+          return true;
+        }
+      });
+
+      const filteredByRecall = filteredByCampaign.filter((lead) => {
         if (lead.recallDate && recall && recall === "true") {
           const recallDate = new Date(lead.recallDate);
           const today = new Date();
@@ -743,7 +802,22 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       const recall = localStorage.getItem("recallFilter");
       const cityFilt = localStorage.getItem("cityFilter")
       const campFilt = localStorage.getItem("campagnaFilter")
-      const filteredByRecall = filteredTableLead.filter((lead) => {
+      const filteredByCity = filteredTableLead.filter((lead) => {
+        if (cityFilt && cityFilt !== null && cityFilt !== undefined) {
+          return lead.città === cityFilt;
+        } else {
+          return true;
+        }
+      });
+
+      const filteredByCampaign = filteredByCity.filter((lead) => {
+        if (campFilt && campFilt !== null && campFilt !== undefined) {
+          return mapCampagnaPerLeadsystemFetch(lead.campagna, campFilt)
+        } else {
+          return true;
+        }
+      });
+      const filteredByRecall = filteredByCampaign.filter((lead) => {
         if (lead.recallDate && recall && recall === "true") {
           const recallDate = new Date(lead.recallDate);
           const today = new Date();

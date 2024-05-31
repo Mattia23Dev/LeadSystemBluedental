@@ -77,9 +77,11 @@ const calculateAndAssignLeadsEveryDay = async () => {
   try {
     const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
 
-    let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }});
-    let leads = await LeadFacebook.find({ $or: [{ assigned: false }, { assigned: { $exists: false } }] }).limit(150); // Imposta il limite a 1000, o a un valore più alto se necessario
-
+    let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }, utente: "65d3110eccfb1c0ce51f7492"});
+    let leads = await LeadFacebook.find({ 
+      $or: [{ assigned: false }, { assigned: { $exists: false } }],
+      name: { $not: { $regex: /Meta Web/, $options: 'i' } } // 'i' per ignorare il case sensitivity
+    }).limit(150);
     const totalLeads = leads.length;
     console.log('Iscrizioni:', totalLeads);
     console.log( 'Utenti:'+ users.length);
@@ -215,49 +217,127 @@ const calculateAndAssignLeadsEveryDay = async () => {
   }
 };
 
-const calculateAndAssignLeadsEveryDayWordpress = async () => {
+const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
   try {
-    let users = await User.find({ $and: [
-      { monthlyLeadCounter: { $gt: 0 } },
-      { tag: "pegaso" }
-    ] });
-    let leads = await LeadWordpress.find({
-      $or: [
-        { assigned: false },
-        { assigned: { $exists: false } },
-      ],
-      $and: [
-        {campagna: 'comparatore' },
-      ]
-    });
+    const callCenter = "664c5b2f3055d6de1fcaa22b";
+    const callCenterUser = await User.findById(callCenter)
+    const bludental = "65d3110eccfb1c0ce51f7492";
+    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
+
+    let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }});
+    let leads = await LeadFacebook.find({
+      $or: [{ assigned: false }, { assigned: { $exists: false } }],
+      name: { $regex: /Meta Web/, $options: 'i' }
+    }).limit(150);
+    
     const totalLeads = leads.length;
-    console.log('Iscrizioni Wordpress:', totalLeads);
+    console.log('Iscrizioni:', totalLeads);
+    console.log( 'Utenti:'+ users.length);
 
     if (totalLeads === 0) {
-      console.log('Nessun lead Wordpress disponibile');
+      console.log('Nessun lead disponibile');
       return;
     }
 
-    let userIndex = 0;
-
-    while (leads.length > 0 && users.some(user => user.monthlyLeadCounter > 0)) {
-      const user = users[userIndex];
-
-      if (!user) {
-        console.log('Tutti gli utenti hanno il contatore a 0');
-        break;
-      }
-
-      if (user.dailyCap !== undefined && user.dailyCap !== null) {
+    const leadsForCallCenterCount = Math.floor(totalLeads / 2);
+    const leadsForBludentalCount = totalLeads - leadsForCallCenterCount;
     
-        if (user.dailyLead >= user.dailyCap) {
-          console.log(`L'utente ${user.nameECP} ha raggiunto il dailyCap per oggi.`);
-          userIndex++;
+    // Divide l'array di lead in due parti
+    const leadsForCallCenter = leads.slice(0, leadsForCallCenterCount);
+    let leadsForBludental = leads.slice(leadsForCallCenterCount);
+    
+    console.log(`Lead per Call Center: ${leadsForCallCenter.length}`);
+    console.log(`Lead per Bludental: ${leadsForBludental.length}`);
+    
+
+    if (callCenterUser.dailyLead < callCenterUser.dailyCap){
+      for (const lead of leadsForCallCenter) {
+        if (lead.assigned) {
+          console.log(`Il lead ${leadWithoutUser?._id} è già stato assegnato.`);
           continue;
         }
-      }
 
-      const leadsNeeded = Math.min(user.monthlyLeadCounter, 1);
+        const userData = {
+          first_name: "",
+          email: "",
+          phone_number: "",
+          trattamento: "",
+          città: '',
+          quando: "",
+        };
+
+        for (const field of lead.fieldData) {
+          if (field.name === "full_name") {
+            userData.first_name = field.values[0];
+          } else if (field.name === "email" || field.name === "e-mail") {
+            userData.email = field.values[0];
+          } else if (field.name === "phone_number") {
+            userData.phone_number = field.values[0];
+          } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_"){
+            userData.trattamento = field.values[0].replace(/_/g, " ");
+          } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
+            userData.città = field.values[0].replace(/_/g, " ");
+          } else if (field.name == "quando_preferiresti_essere_contattata?_"){
+            userData.quando = field.values[0];
+          }
+        }
+
+        const newLead = new Lead({
+          data: new Date(),
+          nome: userData.first_name,
+          email: userData.email,
+          numeroTelefono: userData.phone_number,
+          campagna: 'Social',
+          città: userData.città ? userData.città : '',
+          trattamento: userData.trattamento ? userData.trattamento : 'Implantologia a carico immediato',
+          esito: "Da contattare",
+          orientatori: null,
+          utente: callCenter,
+          note: "",
+          fatturato: "",
+          utmContent: lead.annunci ? lead.annunci : '',
+          utmAdset: lead.adsets ? lead.adsets : '',
+          utmCampaign: lead.name ? lead.name : '',
+          tentativiChiamata: '0',
+          giàSpostato: false,
+        });
+
+        try {
+          await newLead.save();
+          callCenterUser.dailyLead += 1;
+          callCenterUser.save()
+          //await trigger(newLead, user)
+
+          lead.assigned = true;
+          await lead.save();
+          //await sendNotification(user._id);
+          //await sendEmailLeadArrivati(user._id);
+
+          console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);
+        } catch (error) {
+          console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
+        }
+      }      
+    } else {
+      leadsForBludental = leads;
+    }
+
+    const lastUserLeadData = await LastLeadUser.findOne({});
+    if (lastUserLeadData) {
+      lastUserReceivedLead = lastUserLeadData.userId;
+    }
+
+    let userIndex = 0;
+    const lastUser = lastUserReceivedLead && users.find(user => user?._id.toString() === lastUserReceivedLead.toString());
+
+    if (!lastUser) {
+      userIndex = 0;
+    } else {
+        userIndex = users.indexOf(lastUser) + 1;
+    }
+    while (leadsForBludental.length > 0) {
+      const user = users[userIndex % users.length]; //users[userIndex && userIndex < 11 ? userIndex : 0];
+      const leadsNeeded = Math.min(leadsForBludental.length, 1); //Math.min(user.monthlyLeadCounter, 1);
 
       if (leadsNeeded === 0) {
         console.log(`Il contatore mensile dell'utente ${user.nameECP} è insufficiente. Non vengono assegnati ulteriori lead.`);
@@ -265,74 +345,85 @@ const calculateAndAssignLeadsEveryDayWordpress = async () => {
         continue;
       }
 
-      const leadsForUser = leads.splice(0, leadsNeeded);
+      if (!user) {
+        console.error('Nessun utente disponibile per l\'indice', userIndex);
+        continue;
+      }
+
+      const leadsForUser = leadsForBludental.splice(0, leadsNeeded);
 
       for (const leadWithoutUser of leadsForUser) {
-        if (leadWithoutUser.assigned == true) {
-          console.log(`Il lead ${leadWithoutUser.nome} è già stato assegnato.`);
+        if (leadWithoutUser.assigned) {
+          console.log(`Il lead ${leadWithoutUser?._id} è già stato assegnato.`);
           continue;
+        }
+
+        const userData = {
+          first_name: "",
+          email: "",
+          phone_number: "",
+          trattamento: "",
+          città: '',
+          quando: "",
+        };
+
+        for (const field of leadWithoutUser.fieldData) {
+          if (field.name === "full_name") {
+            userData.first_name = field.values[0];
+          } else if (field.name === "email" || field.name === "e-mail") {
+            userData.email = field.values[0];
+          } else if (field.name === "phone_number") {
+            userData.phone_number = field.values[0];
+          } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_"){
+            userData.trattamento = field.values[0].replace(/_/g, " ");
+          } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
+            userData.città = field.values[0].replace(/_/g, " ");
+          } else if (field.name == "quando_preferiresti_essere_contattata?_"){
+            userData.quando = field.values[0];
+          }
         }
 
         const newLead = new Lead({
           data: new Date(),
-          nome: leadWithoutUser.nome || '',
-          cognome: leadWithoutUser.cognome || '',
-          email: leadWithoutUser.email || '',
-          numeroTelefono: leadWithoutUser.numeroTelefono || '',
-          campagna: leadWithoutUser.campagna ? leadWithoutUser.campagna : '',
-          corsoDiLaurea: leadWithoutUser.corsoDiLaurea || '',
-          frequentiUni: leadWithoutUser.universita || false,
-          lavoro: leadWithoutUser.lavoro || false,
-          facolta: leadWithoutUser.facolta || "",
-          oreStudio: leadWithoutUser.orario || "",
-          esito: 'Da contattare',
-          orientatori: null,
-          utente: user._id,
-          università: leadWithoutUser.università || '',
-          provincia: leadWithoutUser.provincia || '',
-          note: '',
-          fatturato: '',
-          utmCampaign: leadWithoutUser.utmCampaign || '',
-          utmSource: leadWithoutUser.utmSource || '',
-          utmContent: leadWithoutUser.utmContent || '',
-          utmTerm: leadWithoutUser.utmTerm || '',
-          utmAdgroup: leadWithoutUser.utmAdgroup || "",
-          utmAdset: leadWithoutUser.utmAdset || "",
-          categories: leadWithoutUser.categories || "",
-          enrollmentTime: leadWithoutUser.enrollmentTime || "",
-          budget: leadWithoutUser.budget || "",
-          tipologiaCorso: leadWithoutUser.tipologiaCorso || "",
-          leva: leadWithoutUser.leva || "",
+          nome: userData.first_name,
+          email: userData.email,
+          numeroTelefono: userData.phone_number,
+          campagna: 'Social',
+          città: userData.città ? userData.città : '',
+          trattamento: userData.trattamento ? userData.trattamento : 'Implantologia a carico immediato',
+          esito: "Da contattare",
+          orientatori: user._id,
+          utente: "65d3110eccfb1c0ce51f7492",
+          note: "",
+          fatturato: "",
+          utmContent: leadWithoutUser.annunci ? leadWithoutUser.annunci : '',
+          utmAdset: leadWithoutUser.adsets ? leadWithoutUser.adsets : '',
+          utmCampaign: leadWithoutUser.name ? leadWithoutUser.name : '',
+          tentativiChiamata: '0',
+          giàSpostato: false,
         });
 
         try {
+          await newLead.save();
+          //await trigger(newLead, user)
+          lastUserReceivedLead = user?._id;
+          await user.save();
+
           leadWithoutUser.assigned = true;
           await leadWithoutUser.save();
 
-          const leadsVerify = await Lead.find({});
-          const existingLead = leadsVerify.find(
-            (lead) =>
-              lead.cognome === leadWithoutUser.cognome && lead.email === leadWithoutUser.email
-          );
+          //await sendNotification(user._id);
 
-          if (!existingLead) {
-            await newLead.save();
-            console.log(`Assegnato il lead ${leadWithoutUser.cognome} all'utente con ID ${user.nameECP}`);
-            user.monthlyLeadCounter -= 1;
-            user.dailyLead += 1;
-            await user.save();
+          //await sendEmailLeadArrivati(user._id);
 
-            const leadIndex = leads.findIndex(lead => lead._id.toString() === leadWithoutUser._id.toString());
-            if (leadIndex !== -1) {
-              leads.splice(leadIndex, 1);
-            }
-          } else {
-            console.log(`Già assegnato il lead ${leadWithoutUser.cognome} all'utente con ID ${user.nameECP}`)
-            continue;
-          }
-
+          console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);
         } catch (error) {
           console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
+        }
+
+        const leadIndex = leadsForBludental.findIndex(lead => lead._id.toString() === leadWithoutUser._id.toString());
+        if (leadIndex !== -1) {
+          leadsForBludental.splice(leadIndex, 1);
         }
       }
 
@@ -345,6 +436,12 @@ const calculateAndAssignLeadsEveryDayWordpress = async () => {
     if (totalLeads === 0) {
       console.log('LeadFacebook terminati prima che tutti gli utenti abbiano il contatore a 0');
     }
+    if (lastUserReceivedLead == null || lastUserReceivedLead == undefined) {
+      await LastLeadUser.findOneAndUpdate({}, { userId: '65ddbe8676b468245d701bc2' }, { upsert: true });
+    } else {
+       await LastLeadUser.findOneAndUpdate({}, { userId: lastUserReceivedLead }, { upsert: true });
+    }
+
   } catch (error) {
     console.log(error.message);
   }
@@ -533,6 +630,11 @@ cron.schedule('15,58,25,40 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *',
   console.log('Assegno i lead di bludental');
 });
 
+cron.schedule('20,10,35,50 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+  calculateAndAssignLeadsEveryDayMetaWeb();
+  console.log('Assegno i lead di bludental');
+});
+
 /*cron.schedule('12 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   //getTagLeads();
   calculateAndAssignLeadsEveryDayWordpress();
@@ -618,11 +720,11 @@ async function updateLeads() {
 }
 
 async function updateLeadsRec() {
-  const startDate = new Date('2024-04-15T00:00:00.000Z');
-  const endDate = new Date('2024-04-28T23:59:59.999Z');
+  const startDate = new Date('2024-05-01T00:00:00.000Z');
+  const endDate = new Date('2024-05-14T23:59:59.999Z');
   try {
     const excludedOrientatoreId = '660fc6b59408391f561edc1a';
-      const leadsToUpdate = await Lead.find({ esito: "Non risponde" });
+      const leadsToUpdate = await Lead.find({ esito: "Non risponde", utmCampaign: /Meta Web/i });
       const filteredLeads = leadsToUpdate.filter((lead) => {
         const leadDate = new Date(lead.data);
         return (

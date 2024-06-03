@@ -581,12 +581,10 @@ const resetDailyCap = async () => {
   console.log('Eseguo il reset del cap');
 
   try {
-    const users = await User.find();
+    const user = await User.findById("664c5b2f3055d6de1fcaa22b");
 
-    for (const user of users) {
-      user.dailyLead = 0;
-      await user.save();
-    }
+    user.dailyLead = 0;
+    await user.save();
 
     console.log('Cap giornaliero resettato');
   } catch (err) {
@@ -600,10 +598,10 @@ const resetDailyCap = async () => {
 });*/
 
 
-/*cron.schedule('30 6 * * *', () => {
+cron.schedule('30 4 * * *', () => {
   resetDailyCap();
   console.log('Eseguito il reset del daily Lead');
-});*/
+});
 
 cron.schedule('10,46,20 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getDentistaLead();

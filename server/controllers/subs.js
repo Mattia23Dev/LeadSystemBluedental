@@ -81,7 +81,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
     let leads = await LeadFacebook.find({ 
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
       name: { $not: { $regex: /Meta Web/, $options: 'i' } } // 'i' per ignorare il case sensitivity
-    }).limit(150);
+    }).limit(10);
     const totalLeads = leads.length;
     console.log('Iscrizioni:', totalLeads);
     console.log( 'Utenti:'+ users.length);
@@ -173,20 +173,35 @@ const calculateAndAssignLeadsEveryDay = async () => {
           giàSpostato: false,
         });
 
+        const leadsVerify = await Lead.find({email: userData.email.trim().toLowerCase()});
         try {
-          await newLead.save();
-          //await trigger(newLead, user)
-          lastUserReceivedLead = user?._id;
-          await user.save();
+          if (!leadsVerify){
+            await newLead.save();
+            //await trigger(newLead, user)
+            lastUserReceivedLead = user?._id;
+            await user.save();
 
-          leadWithoutUser.assigned = true;
-          await leadWithoutUser.save();
+            leadWithoutUser.assigned = true;
+            await leadWithoutUser.save();
 
-          //await sendNotification(user._id);
+            //await sendNotification(user._id);
 
-          //await sendEmailLeadArrivati(user._id);
+            //await sendEmailLeadArrivati(user._id);
 
-          console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);
+            console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);            
+          } else {
+            //await trigger(newLead, user)
+            await user.save();
+
+            leadWithoutUser.assigned = true;
+            await leadWithoutUser.save();
+
+            //await sendNotification(user._id);
+
+            //await sendEmailLeadArrivati(user._id);
+
+            console.log(`Già assegnato il lead ${leadWithoutUser?._id}`);               
+          }
         } catch (error) {
           console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
         }
@@ -228,7 +243,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
     let leads = await LeadFacebook.find({
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
       name: { $regex: /Meta Web/, $options: 'i' }
-    }).limit(150);
+    }).limit(10);
     
     const totalLeads = leads.length;
     console.log('Iscrizioni:', totalLeads);
@@ -403,20 +418,35 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
           giàSpostato: false,
         });
 
+        const leadsVerify = await Lead.find({email: userData.email.trim().toLowerCase()});
         try {
-          await newLead.save();
-          //await trigger(newLead, user)
-          lastUserReceivedLead = user?._id;
-          await user.save();
+          if (!leadsVerify){
+            await newLead.save();
+            //await trigger(newLead, user)
+            lastUserReceivedLead = user?._id;
+            await user.save();
 
-          leadWithoutUser.assigned = true;
-          await leadWithoutUser.save();
+            leadWithoutUser.assigned = true;
+            await leadWithoutUser.save();
 
-          //await sendNotification(user._id);
+            //await sendNotification(user._id);
 
-          //await sendEmailLeadArrivati(user._id);
+            //await sendEmailLeadArrivati(user._id);
 
-          console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);
+            console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);            
+          } else {
+            //await trigger(newLead, user)
+            await user.save();
+
+            leadWithoutUser.assigned = true;
+            await leadWithoutUser.save();
+
+            //await sendNotification(user._id);
+
+            //await sendEmailLeadArrivati(user._id);
+
+            console.log(`Già assegnato il lead ${leadWithoutUser?._id}`);
+          }
         } catch (error) {
           console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
         }
@@ -774,14 +804,13 @@ async function updateLeadsEsito() {
 
 async function deleteLeadsGold() {
   try {
-      await Lead.deleteMany({ utmCampaign: { $regex: /ambra/i } });
-      const count = await Lead.countDocuments({ utmCampaign: { $regex: /gold/i } });
-      console.log("Numero di lead con utmCampaign 'gold':", count);
-      console.log(`Aggiornamento completato. lead sono stati aggiornati.`);
+      await LeadFacebook.deleteMany({ assigned: false });
+      console.log("Eliminate")
   } catch (error) {
       console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
   }
 }
+
 async function updateLeadsByPhoneNumber(phoneNumbers) {
   for (const telefono of phoneNumbers) {
       const lead = await Lead.findOne({ numeroTelefono: telefono });

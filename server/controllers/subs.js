@@ -11,10 +11,10 @@ const axios = require('axios')
 
 let lastUserReceivedLead = null;
 function filterOldLeads(leads) {
-  const oneMonthAgo = new Date();
-  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+  const fourteenDaysAgo = new Date();
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
-  return leads.filter(lead => lead.data < oneMonthAgo);
+  return leads.filter(lead => lead.data < fourteenDaysAgo);
 }
 
 const trigger = (lead, orientatore) => {

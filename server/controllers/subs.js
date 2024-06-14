@@ -10,7 +10,12 @@ const LastLeadUser = require('../models/lastLeadUser');
 const axios = require('axios')
 
 let lastUserReceivedLead = null;
+function filterOldLeads(leads) {
+  const oneMonthAgo = new Date();
+  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
+  return leads.filter(lead => lead.data < oneMonthAgo);
+}
 
 const trigger = (lead, orientatore) => {
   const url = 'https://app.chaticmedia.com/api/users';
@@ -176,9 +181,15 @@ const calculateAndAssignLeadsEveryDay = async () => {
           giàSpostato: false,
         });
 
-        const leadsVerify = await Lead.find({email: userData.email.trim().toLowerCase()});
+        const leadsVerify = await Lead.find({
+          $or: [
+            { email: userData.email.trim().toLowerCase() },
+            { phone: userData.phone_number },
+          ]
+        });
+
         try {
-          if (leadsVerify.length === 0){
+          if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length > 0)){
             await newLead.save();
             //await trigger(newLead, user)
             lastUserReceivedLead = user?._id;
@@ -302,9 +313,14 @@ const calculateAndAssignLeadsEveryDayEstetica = async () => {
           giàSpostato: false,
         });
 
-        const leadsVerify = await Lead.find({email: userData.email.trim().toLowerCase()});
+        const leadsVerify = await Lead.find({
+          $or: [
+            { email: userData.email.trim().toLowerCase() },
+            { phone: userData.phone_number },
+          ]
+        });
         try {
-          if (leadsVerify.length === 0){
+          if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length > 0)){
             await newLead.save();
             await users.save();
 
@@ -373,7 +389,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
     if (callCenterUser.dailyLead < callCenterUser.dailyCap){
       for (const lead of leadsForCallCenter) {
         if (lead.assigned) {
-          console.log(`Il lead ${leadWithoutUser?._id} è già stato assegnato.`);
+          console.log(`Il lead ${lead?._id} è già stato assegnato.`);
           continue;
         }
 
@@ -422,18 +438,33 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
           giàSpostato: false,
         });
 
+        const leadsVerify = await Lead.find({
+          $or: [
+            { email: userData.email.trim().toLowerCase() },
+            { phone: userData.phone_number },
+          ]
+        });
         try {
-          await newLead.save();
-          callCenterUser.dailyLead += 1;
-          callCenterUser.save()
-          //await trigger(newLead, user)
+          if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length > 0)){
+            await newLead.save();
+            callCenterUser.dailyLead += 1;
+            callCenterUser.save()
+            //await trigger(newLead, user)
 
-          lead.assigned = true;
-          await lead.save();
-          //await sendNotification(user._id);
-          //await sendEmailLeadArrivati(user._id);
+            lead.assigned = true;
+            await lead.save();
+            //await sendNotification(user._id);
+            //await sendEmailLeadArrivati(user._id);
 
-          console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);
+            console.log(`Assegnato il lead ${lead?._id} all'utente ${callCenterUser.name}`);            
+          } else {
+            callCenterUser.save()
+
+            lead.assigned = true;
+            await lead.save();
+
+            console.log(`Già assegnato il lead ${lead?._id}`);   
+          }
         } catch (error) {
           console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
         }
@@ -523,10 +554,15 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
           giàSpostato: false,
         });
 
-        const leadsVerify = await Lead.find({email: newLead.email.trim().toLowerCase()});
-        console.log(leadsVerify)
+        const leadsVerify = await Lead.find({
+          $or: [
+            { email: userData.email.trim().toLowerCase() },
+            { phone: userData.phone_number },
+          ]
+        });
+
         try {
-          if (leadsVerify.length === 0){
+          if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length > 0)){
             await newLead.save();
             //await trigger(newLead, user)
             lastUserReceivedLead = user?._id;
@@ -582,7 +618,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
     console.log(error.message);
   }
 };
-calculateAndAssignLeadsEveryDayMetaWeb()
+
 const calculateAndAssignLeadsEveryDayWordpressComparatore = async () => {
   try {
     const userId = '655f707143a59f06d5d4dc3b';

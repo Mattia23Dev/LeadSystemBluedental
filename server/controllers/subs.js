@@ -89,7 +89,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
         { name: { $not: { $regex: /Meta Web/, $options: 'i' } } },
         { name: { $not: { $regex: /ESTETICA/, $options: 'i' } } }
       ] // 'i' per ignorare il case sensitivity
-    }).limit(10);
+    }).limit(50);
     const totalLeads = leads.length;
     console.log('Iscrizioni:', totalLeads);
     console.log( 'Utenti:'+ users.length);
@@ -253,7 +253,7 @@ const calculateAndAssignLeadsEveryDayEstetica = async () => {
     let leads = await LeadFacebook.find({
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
       name: { $regex: /ESTETICA/, $options: 'i' }
-    }).limit(10);
+    }).limit(50);
     const totalLeads = leads.length;
     console.log('Iscrizioni:', totalLeads);
 

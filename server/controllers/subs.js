@@ -360,7 +360,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
     let leads = await LeadFacebook.find({
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
       name: { $regex: /Meta Web/, $options: 'i' }
-    }).limit(1);
+    }).limit(10);
     let leadsN = await LeadFacebook.find({
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
       name: { $regex: /Meta Web/, $options: 'i' }

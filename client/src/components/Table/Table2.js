@@ -1049,6 +1049,8 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
     nonRisponde: false,
     irraggiungibile: false,
     iscrizionePosticipata: false,
+    presentato: false,
+    nonPresentato: false,
   })
 
 
@@ -1477,6 +1479,15 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
                                            </>  
                                          )}
                                  </div>
+                                 {userFixId === "664c5b2f3055d6de1fcaa22b" && <>
+                                    <div className={esito === "Presentato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Presentato')}>
+                                        <span><span>o</span></span>
+                                        Presentato
+                                    </div>
+                                    <div className={esito === "Non presentato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Non presentato')}>
+                                        <span><span>o</span></span>
+                                        Non presentato
+                                    </div></>}
                              </div>
                          <button style={{ fontSize: "14px" }} className='btn-orie' onClick={updateLeadEsito}>Salva modifiche</button>
                          </div>
@@ -1723,6 +1734,65 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               )}
             </div>
           </div>
+          {userFixId === "664c5b2f3055d6de1fcaa22b" && 
+          <>
+          <div className="secwrap"
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, "Presentato")}
+            onDragEnd={handleDragEnd}
+          >
+            <LeadHeader
+              handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
+              type={"Presentato"}
+              refreshate={false}
+              toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
+            <div className="entries">
+              {toggles.presentato && filteredData && filteredData.filter(x => x.status == "Presentato").reverse().map((row, k) =>
+                <LeadEntry
+                  id={JSON.stringify(row)}
+                  index={k}
+                  handleRowClick={handleRowClick} data={row}
+                  handleModifyPopup={handleModifyPopup}
+                  secref={secref}
+                  handleModifyPopupEsito={handleModifyPopupEsito}
+                  handleDelete={handleDelete}
+                  campagna={row.campagna}
+                  nuovaEtichetta={nuovaEtichetta}
+                  setNuovaEtichetta={setNuovaEtichetta}
+                  selezionOrientatore={openChangeOrientatore}
+                />
+              )}
+            </div>
+          </div>
+          <div className="secwrap"
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, "Non presentato")}
+            onDragEnd={handleDragEnd}
+          >
+            <LeadHeader
+              handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
+              type={"Non presentato"}
+              refreshate={false}
+              toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
+            <div className="entries">
+              {toggles.nonPresentato && filteredData && filteredData.filter(x => x.status == "Non presentato").reverse().map((row, k) =>
+                <LeadEntry
+                  id={JSON.stringify(row)}
+                  index={k}
+                  handleRowClick={handleRowClick} data={row}
+                  handleModifyPopup={handleModifyPopup}
+                  secref={secref}
+                  handleModifyPopupEsito={handleModifyPopupEsito}
+                  handleDelete={handleDelete}
+                  campagna={row.campagna}
+                  nuovaEtichetta={nuovaEtichetta}
+                  setNuovaEtichetta={setNuovaEtichetta}
+                  selezionOrientatore={openChangeOrientatore}
+                />
+              )}
+            </div>
+          </div>
+          </>}
         </div>
       }
     </div>

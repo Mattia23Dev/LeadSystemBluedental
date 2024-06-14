@@ -20,6 +20,9 @@
     gap: 1.3rem;
     width: 80%;
 }
+.calendar-fissato{
+    margin: 5px 0 20px 0;
+}
 .motivo-venduto > div > select {
     outline: none;
     border: 1.3px solid #3471CC;

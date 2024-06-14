@@ -1,9 +1,11 @@
-import React, {useState} from 'react'
+import React, {useContext, useState} from 'react'
 import './popupMotivo.css';
 import vendutoImg from '../../../imgs/venduto.png';
 import nonVendImg from '../../../imgs/nonvend.png';
 import indietro from '../../../imgs/indietro.png';
 import bonificato from '../../../imgs/bonificato.png';
+import Calendar from 'react-calendar';
+import { UserContext } from '../../../context';
 
 const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
     const [motivo, setMotivo] = useState("");
@@ -11,6 +13,10 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
     const [patientType, setPatientType] = useState('');
     const [treatment, setTreatment] = useState('');
     const [location, setLocation] = useState('');
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [selectedTime, setSelectedTime] = useState({ hours: 7, minutes: 0 });
+    const [state, setState] = useContext(UserContext);
+    const userFixId = state.user.role && state.user.role === "orientatore" ? state.user.utente : state.user._id;
 
   const patientTypes = ["Nuovo paziente", "Gia’ paziente"];
   const treatments = ["Impianti", "Pulizia dei denti", "Protesi Mobile", "Sbiancamento", "Ortodonzia", "Faccette dentali", "Generico"];
@@ -57,6 +63,17 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
                 }
         }
     }
+
+    const handleDateChange = (date) => {
+      setSelectedDate(date);
+    };
+    const handleTimeChange = (e) => {
+      const { name, value } = e.target;
+      setSelectedTime((prevTime) => ({
+        ...prevTime,
+        [name]: parseInt(value, 10),
+      }));
+    };
 
   return (
     <div className='popup-motivo'>
@@ -130,6 +147,46 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
                  ))}
                </select>
              </div>
+
+             {userFixId === "664c5b2f3055d6de1fcaa22b" && 
+             <div className='venduto-motivo'>
+                  <label htmlFor="locationSelect">Data Prenotazione:</label>
+                    <Calendar
+                        onChange={(date) => {
+                        handleDateChange(date);
+                    }} 
+                    className="custom-calendar calendar-fissato" 
+                    value={selectedDate} />                    
+                <div className='orario-container'>
+                    <p>Orario prenotazione</p>
+                    <div className='select-container-orario'>
+                        <select 
+                        className='select-box'
+                        name="hours"
+                        value={selectedTime.hours}
+                        onChange={(e) => handleTimeChange(e)}>
+                            {Array.from({ length: 15 }, (_, i) => {
+                                const hour = i + 7; // Parte da 7 e aggiunge l'offset
+                                return (
+                                    <option key={hour} value={hour}>{hour < 10 ? `0${hour}` : hour}</option>
+                                );
+                            })}
+                        </select>
+                        <span className='separator'>:</span>
+                        <select 
+                        className='select-box'
+                        name="minutes"
+                        value={selectedTime.minutes}
+                        onChange={(e) => handleTimeChange(e)}
+                        >
+                        {/* Opzioni per i minuti */}
+                        {Array.from({ length: 60 }, (_, i) => (
+                            <option key={i} value={i}>{i < 10 ? `0${i}` : i}</option>
+                        ))}
+                        </select>
+                    </div>
+                </div>
+             </div>}
          </div>
         )}
         <div className='salva-motivo'>

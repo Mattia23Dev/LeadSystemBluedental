@@ -33,6 +33,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
     const [mostraCalendar, setMostraCalendar] = useState(false);
     const [selectedDate, setSelectedDate] = useState(lead.recallDate && lead.recallDate !== null ? new Date(lead.recallDate) : new Date());
     const [selectedTime, setSelectedTime] = useState({ hours: 7, minutes: 0 });
+    const [recallType, setRecallType] = useState(lead.recallType && lead.recallType !== "" ? lead.recallType : "");
     const [patientType, setPatientType] = useState('');
     const [treatment, setTreatment] = useState('');
     const [location, setLocation] = useState('');
@@ -114,6 +115,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
               leadId,
               recallDate,
               recallHours,
+              recallType,
             });
         
             console.log('Lead aggiornata:', response.data);
@@ -125,6 +127,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                 ...lead,
                 recallDate,
                 recallHours,
+                recallType,
             });
           } catch (error) {
             console.error('Errore durante l\'aggiornamento della lead:', error.message);
@@ -155,7 +158,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                 </div>
                 <hr className='linea-choose-date' />
                 <div className='orario-container'>
-                    <p>seleziona <br />un orario</p>
+                    <p>seleziona un orario</p>
                     <div className='select-container-orario'>
                         <select 
                         className='select-box'
@@ -180,6 +183,20 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                         {Array.from({ length: 60 }, (_, i) => (
                             <option key={i} value={i}>{i < 10 ? `0${i}` : i}</option>
                         ))}
+                        </select>
+                    </div>
+                </div>
+                <div className='orario-container'>
+                    <p>seleziona tipologia recall</p>
+                    <div className='select-container-orario'>
+                        <select 
+                        className='select-box'
+                        name="hours"
+                        value={recallType}
+                        onChange={(e) => setRecallType(e.target.value)}>
+                           <option value={""}>Seleziona</option>
+                           <option value={"recall"}>Recall generica</option>
+                           <option value={"appuntamento"}>Appuntamento Cliente</option>
                         </select>
                     </div>
                 </div>

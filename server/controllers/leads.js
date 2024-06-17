@@ -226,7 +226,7 @@ const Lead = require('../models/lead');
 
   exports.updateLeadRecall = async (req, res) => {
     try {
-      const { leadId, recallDate, recallHours } = req.body;
+      const { leadId, recallDate, recallHours, recallType } = req.body;
   
       const lead = await Lead.findById(leadId);
   
@@ -236,7 +236,7 @@ const Lead = require('../models/lead');
   
       lead.recallDate = recallDate;
       lead.recallHours = recallHours;
-  
+      lead.recallType = recallType;
       await lead.save();
   
       // Restituisci l'oggetto della lead aggiornata

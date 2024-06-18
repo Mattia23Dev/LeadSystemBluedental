@@ -105,10 +105,12 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
         if (selectedDate && selectedTime) {
           const localDate = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000);
           const recallDate = localDate.toISOString().split('T')[0];
+          if (userFixId === "664c5b2f3055d6de1fcaa22b"){
             if (recallType.trim() === ""){
                 window.alert("Inserisci la tipologia di recall")
                 return
             }
+          }  
           const recallHours = `${selectedTime.hours}:${selectedTime.minutes < 10 ? `0${selectedTime.minutes}` : selectedTime.minutes}`;
 
           console.log('Recall Date:', recallDate);
@@ -189,6 +191,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                         </select>
                     </div>
                 </div>
+                {userFixId === "664c5b2f3055d6de1fcaa22b" &&
                 <div className='orario-container'>
                     <p>seleziona tipologia recall</p>
                     <div className='select-container-orario'>
@@ -202,7 +205,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                            <option value={"appuntamento"}>Appuntamento Cliente</option>
                         </select>
                     </div>
-                </div>
+                </div>}
                 <hr className='linea-choose-date' />
                 <div className='button-choose-date'>
                     <button onClick={handleSaveRecall}>Salva recall</button>

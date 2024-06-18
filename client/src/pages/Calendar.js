@@ -46,7 +46,7 @@ function MyCalendar({leads, setSelectedLead, setOpenInfoCal, saveNewRecall, setO
         return createElement(
           'div',
           {
-            class: (arg.event.extendedProps.appDate && arg.event.extendedProps.appDate.trim() !== "") && !arg.event.extendedProps.doppio ? 'event-content-container chatbot-calendar' : (arg.event.extendedProps.recallType === "" || arg.event.extendedProps.recallType === "recall") ? 'event-content-container' : "event-content-container appuntamento-recall-scelta",
+            class: (arg.event.extendedProps.appDate && arg.event.extendedProps.appDate.trim() !== "") && !arg.event.extendedProps.doppio ? 'event-content-container chatbot-calendar' : (arg.event.extendedProps.recallType !== "appuntamento") ? 'event-content-container' : "event-content-container appuntamento-recall-scelta",
           },
           //createElement('span', {class: 'iniziali-icon-calendar'}, iniziali),
           createElement('span', { class: 'event-title' }, titleText),

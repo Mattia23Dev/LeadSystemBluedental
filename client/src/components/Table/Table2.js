@@ -239,6 +239,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
           summary: lead.summary ? lead.summary : "",
           appDate: lead.appDate ? lead.appDate : "",
+          recallType: lead.recallType ? lead.recallType : "",
         };
       });
 
@@ -357,6 +358,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
           summary: lead.summary ? lead.summary : "",
           appDate: lead.appDate ? lead.appDate : "",
+          recallType: lead.recallType ? lead.recallType : "",
         };
       });
 
@@ -510,6 +512,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         lastModify: row.lastModify,
         campagna: row.utmCampaign,
         tentativiChiamata: row.tentativiChiamata ? row.tentativiChiamata : "0",
+        recallType: row.recallType ? row.recallType : "",
       };
     });
     setFilteredData(filteredDataIn);
@@ -697,6 +700,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
           lastModify: lead.lastModify ? lead.lastModify : null, 
           campagna: lead.utmCampaign ? lead.utmCampaign : "",
           tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
+          recallType: lead.recallType ? lead.recallType : "",
         };
       });
 
@@ -796,6 +800,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
           lastModify: lead.lastModify ? lead.lastModify : null, 
           campagna: lead.utmCampaign ? lead.utmCampaign : "",
           tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
+          recallType: lead.recallType ? lead.recallType : "",
         };
       });
 
@@ -902,6 +907,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               id: updatedLead._id,
               trattamento: updatedLead.trattamento,
               tentativiChiamata: updatedLead.tentativiChiamata ? updatedLead.tentativiChiamata : "0",
+              recallType: updatedLead.recallType ? updatedLead.recallType : "",
             };
             return { ...lead, ...adaptedLead };
           } else {
@@ -927,6 +933,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
             id: updatedLead._id,
             trattamento: updatedLead.trattamento,
             tentativiChiamata: updatedLead.tentativiChiamata ? updatedLead.tentativiChiamata : "0",
+            recallType: updatedLead.recallType ? updatedLead.recallType : "",
           };
           return { ...lead, ...adaptedLead };
         } else {

@@ -243,6 +243,7 @@ exports.createOrientatore = async (req, res) => {
   
       Object.assign(lead, req.body);
       lead.lastModify = new Date().toISOString();
+      if (lead.utente.toString === "65d3110eccfb1c0ce51f7492"){
       if (lead.esito === "Non risponde"){
         if (lead.giàSpostato === false && parseInt(req.body.tentativiChiamata) > 1 ){
           const orientatoriDisponibili = await Orientatore.find({ _id: { $ne: lead.orientatori } });
@@ -253,6 +254,7 @@ exports.createOrientatore = async (req, res) => {
           }        
         }
       }
+    }
       await lead.save();
       
       const updatedLead = await lead.populate('orientatori');

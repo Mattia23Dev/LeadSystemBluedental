@@ -105,9 +105,12 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
         if (selectedDate && selectedTime) {
           const localDate = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000);
           const recallDate = localDate.toISOString().split('T')[0];
-    
+            if (recallType.trim() === ""){
+                window.alert("Inserisci la tipologia di recall")
+                return
+            }
           const recallHours = `${selectedTime.hours}:${selectedTime.minutes < 10 ? `0${selectedTime.minutes}` : selectedTime.minutes}`;
-    
+
           console.log('Recall Date:', recallDate);
           console.log('Recall Hours:', recallHours);
           try {

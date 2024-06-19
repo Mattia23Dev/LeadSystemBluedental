@@ -91,6 +91,7 @@ const LeadSchema = new Schema({
     last_interaction: String,
     summary: String,
     appDate: String,
+    appFissato: String,
   });
 
 

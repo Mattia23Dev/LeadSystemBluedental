@@ -101,6 +101,9 @@
 .appuntamento-recall-scelta{
   background-color: #13315d !important;
 }
+.appuntamento-fissato{
+  background-color: #c27800 !important;
+}
 .shadow-popup-modify{
 width: 100%;
 height: 100vh;

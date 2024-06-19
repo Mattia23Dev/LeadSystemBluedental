@@ -41,12 +41,13 @@ function MyCalendar({leads, setSelectedLead, setOpenInfoCal, saveNewRecall, setO
       events: leads,
       eventContent: function (arg, createElement) {
         var titleText = arg.event.title;
-        var descriptionText = (arg.event.extendedProps.appDate && arg.event.extendedProps.appDate.trim() !== "") && !arg.event.extendedProps.doppio ? formatDateString(arg.event.extendedProps.appDate) : arg.event.extendedProps.recallHours;
-        
+        //var descriptionText = (arg.event.extendedProps.appDate && arg.event.extendedProps.appDate.trim() !== "") && !arg.event.extendedProps.doppio ? formatDateString(arg.event.extendedProps.appDate) : arg.event.extendedProps.recallHours;
+        var descriptionText =  arg.event.extendedProps.tipoArray === "appDate" && arg.event.extendedProps.appDate.trim() !== "" ? formatDateString(arg.event.extendedProps.appDate) :
+         arg.event.extendedProps.tipoArray === "appFissato" ? formatDateString(arg.event.extendedProps.appFissato) : arg.event.extendedProps.recallHours;
         return createElement(
           'div',
           {
-            class: (arg.event.extendedProps.appDate && arg.event.extendedProps.appDate.trim() !== "") && !arg.event.extendedProps.doppio ? 'event-content-container chatbot-calendar' : (arg.event.extendedProps.recallType !== "appuntamento") ? 'event-content-container' : "event-content-container appuntamento-recall-scelta",
+            class: arg.event.extendedProps.tipoArray === "appDate" ? 'event-content-container chatbot-calendar' : arg.event.extendedProps.tipoArray === "appFissato" ? 'event-content-container appuntamento-fissato' : (arg.event.extendedProps.tipoArray === "recallDate" && arg.event.extendedProps.recallType !== "appuntamento") ? "event-content-container" : "event-content-container appuntamento-recall-scelta",
           },
           //createElement('span', {class: 'iniziali-icon-calendar'}, iniziali),
           createElement('span', { class: 'event-title' }, titleText),
@@ -153,7 +154,9 @@ const CalendarM = () => {
                       tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "",
                       summary: lead.summary ? lead.summary : "",
                       appDate: lead.appDate ? lead.appDate : "",
+                      appFissato: lead.appFissato ? lead.appFissato : "",
                       recallType: lead.recallType ? lead.recallType : "",
+                      tipoArray: ""
                   },
                   start: dateTime,
                   description: `Data: ${dateTime}, Testo`,
@@ -161,13 +164,35 @@ const CalendarM = () => {
   
               // Aggiungere al rispettivo array
               if (lead.appDate) {
-                  appDateArray.push({ ...leadObject, start: formatDateString(lead.appDate) });
+                appDateArray.push({ 
+                  ...leadObject, 
+                  start: formatDateString(lead.appDate), 
+                  extendedProps: { 
+                    ...leadObject.extendedProps, 
+                    tipoArray: "appDate" 
+                  }
+                });
               }
               if (lead.recallDate) {
-                  recallArray.push({ ...leadObject, start:  moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate()});
+                  recallArray.push({ 
+                    ...leadObject, 
+                    start:  moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate(), 
+                    extendedProps: { 
+                      ...leadObject.extendedProps, 
+                      tipoArray: "recallDate" 
+                    }
+                  });
               }
               if (lead.appFissato) {
-                  appFissatoArray.push({ ...leadObject, start: formatDateString(lead.appFissato) });
+                  appFissatoArray.push({ 
+                    ...leadObject, 
+                    start: formatDateString(lead.appFissato), 
+                    extendedProps: { 
+                      ...leadObject.extendedProps, 
+                      tipoArray: "appFissato" 
+                    }
+                  });
+                  console.log(appFissatoArray)
               }
           });
   

@@ -61,9 +61,7 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
       return `${year}-${month}-${day} ${hours}:${minutes}`;
     };
     const saveMotivo = () => {
-      const dataformattata = formatDateTime()
-      console.log(dataformattata);
-        /*if (type === "Venduto" || type === "Fissato") {
+        if (type === "Venduto" || type === "Fissato") {
              spostaLead("", leadId, importoBonificato, type, patientType, treatment, location);
             } else {
                 if (motivo !== ""){
@@ -72,7 +70,22 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
                     window.alert('Inserisci il motivo')
                     return
                 }
-        }*/
+        }
+    }
+
+    const saveMotivoCallCenter = () => {
+      const dataformattata = formatDateTime()
+      console.log(dataformattata);
+        if (type === "Venduto" || type === "Fissato") {
+             spostaLead("", leadId, importoBonificato, type, patientType, treatment, location, dataformattata);
+            } else {
+                if (motivo !== ""){
+                   spostaLead(motivo, leadId, "0", type, "", "", "", dataformattata); 
+                }else {
+                    window.alert('Inserisci il motivo')
+                    return
+                }
+        }
     }
 
     const handleDateChange = (date) => {
@@ -87,7 +100,7 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
     };
 
   return (
-    <div className='popup-motivo'>
+    <div className={userFixId === "664c5b2f3055d6de1fcaa22b" ? 'popup-motivo allargato-pm' : 'popup-motivo'}>
         <img onClick={onClose} src={indietro} />
         <div className='popup-motivo-top'>
             {type === "Fissato" ? (
@@ -122,7 +135,8 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
                 </label>
             ))}
         </div>) : (
-          <div className='motivo-venduto'>
+          <div className='flexa'>
+            <div className='motivo-venduto'>
             <div className='choose-motivo'>
             <p style={{textAlign: 'center'}}>Tipologia paziente</p>
             {patientTypes.map((opzione, index) => (
@@ -158,9 +172,10 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
                  ))}
                </select>
              </div>
+             </div>
 
              {userFixId === "664c5b2f3055d6de1fcaa22b" && 
-             <div className='venduto-motivo'>
+             <div className='motivo-venduto'>
                   <label htmlFor="locationSelect">Data Prenotazione:</label>
                     <Calendar
                         onChange={(date) => {
@@ -201,7 +216,13 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
          </div>
         )}
         <div className='salva-motivo'>
-            <button onClick={saveMotivo}>Salva modifiche</button>
+            <button onClick={() => {
+              if (userFixId === "664c5b2f3055d6de1fcaa22b"){
+                saveMotivoCallCenter()
+              } else {
+                saveMotivo()
+              }
+            }}>Salva modifiche</button>
         </div>
     </div>
   )

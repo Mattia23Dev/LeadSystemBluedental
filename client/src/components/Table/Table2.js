@@ -295,14 +295,13 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       })
       .map(lead => {
         // Combina la data e l'ora per ottenere una data completa
-        const combinedDateTime = moment(lead.recallDate + ' ' + lead.recallHours, 'YYYY-MM-DD HH:mm');
+        const combinedDateTime = moment(`${lead.recallDate.substring(0, 10)} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm');
         return {
           ...lead,
           combinedDateTime: combinedDateTime // Aggiungi la data completa come proprietà aggiuntiva
         };
       })
       .filter(lead => {
-        // Filtra solo le lead con una data futura o uguale all'ora attuale
         return lead.combinedDateTime.isSameOrAfter(moment());
       })
       .sort((leadA, leadB) => {
@@ -431,7 +430,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       })
       .map(lead => {
         if (lead.recallDate && lead.recallHours && lead.appDate && lead.appDate?.trim() !== ""){
-          const combinedDateTime = moment(lead.recallDate + ' ' + lead.recallHours, 'YYYY-MM-DD HH:mm');
+          const combinedDateTime = moment(`${lead.recallDate.substring(0, 10)} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm');
           const appDateTime = moment(lead.appDate, 'DD-MM-YY HH:mm');      
           const now = moment();
         
@@ -450,17 +449,22 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           };        
         } else if (lead.recallDate && lead.recallHours && lead.appDate?.trim() === ""){
           console.log("trovato")
-          const combinedDateTime = moment(lead.recallDate + ' ' + lead.recallHours, 'YYYY-MM-DD HH:mm');
+          const combinedDateTime = moment(`${lead.recallDate.substring(0, 10)} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm');
           return {
             ...lead,
             combinedDateTime: combinedDateTime
           }; 
-        } else {
+        } else if (lead.appDate && lead.appDate.trim() !== "") {
           const appDateTime = moment(lead.appDate, 'DD-MM-YY HH:mm');
           return {
             ...lead,
             combinedDateTime: appDateTime
           };           
+        } else {
+          return {
+            ...lead,
+            combinedDateTime: moment.invalid()
+          };
         }
       })
       .filter(lead => {
@@ -1178,7 +1182,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
     }
   };
 
-  const updateLeadEsitoConMotivo = async (motivo, leadId, fatturato, esito, tipo, trattPrenotato, luogo) => {
+  const updateLeadEsitoConMotivo = async (motivo, leadId, fatturato, esito, tipo, trattPrenotato, luogo, appFissato) => {
     setPopupMotivi(false);
     try {
       const modifyLead = {
@@ -1187,7 +1191,8 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
         motivo,
         tipo,
         trattPrenotato, 
-        luogo
+        luogo,
+        appFissato: appFissato ? appFissato : null,
       };
       const response = await axios.put(`/lead/${userFixId}/update/${leadId.id}`, modifyLead);
 

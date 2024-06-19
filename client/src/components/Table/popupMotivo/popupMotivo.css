@@ -12,6 +12,9 @@
     text-align: center;
     box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.39);
 }
+.allargato-pm{
+    width: 70% !important;
+}
 .motivo-venduto{
     display: flex;
     flex-direction: column;
@@ -22,6 +25,10 @@
 }
 .calendar-fissato{
     margin: 5px 0 20px 0;
+}
+.flexa{
+    display: flex;
+    gap: 1rem;
 }
 .motivo-venduto > div > select {
     outline: none;

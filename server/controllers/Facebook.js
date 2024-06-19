@@ -207,7 +207,7 @@ const Lead = require('../models/lead');
   };
 //ACCOUNT 2.0 ACT_627545782710130
   exports.getDentistaLead2 = () => {
-    const url = 'https://graph.facebook.com/v17.0/act_627545782710130/campaigns';
+    const url = 'https://graph.facebook.com/v19.0/act_627545782710130/campaigns';
     const params = {
       fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
       effective_status: "['ACTIVE']",
@@ -319,7 +319,7 @@ const Lead = require('../models/lead');
   };
 
   exports.getBludentalLead = () => {
-    const url = 'https://graph.facebook.com/v17.0/act_982532079362123/campaigns';
+    const url = 'https://graph.facebook.com/v19.0/act_982532079362123/campaigns';
     const params = {
       fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
       effective_status: "['ACTIVE']",
@@ -371,6 +371,7 @@ const Lead = require('../models/lead');
       })
       .catch(error => {
         console.error('Errore:', error);
+        console.log(error.data)
       });
   };
 

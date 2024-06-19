@@ -195,7 +195,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                 <div className='orario-container'>
                     <p>seleziona tipologia recall</p>
                     <div className='select-container-orario'>
-                        <select 
+                        <select
                         className='select-box'
                         name="hours"
                         value={recallType}

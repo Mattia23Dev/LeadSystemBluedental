@@ -13,8 +13,8 @@ let lastUserReceivedLead = null;
 function filterOldLeads(leads) {
   const fourteenDaysAgo = new Date();
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-
-  return leads.filter(lead => lead.data < fourteenDaysAgo);
+  
+  return leads.filter(lead => new Date(lead.data) < fourteenDaysAgo);
 }
 
 const trigger = (lead, orientatore) => {
@@ -560,7 +560,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
             { phone: userData.phone_number },
           ]
         });
-
+        const leadesistenti = filterOldLeads(leadsVerify)
         try {
           if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length > 0)){
             await newLead.save();
@@ -799,7 +799,7 @@ cron.schedule('15,58,25,40 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *',
   calculateAndAssignLeadsEveryDay();
   console.log('Assegno i lead di bludental altro');
 });
-
+calculateAndAssignLeadsEveryDayMetaWeb();
 cron.schedule('20,10,35,50 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   calculateAndAssignLeadsEveryDayMetaWeb();
   console.log('Assegno i lead di bludental Meta web');

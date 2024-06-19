@@ -652,6 +652,82 @@ const writeDataSocial = async (auth) => {
   );
 };
 
+const writeDataCallCenter = async (auth) => {
+  const dataToUpdate = [];
+  const sheets = google.sheets({ version: 'v4', auth });
+  const oggi = new Date();
+  const domani = new Date(oggi);
+  domani.setDate(oggi.getDate() + 1);
+  //oggi.setDate(oggi.getDate())
+  oggi.setHours(0, 0, 0, 0);
+  domani.setHours(0, 0, 0, 0);
+  const ieri = new Date('2023-02-20');
+  ieri.setHours(0, 0, 0, 0);
+
+  const todayFormatted = formatDate(oggi);
+  const yesterdayFormatted = formatDate(ieri);
+
+  const leads = await Lead.find({utente: "664c5b2f3055d6de1fcaa22b"}).populate('orientatori').populate('utente');
+  console.log(leads.length)
+  const assegnatiLeadsComp = leads.filter((lead) => {
+    const leadDate = new Date(lead.data);
+    return leadDate >= ieri && leadDate <= domani;
+  });
+
+  assegnatiLeadsComp.forEach((lead) => {
+    const leadData = [
+      lead.data ? formatDate(new Date(lead.data)) : '', 
+      lead.nome,
+      lead.email,
+      lead.numeroTelefono,
+      lead.campagna ? lead.campagna.trim().toLocaleLowerCase() === 'messenger' ? "Messenger" : lead.campagna : '',
+      "meta",
+      "Lead form",
+      lead.utmCampaign ? lead.utmCampaign.toString() : lead.campagna.trim().toLocaleLowerCase() === 'messenger' ? "Messenger" : '', 
+      lead.utmAdset ? lead.utmAdset.toString() : lead.campagna.trim().toLocaleLowerCase() === "messenger" ? 'Messenger' : '',
+      lead.utmContent ? lead.utmContent.toString() : lead.campagna.trim().toLocaleLowerCase() === "messenger" ? 'Messenger' : '',
+      lead.orientatori && lead.orientatori !== null ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : "Non assegnato",
+      lead.motivo ? lead.motivo : "",
+      lead.esito === "Non interessato" ? "Lead persa" : lead.esito.toString(),
+      lead.dataCambiamentoEsito ? formatDate(lead.dataCambiamentoEsito) : 'Nessuna Data', 
+      lead.tipo ? lead.tipo : "",
+      lead.trattPrenotato ? lead.trattPrenotato : "", 
+      lead.luogo ? lead.luogo : "",
+      lead.trattamento ? lead.trattamento : "",
+      lead.tentativiChiamata ? lead.tentativiChiamata : "",
+      lead.città ? lead.città : "",
+      lead.giàSpostato ? lead.giàSpostato : "NO",
+      lead.note ? lead.note : "",
+      "Meta web"
+    ];
+  
+    dataToUpdate.push(leadData);
+  });
+
+  const resource = {
+    values: dataToUpdate,
+  };
+  sheets.spreadsheets.values.append(
+    {
+      spreadsheetId: '17pmPgqtw4DNzYvczEZuZPSQg6k49lPnOURibUMpbN7s',
+      range: 'EXPORT-CALL-CENTER!A1',
+      valueInputOption: 'RAW',
+      resource: resource,
+    },
+    async (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(
+          '%d cells updated on range: %s',
+          result.data.updates.updatedCells,
+          result.data.updates.updatedRange
+        );
+      }
+    }
+  );
+};
+
 const writeDataWordpress = async (auth) => {
   const dataToUpdate = [];
   const sheets = google.sheets({ version: 'v4', auth });
@@ -922,6 +998,10 @@ cron.schedule('10 1 * * *', () => {
 */
 cron.schedule('30 1 * * *', () => {
   runExport(writeDataSocial);
+})
+
+cron.schedule('30 2 * * *', () => {
+  runExport(writeDataCallCenter);
 })
 
 //runExport(writeDataSocial);

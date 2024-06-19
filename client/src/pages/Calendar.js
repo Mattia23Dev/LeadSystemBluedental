@@ -110,133 +110,98 @@ const CalendarM = () => {
     };
     
     const fetchLeads = async (orin) => {
-
-        try {
+      try {
           const response = await axios.post('/get-leads-manual-base', {
-            _id: state.user._id
-            //_id: "655f707143a59f06d5d4dc3b"
+              _id: state.user._id
           });
-    
-          const doppioAppuntamento = response.data.filter(lead => (lead.appDate && lead.appDate !== "") && lead.recallDate);
-          const filteredDoppione = doppioAppuntamento.map((lead) => {
-            const telephone = lead.numeroTelefono ? lead.numeroTelefono.toString() : '';
-            const cleanedTelephone =
-              telephone.startsWith('+39') && telephone.length === 13
-                ? telephone.substring(3)
-                : telephone;
-    
-          const dateTime = moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate()
-          const inizialiNome = lead.orientatori ? lead.orientatori.nome.charAt(0).toUpperCase() : '';
-          const inizialiCognome = lead.orientatori ? lead.orientatori.cognome.charAt(0).toUpperCase() : '';
-
-            return {
-              id: lead._id,
-              title: lead.nome,
-              extendedProps : {
-                name: lead.nome,
-                surname: lead.cognome,
-                email: lead.email,
-                date: lead.data,
-                telephone: cleanedTelephone,
-                status: lead.esito,
-                doppio: true,
-                orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
-                fatturato: lead.fatturato ? lead.fatturato : '',
-                provenienza: lead.campagna,
-                città: lead.città ? lead.città : '',
-                trattamento: lead.trattamento ? lead.trattamento : '',
-                note: lead.note ? lead.note : '',
-                id: lead._id,
-                etichette: lead.etichette ? lead.etichette : null,
-                motivo: lead.motivo ? lead.motivo : null,
-                recallHours: lead.recallHours ? lead.recallHours : null,
-                recallDate: lead.recallDate ? lead.recallDate : null,
-                lastModify: lead.lastModify ? lead.lastModify : null, 
-                campagna: lead.utmCampaign ? lead.utmCampaign : "",
-                tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "",
-                summary: lead.summary ? lead.summary : "",
-                appDate: lead.appDate ? lead.appDate : "",
-                recallType: lead.recallType ? lead.recallType : "",
-            },
-              start: dateTime,
-              description: `Data: ${dateTime}, Testo`,
-            };
+  
+          // Creare tre array distinti
+          const appDateArray = [];
+          const recallArray = [];
+          const appFissatoArray = [];
+  
+          response.data.forEach((lead) => {
+              const telephone = lead.numeroTelefono ? lead.numeroTelefono.toString() : '';
+              const cleanedTelephone = telephone.startsWith('+39') && telephone.length === 13 ? telephone.substring(3) : telephone;
+              const dateTime = moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate();
+              const inizialiNome = lead.orientatori ? lead.orientatori.nome.charAt(0).toUpperCase() : '';
+              const inizialiCognome = lead.orientatori ? lead.orientatori.cognome.charAt(0).toUpperCase() : '';
+  
+              const leadObject = {
+                  id: lead._id,
+                  title: lead.nome,
+                  extendedProps: {
+                      name: lead.nome,
+                      surname: lead.cognome,
+                      email: lead.email,
+                      date: lead.data,
+                      telephone: cleanedTelephone,
+                      status: lead.esito,
+                      orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
+                      fatturato: lead.fatturato ? lead.fatturato : '',
+                      provenienza: lead.campagna,
+                      città: lead.città ? lead.città : '',
+                      trattamento: lead.trattamento ? lead.trattamento : '',
+                      note: lead.note ? lead.note : '',
+                      id: lead._id,
+                      etichette: lead.etichette ? lead.etichette : null,
+                      motivo: lead.motivo ? lead.motivo : null,
+                      recallHours: lead.recallHours ? lead.recallHours : null,
+                      recallDate: lead.recallDate ? lead.recallDate : null,
+                      lastModify: lead.lastModify ? lead.lastModify : null,
+                      campagna: lead.utmCampaign ? lead.utmCampaign : "",
+                      tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "",
+                      summary: lead.summary ? lead.summary : "",
+                      appDate: lead.appDate ? lead.appDate : "",
+                      recallType: lead.recallType ? lead.recallType : "",
+                  },
+                  start: dateTime,
+                  description: `Data: ${dateTime}, Testo`,
+              };
+  
+              // Aggiungere al rispettivo array
+              if (lead.appDate) {
+                  appDateArray.push({ ...leadObject, start: formatDateString(lead.appDate) });
+              }
+              if (lead.recallDate) {
+                  recallArray.push({ ...leadObject, start:  moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate()});
+              }
+              if (lead.appFissato) {
+                  appFissatoArray.push({ ...leadObject, start: formatDateString(lead.appFissato) });
+              }
           });
-          const filteredTableLead = response.data.map((lead) => {
-            const telephone = lead.numeroTelefono ? lead.numeroTelefono.toString() : '';
-            const cleanedTelephone =
-              telephone.startsWith('+39') && telephone.length === 13
-                ? telephone.substring(3)
-                : telephone;
-    
-          const inizialiNome = lead.orientatori ? lead.orientatori.nome.charAt(0).toUpperCase() : '';
-          const dateTime = (lead.campagna === "AI chatbot" || (lead.appDate && lead.appDate?.trim()  !== '')) ?
-          formatDateString(lead.appDate) :
-          moment(`${lead.recallDate} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm:ss').toDate();
-            return {
-              id: lead._id,
-              title: lead.nome,
-              extendedProps : {
-                name: lead.nome,
-                surname: lead.cognome,
-                email: lead.email,
-                date: lead.data,
-                telephone: cleanedTelephone,
-                status: lead.esito,
-                doppio: false,
-                orientatore: lead.orientatori ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : '',
-                fatturato: lead.fatturato ? lead.fatturato : '',
-                provenienza: lead.campagna,
-                città: lead.città ? lead.città : '',
-                trattamento: lead.trattamento ? lead.trattamento : '',
-                note: lead.note ? lead.note : '',
-                id: lead._id,
-                etichette: lead.etichette ? lead.etichette : null,
-                motivo: lead.motivo ? lead.motivo : null,
-                recallHours: lead.recallHours ? lead.recallHours : null,
-                recallDate: lead.recallDate ? lead.recallDate : null,
-                lastModify: lead.lastModify ? lead.lastModify : null, 
-                campagna: lead.utmCampaign ? lead.utmCampaign : "",
-                tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "",
-                summary: lead.summary ? lead.summary : "",
-                appDate: lead.appDate ? lead.appDate : "",
-                recallType: lead.recallType ? lead.recallType : "",
-            },
-              start: dateTime,
-              description: `Data: ${dateTime}, Testo`,
-            };
-          });
-          console.log(filteredTableLead)
-          const mergedArray = filteredTableLead.concat(filteredDoppione);
-          console.log(mergedArray)
+  
+          // Unire i tre array
+          const mergedArray = [...appDateArray, ...recallArray, ...appFissatoArray];
+  
           const ori = localStorage.getItem("Ori");
-
+  
           const filteredByRecall = mergedArray.filter((lead) => {
-            return (lead.extendedProps.recallDate && lead.extendedProps.recallHours && lead.extendedProps.recallDate !== null) || (lead.extendedProps.appDate);
+              return (lead.extendedProps.recallDate && lead.extendedProps.recallHours && lead.extendedProps.recallDate !== null) || (lead.extendedProps.appDate);
           });
-    
+  
           const filteredByOrientatore = filteredByRecall.filter((row) => {
-            if (ori && ori !== null && ori !== undefined && orin.length > 0) {
-              const selectedOrientatoreObj = orin.find(option => option._id === ori);
-              const selectedOrientatoreFullName = selectedOrientatoreObj ? selectedOrientatoreObj.nome + ' ' + selectedOrientatoreObj.cognome : '';
-              const rowOrientatoreFullName = row.extendedProps.orientatore;
-              return rowOrientatoreFullName === selectedOrientatoreFullName;
-            } else if (ori === "nonassegnato") {
-              const rowOrientatoreFullName = row.extendedProps.orientatore;
-              return rowOrientatoreFullName === "";
-            } else {
-              return true;
-            }
+              if (ori && ori !== null && ori !== undefined && orin.length > 0) {
+                  const selectedOrientatoreObj = orin.find(option => option._id === ori);
+                  const selectedOrientatoreFullName = selectedOrientatoreObj ? selectedOrientatoreObj.nome + ' ' + selectedOrientatoreObj.cognome : '';
+                  const rowOrientatoreFullName = row.extendedProps.orientatore;
+                  return rowOrientatoreFullName === selectedOrientatoreFullName;
+              } else if (ori === "nonassegnato") {
+                  const rowOrientatoreFullName = row.extendedProps.orientatore;
+                  return rowOrientatoreFullName === "";
+              } else {
+                  return true;
+              }
           });
-
+  
           setFilteredData(filteredByOrientatore);
           setOriginalData(filteredByRecall);
           console.log(filteredByOrientatore);
           setIsLoading(false);
-        } catch (error) {
+      } catch (error) {
           console.error(error.message);
-        }
-      };
+      }
+  };  
 
       const getOrientatoreLeads = async () => {
         try {

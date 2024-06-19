@@ -51,8 +51,19 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
 
     const motivoList = type === "Venduto" ? motivoVendutoList : motivoLeadPersaList;
 
+    const formatDateTime = () => {
+      const year = selectedDate.getFullYear().toString().slice(-2);
+      const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+      const day = selectedDate.getDate().toString().padStart(2, '0');
+      const hours = selectedTime.hours.toString().padStart(2, '0');
+      const minutes = selectedTime.minutes.toString().padStart(2, '0');
+  
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    };
     const saveMotivo = () => {
-        if (type === "Venduto" || type === "Fissato") {
+      const dataformattata = formatDateTime()
+      console.log(dataformattata);
+        /*if (type === "Venduto" || type === "Fissato") {
              spostaLead("", leadId, importoBonificato, type, patientType, treatment, location);
             } else {
                 if (motivo !== ""){
@@ -61,7 +72,7 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
                     window.alert('Inserisci il motivo')
                     return
                 }
-        }
+        }*/
     }
 
     const handleDateChange = (date) => {
@@ -154,7 +165,7 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
                     <Calendar
                         onChange={(date) => {
                         handleDateChange(date);
-                    }} 
+                    }}
                     className="custom-calendar calendar-fissato" 
                     value={selectedDate} />                    
                 <div className='orario-container'>

@@ -34,11 +34,11 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
     const [selectedDate, setSelectedDate] = useState(lead.recallDate && lead.recallDate !== null ? new Date(lead.recallDate) : new Date());
     const [selectedTime, setSelectedTime] = useState({ hours: 7, minutes: 0 });
     const [recallType, setRecallType] = useState(lead.recallType && lead.recallType !== "" ? lead.recallType : "");
-    const [patientType, setPatientType] = useState('');
-    const [treatment, setTreatment] = useState('');
-    const [location, setLocation] = useState('');
+    const [patientType, setPatientType] = useState(lead.tipo ? lead.tipo : '');
+    const [treatment, setTreatment] = useState(lead.trattPrenotato ? lead.trattPrenotato : '');
+    const [location, setLocation] = useState(lead.luogo ? lead.luogo : '');
     const [tentativiChiamata, setTentativiChiamata] = useState(lead.tentativiChiamata ? lead.tentativiChiamata : "0");
-
+    console.log(location, treatment, patientType)
     const [motivo, setMotivo] = useState(lead.motivo ? lead.motivo : "");
     const patientTypes = ["Nuovo paziente", "Gia’ paziente"];
     const treatments = ["Impianti", "Pulizia dei denti", "Protesi Mobile", "Sbiancamento", "Ortodonzia", "Faccette dentali", "Generico"];
@@ -423,6 +423,99 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
         }
     }
 
+    const formatDateTime = () => {
+        const year = selectedDateF.getFullYear().toString().slice(-2);
+        const month = (selectedDateF.getMonth() + 1).toString().padStart(2, '0');
+        const day = selectedDateF.getDate().toString().padStart(2, '0');
+        const hours = selectedTimeF.hours.toString().padStart(2, '0');
+        const minutes = selectedTimeF.minutes.toString().padStart(2, '0');
+    
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+      };
+    const saveMotivoverifyCallcenter = async () => {
+        if (esito === "Non valido" || esito === "Non interessato"){
+            if (!motivo || motivo == ""){
+              window.alert("Inserisci il motivo")
+              return
+            } else {
+                try {
+                    const modifyLead = {
+                        esito,
+                        fatturato,
+                        motivo,
+                      };   
+                      const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
+                      onUpdateLead({
+                        ...lead,
+                        status: esito,
+                        motivo: motivo,
+                        fatturato: fatturato
+                    });
+                        fetchLeads();
+                        toast.success('Stato modificato!');
+                        setRefreshate(true)
+                        setChooseMotivo(false);
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+        } else if (esito === "Fissato"){
+            if (treatment === "" || location === "" || patientType === ""){
+                window.alert('Compila tutti i campi')
+                return
+            } else {
+                try {
+                    const appFissatoFormattata = formatDateTime()
+                    console.log(appFissatoFormattata)
+                    const modifyLead = {
+                        esito,
+                        fatturato,
+                        tipo: patientType, 
+                        trattPrenotato: treatment, 
+                        luogo: location,
+                        appFissato: appFissatoFormattata,
+                      };   
+                      const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
+                      onUpdateLead({
+                        ...lead,
+                        status: esito,
+                        motivo: motivo,
+                        fatturato: fatturato,
+                        appFissato: appFissatoFormattata,
+                    });
+                        fetchLeads();
+                        toast.success('Stato modificato!');
+                        setRefreshate(true)
+                        setChooseMotivo(false);
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+        } else {
+            try {
+            const motivo = "";
+            const modifyLead = {
+            esito,
+            fatturato,
+            motivo,
+            };   
+            const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
+            onUpdateLead({
+                ...lead,
+                status: esito,
+                motivo: motivo,
+                fatturato: fatturato
+            });
+            fetchLeads();
+            toast.success('Stato modificato!');
+            setRefreshate(true)
+            setChooseMotivo(false);
+            } catch (error) {
+              console.error(error);
+            }
+        }
+    }
+
     const handleClickWhatsapp = () => {
         const whatsappLink = `https://wa.me/39${lead.telephone}`;
         window.open(whatsappLink, '_blank');
@@ -469,7 +562,25 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
 
       const [openPage, setOpenPage] = useState("scheda");
       const [chooseMotivo, setChooseMotivo] = useState(false);
-      console.log(lead)
+      const appFissatoDate = lead.appFissato && lead.appFissato !== null
+      ? moment(lead.appFissato, 'YY-MM-DD HH:mm').toDate()
+      : new Date();
+      const initialHours = appFissatoDate.getHours();
+      const initialMinutes = appFissatoDate.getMinutes();
+      const [selectedDateF, setSelectedDateF] = useState(appFissatoDate);
+      console.log(selectedDateF)
+      const [selectedTimeF, setSelectedTimeF] = useState(lead.appFissato && lead.appFissato !== null ? { hours: initialHours, minutes: initialMinutes } : {hours: 7, minutes: 0});
+
+      const handleDateChangeFissato = (date) => {
+        setSelectedDateF(date);
+      };
+      const handleTimeChangeFissato = (e) => {
+        const { name, value } = e.target;
+        setSelectedTimeF((prevTime) => ({
+          ...prevTime,
+          [name]: parseInt(value, 10),
+        }));
+      };
     return (
         <>
         {mostraCalendar ? (
@@ -480,7 +591,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
             <div className='popup-modify' id={admin ? "popupadmincolors" : ''}>
                 {chooseMotivo && (
                     <div className='shadow-blur'>
-                        <div style={{marginTop: '-100px', position: 'fixed', zIndex: 100}} className="choose-esito-popup">
+                        <div style={{marginTop: '-100px', position: 'fixed', zIndex: 100}} className={userFixId === "664c5b2f3055d6de1fcaa22b" ? "choose-esito-popup choose-esito-callcenter" : "choose-esito-popup"}>
                             <div className='top-choose-esito'>
                             <h4>Modifica l'esito di {nome}</h4>
                             </div>
@@ -551,6 +662,45 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                                 </select>
                                               </>  
                                             )}
+                                            {userFixId === "664c5b2f3055d6de1fcaa22b" && esito === "Fissato" &&
+                                                <div className='motivo-venduto'>
+                                                    <label htmlFor="locationSelect">Data Prenotazione:</label>
+                                                        <Calendar
+                                                            onChange={(date) => {
+                                                            handleDateChangeFissato(date);
+                                                        }}
+                                                        className="custom-calendar calendar-fissato" 
+                                                        value={selectedDateF} />                    
+                                                    <div className='orario-container'>
+                                                        <p>Orario prenotazione</p>
+                                                        <div className='select-container-orario'>
+                                                            <select 
+                                                            className='select-box'
+                                                            name="hours"
+                                                            value={selectedTimeF.hours}
+                                                            onChange={(e) => handleTimeChangeFissato(e)}>
+                                                                {Array.from({ length: 15 }, (_, i) => {
+                                                                    const hour = i + 7; // Parte da 7 e aggiunge l'offset
+                                                                    return (
+                                                                        <option key={hour} value={hour}>{hour < 10 ? `0${hour}` : hour}</option>
+                                                                    );
+                                                                })}
+                                                            </select>
+                                                            <span className='separator'>:</span>
+                                                            <select 
+                                                            className='select-box'
+                                                            name="minutes"
+                                                            value={selectedTimeF.minutes}
+                                                            onChange={(e) => handleTimeChangeFissato(e)}
+                                                            >
+                                                            {/* Opzioni per i minuti */}
+                                                            {Array.from({ length: 60 }, (_, i) => (
+                                                                <option key={i} value={i}>{i < 10 ? `0${i}` : i}</option>
+                                                            ))}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>}
                                     </div>
                                     {userFixId === "664c5b2f3055d6de1fcaa22b" && <>
                                     <div className={esito === "Presentato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Presentato')}>
@@ -562,7 +712,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                         Non presentato
                                     </div></>}
                                 </div>
-                            <button style={{ fontSize: "14px" }} className='btn-orie' onClick={saveMotivoverify}>Salva modifiche</button>
+                            <button style={{ fontSize: "14px" }} className='btn-orie' onClick={userFixId !== "664c5b2f3055d6de1fcaa22b" ? saveMotivoverify : saveMotivoverifyCallcenter}>Salva modifiche</button>
                             </div>
                     </div>    
                 )}

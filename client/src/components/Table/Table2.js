@@ -241,6 +241,9 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           appDate: lead.appDate ? lead.appDate : "",
           recallType: lead.recallType ? lead.recallType : "",
           appFissato: lead.appFissato ? lead.appFissato : null,
+          trattPrenotato: lead.trattPrenotato ? lead.trattPrenotato : "",
+          luogo: lead.luogo ? lead.luogo : "",
+          tipo: lead.tipo ? lead.tipo : "",
         };
       });
 
@@ -360,6 +363,9 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           appDate: lead.appDate ? lead.appDate : "",
           recallType: lead.recallType ? lead.recallType : "",
           appFissato: lead.appFissato ? lead.appFissato : null,
+          trattPrenotato: lead.trattPrenotato ? lead.trattPrenotato : "",
+          luogo: lead.luogo ? lead.luogo : "",
+          tipo: lead.tipo ? lead.tipo : "",
         };
       });
 
@@ -520,6 +526,9 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         tentativiChiamata: row.tentativiChiamata ? row.tentativiChiamata : "0",
         recallType: row.recallType ? row.recallType : "",
         appFissato: row.appFissato ? row.appFissato : null,
+        trattPrenotato: row.trattPrenotato ? row.trattPrenotato : "",
+        luogo: row.luogo ? row.luogo : "",
+        tipo: row.tipo ? row.tipo : "",
       };
     });
     setFilteredData(filteredDataIn);
@@ -709,6 +718,9 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
           tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
           recallType: lead.recallType ? lead.recallType : "",
           appFissato: lead.appFissato ? lead.appFissato : null,
+          trattPrenotato: lead.trattPrenotato ? lead.trattPrenotato : "",
+          luogo: lead.luogo ? lead.luogo : "",
+          tipo: lead.tipo ? lead.tipo : "",
         };
       });
 
@@ -810,6 +822,9 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
           tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
           recallType: lead.recallType ? lead.recallType : "",
           appFissato: lead.appFissato ? lead.appFissato : null,
+          trattPrenotato: lead.trattPrenotato ? lead.trattPrenotato : "",
+          luogo: lead.luogo ? lead.luogo : "",
+          tipo: lead.tipo ? lead.tipo : "",
         };
       });
 
@@ -918,6 +933,9 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               tentativiChiamata: updatedLead.tentativiChiamata ? updatedLead.tentativiChiamata : "0",
               recallType: updatedLead.recallType ? updatedLead.recallType : "",
               appFissato: updatedLead.appFissato ? updatedLead.appFissato : null,
+              trattPrenotato: updatedLead.trattPrenotato ? updatedLead.trattPrenotato : "",
+              luogo: updatedLead.luogo ? updatedLead.luogo : "",
+              tipo: updatedLead.tipo ? updatedLead.tipo : "",
             };
             return { ...lead, ...adaptedLead };
           } else {
@@ -945,6 +963,9 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
             tentativiChiamata: updatedLead.tentativiChiamata ? updatedLead.tentativiChiamata : "0",
             recallType: updatedLead.recallType ? updatedLead.recallType : "",
             appFissato: updatedLead.appFissato ? updatedLead.appFissato : null,
+            trattPrenotato: updatedLead.trattPrenotato ? updatedLead.trattPrenotato : "",
+            luogo: updatedLead.luogo ? updatedLead.luogo : "",
+            tipo: updatedLead.tipo ? updatedLead.tipo : "",
           };
           return { ...lead, ...adaptedLead };
         } else {
@@ -1152,6 +1173,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
 
     const droppedItem = JSON.parse(event.dataTransfer.getData('text/plain'));
     const draggedLeadId = droppedItem.id;
+    console.log(droppedItem)
     if (type === draggedLeadId.status) {
       return null
     } else if (type === "Fissato" || type === "Non valido" || type === "Non interessato" || type === "Lead persa") {

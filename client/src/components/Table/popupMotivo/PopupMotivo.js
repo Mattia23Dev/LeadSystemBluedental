@@ -4,20 +4,29 @@ import vendutoImg from '../../../imgs/venduto.png';
 import nonVendImg from '../../../imgs/nonvend.png';
 import indietro from '../../../imgs/indietro.png';
 import bonificato from '../../../imgs/bonificato.png';
+import moment from 'moment';
 import Calendar from 'react-calendar';
 import { UserContext } from '../../../context';
 
 const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
+      const appFissatoDate = leadId.appFissato && leadId.appFissato !== null
+      ? moment(leadId.appFissato, 'YY-MM-DD HH:mm').toDate()
+      : new Date();
+
+    const initialHours = appFissatoDate.getHours();
+    const initialMinutes = appFissatoDate.getMinutes();
+
     const [motivo, setMotivo] = useState("");
     const [importoBonificato, setImportoBonificato] = useState("");
     const [patientType, setPatientType] = useState('');
     const [treatment, setTreatment] = useState('');
     const [location, setLocation] = useState('');
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const [selectedTime, setSelectedTime] = useState({ hours: 7, minutes: 0 });
+    const [selectedDate, setSelectedDate] = useState(appFissatoDate);
+
+    const [selectedTime, setSelectedTime] = useState(leadId.appFissato && leadId.appFissato !== null ? { hours: initialHours, minutes: initialMinutes } : {hours: 7, minutes: 0});
     const [state, setState] = useContext(UserContext);
     const userFixId = state.user.role && state.user.role === "orientatore" ? state.user.utente : state.user._id;
-
+    console.log(leadId.appFissato)
   const patientTypes = ["Nuovo paziente", "Gia’ paziente"];
   const treatments = ["Impianti", "Pulizia dei denti", "Protesi Mobile", "Sbiancamento", "Ortodonzia", "Faccette dentali", "Generico"];
   const locations = [

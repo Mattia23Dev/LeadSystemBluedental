@@ -6,7 +6,10 @@ const path = require('path');
 const process = require('process');
 const {authenticate} = require('@google-cloud/local-auth');
 const {google} = require('googleapis');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
 const axios = require('axios');
+const moment = require("moment");
+const LeadFacebook = require('../models/leadFacebook');
 
 exports.getDataCap = async (req, res) => { 
     console.log(req.body);
@@ -652,6 +655,12 @@ const writeDataSocial = async (auth) => {
   );
 };
 
+const formatDateString = (inputDate) => {
+  const parsedDate = moment(inputDate, 'YY-MM-DD HH:mm');                
+  const formattedDate = parsedDate.format('DD/MM/YYYY HH:mm');        
+  return formattedDate;
+};
+
 const writeDataCallCenter = async (auth) => {
   const dataToUpdate = [];
   const sheets = google.sheets({ version: 'v4', auth });
@@ -698,7 +707,10 @@ const writeDataCallCenter = async (auth) => {
       lead.città ? lead.città : "",
       lead.giàSpostato ? lead.giàSpostato : "NO",
       lead.note ? lead.note : "",
-      "Meta web"
+      "Meta web",
+      lead.appFissato ? formatDateString(lead.appFissato) : "",
+      lead.appDate ? formatDateString(lead.appDate) : "",
+      lead.recallType ? lead.recallType : ""
     ];
   
     dataToUpdate.push(leadData);
@@ -979,6 +991,53 @@ const runExport = (exportFunction) => {
     .catch(console.error);
 };
 
+async function fetchEmailsFromSheet() {
+  const authClient = await authorize();
+  const sheets = google.sheets({ version: 'v4', auth: authClient });
+
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: '1kKa_lDiRToed9H_4SEo6lDd4hzdyEeXzi87T7OZFilo',
+    range: 'Sheet1!B2:B1000',
+  });
+
+  const rows = response.data.values;
+  console.log(response.data)
+  if (rows.length) {
+    return rows.map(row => row[0]);
+  } else {
+    console.log('No data found.');
+    return [];
+  }
+}
+
+async function findLeadsByEmails(emails) {
+  for (const email of emails) {
+    const lead = await LeadFacebook.findOne({
+      "fieldData": {
+        "$elemMatch": {
+          "name": "email",
+          "values": email.trim()
+        }
+      }
+    });
+    if (lead) {
+      console.log(`Lead trovato: ${email}`);
+      lead.assigned = false;
+      await lead.save()
+    } else {
+      console.log(`Lead non trovato: ${email}`);
+    }
+  }
+}
+
+/*(async () => {
+  try {
+    const emails = await fetchEmailsFromSheet();
+    await findLeadsByEmails(emails);
+  } catch (error) {
+    console.error('Errore:', error);
+  }
+})();*/
 
 //runExport(writeDataComparatore);
 //runDailyJob();
@@ -1004,7 +1063,6 @@ cron.schedule('30 2 * * *', () => {
   runExport(writeDataCallCenter);
 })
 
-//runExport(writeDataSocial);
 /*cron.schedule('20 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   GetSheetAffiliateData();
 });

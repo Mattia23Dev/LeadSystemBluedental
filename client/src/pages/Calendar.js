@@ -156,7 +156,10 @@ const CalendarM = () => {
                       appDate: lead.appDate ? lead.appDate : "",
                       appFissato: lead.appFissato ? lead.appFissato : "",
                       recallType: lead.recallType ? lead.recallType : "",
-                      tipoArray: ""
+                      tipoArray: "",
+                      trattPrenotato: lead.trattPrenotato ? lead.trattPrenotato : "",
+                      luogo: lead.luogo ? lead.luogo : "",
+                      tipo: lead.tipo ? lead.tipo : "",
                   },
                   start: dateTime,
                   description: `Data: ${dateTime}, Testo`,

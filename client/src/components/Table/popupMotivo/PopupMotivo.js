@@ -80,7 +80,7 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
              spostaLead("", leadId, importoBonificato, type, patientType, treatment, location, dataformattata);
             } else {
                 if (motivo !== ""){
-                   spostaLead(motivo, leadId, "0", type, "", "", "", dataformattata); 
+                   spostaLead(motivo, leadId, "0", type, "", "", "", null);
                 }else {
                     window.alert('Inserisci il motivo')
                     return

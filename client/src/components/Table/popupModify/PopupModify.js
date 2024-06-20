@@ -469,7 +469,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
 
       const [openPage, setOpenPage] = useState("scheda");
       const [chooseMotivo, setChooseMotivo] = useState(false);
-
+      console.log(lead)
     return (
         <>
         {mostraCalendar ? (
@@ -594,6 +594,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                     <p><FiClock color='#30978B' /> Data di <b>creazione lead</b>: <span>{formatDate(lead.date)}</span></p>
                                     <p>{lead.lastModify && lead.lastModify !== null ? <><FiClock color='#3471CC' /> Data <b>ultima modifica</b>: <span>{formatDate(lead.lastModify)}</span></> : ""}</p>
                                     {(lead.appDate && lead?.appDate?.trim() !== "") && <h6><FiClock color='#3471CC' /> Data <b>appuntamento:</b> <span>{formatDateString(lead.appDate)}</span></h6>}
+                                    {(lead.appFissato && lead.status === "Fissato" && lead?.appFissato !== null) && <h6><FiClock color='#3471CC' /> Data <b>fissato:</b> <span>{formatDateString(lead.appFissato)}</span></h6>}
                                     <p style={{margin: '17px 0 10px 0'}}>Stato lead: 
                                         <span onClick={() => setChooseMotivo(true)}>{esito == "Non interessato" ? "Lead persa" : esito} <FaPencilAlt size={12} style={{marginLeft: '3px', cursor: 'pointer'}} /></span>
                                         {esito === "Fissato" && fatturato !== "0" && <span>{fatturato}€</span>}

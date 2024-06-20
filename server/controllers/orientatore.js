@@ -230,7 +230,7 @@ exports.createOrientatore = async (req, res) => {
       if (!lead) {
         return res.status(404).json({ error: 'Lead non trovato' });
       }
-  
+      const appuntamentoFissato = lead.appFissato;
       if (req.body.esito && req.body.esito !== lead.esito) {
         lead.dataCambiamentoEsito = new Date();
       }
@@ -240,8 +240,15 @@ exports.createOrientatore = async (req, res) => {
           req.body.orientatori = null;
         }
       }
+
+      const mantenereAppFissato = lead.utente.toString() === "664c5b2f3055d6de1fcaa22b" && req.body.esito !== "Fissato" && lead.esito === "Fissato";
   
       Object.assign(lead, req.body);
+
+      if (mantenereAppFissato) {
+        lead.appFissato = appuntamentoFissato;
+      }
+      
       lead.lastModify = new Date().toISOString();
       if (lead.utente.toString === "65d3110eccfb1c0ce51f7492"){
       if (lead.esito === "Non risponde"){
@@ -255,6 +262,7 @@ exports.createOrientatore = async (req, res) => {
         }
       }
     }
+
       await lead.save();
       
       const updatedLead = await lead.populate('orientatori');

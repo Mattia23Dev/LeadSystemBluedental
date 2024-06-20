@@ -240,6 +240,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           summary: lead.summary ? lead.summary : "",
           appDate: lead.appDate ? lead.appDate : "",
           recallType: lead.recallType ? lead.recallType : "",
+          appFissato: lead.appFissato ? lead.appFissato : null,
         };
       });
 
@@ -358,6 +359,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           summary: lead.summary ? lead.summary : "",
           appDate: lead.appDate ? lead.appDate : "",
           recallType: lead.recallType ? lead.recallType : "",
+          appFissato: lead.appFissato ? lead.appFissato : null,
         };
       });
 
@@ -431,7 +433,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       .map(lead => {
         if (lead.recallDate && lead.recallHours && lead.appDate && lead.appDate?.trim() !== ""){
           const combinedDateTime = moment(`${lead.recallDate.substring(0, 10)} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm');
-          const appDateTime = moment(lead.appDate, 'DD-MM-YY HH:mm');      
+          const appDateTime = moment(lead.appDate, 'DD-MM-YY HH:mm');
           const now = moment();
         
           let nearestFutureDate;
@@ -517,6 +519,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         campagna: row.utmCampaign,
         tentativiChiamata: row.tentativiChiamata ? row.tentativiChiamata : "0",
         recallType: row.recallType ? row.recallType : "",
+        appFissato: row.appFissato ? row.appFissato : null,
       };
     });
     setFilteredData(filteredDataIn);
@@ -705,6 +708,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
           campagna: lead.utmCampaign ? lead.utmCampaign : "",
           tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
           recallType: lead.recallType ? lead.recallType : "",
+          appFissato: lead.appFissato ? lead.appFissato : null,
         };
       });
 
@@ -805,6 +809,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
           campagna: lead.utmCampaign ? lead.utmCampaign : "",
           tentativiChiamata: lead.tentativiChiamata ? lead.tentativiChiamata : "0",
           recallType: lead.recallType ? lead.recallType : "",
+          appFissato: lead.appFissato ? lead.appFissato : null,
         };
       });
 
@@ -912,6 +917,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               trattamento: updatedLead.trattamento,
               tentativiChiamata: updatedLead.tentativiChiamata ? updatedLead.tentativiChiamata : "0",
               recallType: updatedLead.recallType ? updatedLead.recallType : "",
+              appFissato: updatedLead.appFissato ? updatedLead.appFissato : null,
             };
             return { ...lead, ...adaptedLead };
           } else {
@@ -938,6 +944,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
             trattamento: updatedLead.trattamento,
             tentativiChiamata: updatedLead.tentativiChiamata ? updatedLead.tentativiChiamata : "0",
             recallType: updatedLead.recallType ? updatedLead.recallType : "",
+            appFissato: updatedLead.appFissato ? updatedLead.appFissato : null,
           };
           return { ...lead, ...adaptedLead };
         } else {

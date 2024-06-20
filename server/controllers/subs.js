@@ -360,7 +360,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
     let leads = await LeadFacebook.find({
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
       name: { $regex: /Meta Web/, $options: 'i' }
-    }).limit(10);
+    }).limit(50);
     let leadsN = await LeadFacebook.find({
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
       name: { $regex: /Meta Web/, $options: 'i' }
@@ -803,11 +803,6 @@ cron.schedule('15,58,25,40 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *',
 cron.schedule('20,10,35,50 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   calculateAndAssignLeadsEveryDayMetaWeb();
   console.log('Assegno i lead di bludental Meta web');
-});
-
-cron.schedule('23,13,38,55 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
-  calculateAndAssignLeadsEveryDayEstetica();
-  console.log('Assegno i lead di bludental Estetica');
 });
 
 /*cron.schedule('12 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {

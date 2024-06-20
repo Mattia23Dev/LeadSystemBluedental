@@ -5,7 +5,7 @@ const cron = require('node-cron');
 const axios = require('axios');
 
 const accessToken = 'EAAD6mNGgHKABO0VRMoANGbKwcHT4xFBwjf1vZBEu1QwThbS8vQEEGcX8L9Yw2k99cZCIMncdZBGRm9QbbIiZCWrVzNIWvGEjeGhvUdM7eanwQZCTTOycgif5ZAvJZBQdD7sh2illondwZBIJhx1lpbZCbK7iZBIKkuwwTOK5TOAvVMzEovRdpFpmrBdvja';
-const apiUrl = 'https://graph.facebook.com/v12.0';
+const apiUrl = 'https://graph.facebook.com/v19.0';
 const idCampagna = '23858081191190152'; //ECP [LEAD ADS] - LAL Vendite - vantaggi VIDEO
 const idCampagna2 = '23859089103880152'; //ECP - [LEAD ADS] - Master
 const fields = 'id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}';
@@ -151,7 +151,7 @@ const Lead = require('../models/lead');
   };
 // NUOVO ID DELL'ACCOUNT PUBBLICITARIO 3.0 DENTISTA VICINO A ME     act_511963014361529
   exports.getDentistaLead = () => {
-    const url = 'https://graph.facebook.com/v17.0/act_511963014361529/campaigns';
+    const url = 'https://graph.facebook.com/v19.0/act_511963014361529/campaigns';
     const params = {
       fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
       effective_status: "['ACTIVE']",
@@ -263,7 +263,7 @@ const Lead = require('../models/lead');
   };
   // ACCOUNT 3.0 ACT_915414373405841
   exports.getDentistaLead3 = () => {
-    const url = 'https://graph.facebook.com/v17.0/act_915414373405841/campaigns';
+    const url = 'https://graph.facebook.com/v19.0/act_915414373405841/campaigns';
     const params = {
       fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
       effective_status: "['ACTIVE']",

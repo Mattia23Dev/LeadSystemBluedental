@@ -253,7 +253,7 @@ exports.createOrientatore = async (req, res) => {
       if (lead.utente.toString === "65d3110eccfb1c0ce51f7492"){
       if (lead.esito === "Non risponde"){
         if (lead.giàSpostato === false && parseInt(req.body.tentativiChiamata) > 1 ){
-          const orientatoriDisponibili = await Orientatore.find({ _id: { $ne: lead.orientatori } });
+          const orientatoriDisponibili = await Orientatore.find({ _id: { $ne: lead.orientatori }, utente: "65d3110eccfb1c0ce51f7492" });
           if (orientatoriDisponibili.length > 0) {
             const orientatoreCasuale = orientatoriDisponibili[Math.floor(Math.random() * orientatoriDisponibili.length)];
             lead.orientatori = orientatoreCasuale._id;

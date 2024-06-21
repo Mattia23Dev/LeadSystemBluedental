@@ -80,7 +80,7 @@ axios.post(url, data, { headers })
 
 const calculateAndAssignLeadsEveryDay = async () => {
   try {
-    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', "65ddbe8676b468245d701bc2", "65ddbeaa76b468245d701bc5" /*ANGELICA*/, "6613a1389408391f56215308" /*STEFANIA*/, "6613a0bd9408391f562152f5" /*ALESSIA*/];
+    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', "65ddbeaa76b468245d701bc5" /*ANGELICA*/, "6613a1389408391f56215308" /*STEFANIA*/, "6613a0bd9408391f562152f5" /*ALESSIA*/];
 
     let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }, utente: "65d3110eccfb1c0ce51f7492"});
     let leads = await LeadFacebook.find({ 
@@ -354,7 +354,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
     const callCenter = "664c5b2f3055d6de1fcaa22b";
     const callCenterUser = await User.findById(callCenter)
     const bludental = "65d3110eccfb1c0ce51f7492";
-    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', "65ddbe8676b468245d701bc2", "65ddbeaa76b468245d701bc5" /*ANGELICA*/, "6613a1389408391f56215308" /*STEFANIA*/, "6613a0bd9408391f562152f5" /*ALESSIA*/];
+    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', "65ddbeaa76b468245d701bc5" /*ANGELICA*/, "6613a1389408391f56215308" /*STEFANIA*/, "6613a0bd9408391f562152f5" /*ALESSIA*/];
 
     let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }});
     let leads = await LeadFacebook.find({

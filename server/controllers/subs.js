@@ -80,7 +80,7 @@ axios.post(url, data, { headers })
 
 const calculateAndAssignLeadsEveryDay = async () => {
   try {
-    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', "65ddbeaa76b468245d701bc5" /*ANGELICA*/, "6613a1389408391f56215308" /*STEFANIA*/, "6613a0bd9408391f562152f5" /*ALESSIA*/];
+    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
 
     let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }, utente: "65d3110eccfb1c0ce51f7492"});
     let leads = await LeadFacebook.find({ 
@@ -354,7 +354,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
     const callCenter = "664c5b2f3055d6de1fcaa22b";
     const callCenterUser = await User.findById(callCenter)
     const bludental = "65d3110eccfb1c0ce51f7492";
-    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a', "65ddbeaa76b468245d701bc5" /*ANGELICA*/, "6613a1389408391f56215308" /*STEFANIA*/, "6613a0bd9408391f562152f5" /*ALESSIA*/];
+    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
 
     let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }});
     let leads = await LeadFacebook.find({
@@ -895,7 +895,7 @@ async function updateLeadsRec() {
   const endDate = new Date('2024-06-14T23:59:59.999Z');
   try {
     const excludedOrientatoreId = '660fc6b59408391f561edc1a';
-      const leadsToUpdate = await Lead.find({ esito: "Non risponde", utmCampaign: /Meta Web/i });
+      const leadsToUpdate = await Lead.find({ esito: "Non risponde", utmCampaign: /Meta Web/i, utente: "65d3110eccfb1c0ce51f7492" });
       const filteredLeads = leadsToUpdate.filter((lead) => {
         const leadDate = new Date(lead.data);
         return (
@@ -989,6 +989,20 @@ async function updateLeadsToOrieDallaCampagna() {
       }
       console.log('Campo orientatori aggiornato per le lead estetica');
 }
+
+async function updateLeadsOriToOri() {
+  const leads = await Lead.find({
+    esito: "Da contattare",
+    orientatori: "6613a0bd9408391f562152f5"
+  });
+  console.log(leads.length)
+  for (const lead of leads){
+    lead.orientatori = "65ddbe8676b468245d701bc2";
+    await lead.save();
+  }
+  console.log('Campo orientatori aggiornato per le lead estetica');
+}
+
 async function eliminaEstetica() {
   const startDate = new Date('2024-06-15T00:00:00.000Z');
   const endDate = new Date('2024-06-30T23:59:59.999Z');

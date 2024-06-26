@@ -179,10 +179,36 @@
 }
 .passalead-form{
     display: flex;
-    justify-content: space-around;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 50px;
+}
+.passalead-form .wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 30px;
+}
+.passalead-form .wrapper > div {
+    display: flex;
     align-items: center;
 }
-
+.passalead-form button{
+    background-color: #3471CC;
+    margin: 0 auto;
+    padding: 8px 16px;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    color: white;
+    border-radius: 5px;
+    margin-top: 15px;
+}
+.passalead-form input{
+    border: none;
+    border-bottom: 1px solid #3471CC;
+    margin-left: 10px;
+}
 .input-item {
     display: flex;
     flex-direction: column;

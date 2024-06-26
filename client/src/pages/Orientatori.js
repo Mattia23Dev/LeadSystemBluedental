@@ -180,14 +180,8 @@ const Orientatori = () => {
     }
   };
 
-  const [esito, setEsito] = useState('');
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [selectedOrientatorePassa, setSelectedOrientatorePassa] = useState('');
-
-  const handleEsitoChange = (e) => {
-    setEsito(e.target.value);
-  };
 
   const handleStartDateChange = (date) => {
     setStartDate(date);
@@ -197,9 +191,18 @@ const Orientatori = () => {
     setEndDate(date);
   };
 
-  const handleOrientatoreChange = (e) => {
-    setSelectedOrientatorePassa(e.target.value);
-  };
+  const sendLeadRec = async () => {
+    try {
+      if (!startDate || !endDate){
+        window.alert("Inserisci le date");
+        return
+      }
+      const response = await axios.post(`/update-leads-rec`, {startDate,endDate});
+      console.log(response)
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   return (
     <>
@@ -310,20 +313,8 @@ const Orientatori = () => {
             </div>
             {userFixId == "65d3110eccfb1c0ce51f7492" && 
             <div className='passalead-rec'>
-              <h4>Passa lead alla Rec</h4>
+              <h4>Passa le lead non risponde alla Rec</h4>
               <div className='passalead-form'>
-              <div>
-                <label>
-                  Esito:
-                  <select value={esito} onChange={handleEsitoChange}>
-                    <option value="">Seleziona esito</option>
-                    <option value='Da contattare'>Da contattare</option>
-                    <option value='Non risponde'>Non risponde</option>
-                    <option value="Da richiamare">Da richiamare</option>
-                    <option value='Non interessato'>Lead persa</option>
-                  </select>
-                </label>
-              </div>
               <div>
                 <p style={{ color: "gray", fontSize: '12px' }}>Seleziona una data</p>
                 <div className="wrapper">
@@ -337,19 +328,7 @@ const Orientatori = () => {
                   </div>
                 </div>            
               </div>
-              <div>
-                <label>
-                  Orientatore:
-                  <select value={selectedOrientatorePassa} onChange={handleOrientatoreChange}>
-                    <option value="">Seleziona un orientatore</option>
-                    {filteredData.map((orientatore) => (
-                      <option key={orientatore._id} value={orientatore._id}>
-                        {orientatore.nome} {orientatore.cognome}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              <button onClick={sendLeadRec}>Invia</button>
               </div>
             </div>}
           </div>

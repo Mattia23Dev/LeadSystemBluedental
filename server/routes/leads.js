@@ -8,6 +8,8 @@ const {getLeadsFb, getLeadsManual, getAllLead, calculateFatturatoByUtente, calcu
 const { createOrientatore, deleteOrientatore, createLead, deleteLead, updateLead, getOrientatori, getLeadDeleted, updateOrientatore, deleteRecall, updateAssegnazioneOrientatore } = require('../controllers/orientatore');
 const { getAllLeadForCounter, LeadForMarketing } = require('../controllers/superAdmin');
 const { getDataCap } = require('../controllers/comparadentista');
+const Orientatore = require('../models/orientatori');
+const Lead = require('../models/lead');
 
 router.post("/get-leads-fb", getLeadsFb);
 router.post("/get-leads-manual", getLeadsManual);
@@ -60,6 +62,47 @@ router.post('/enable-notifications', async (req, res) => {
   } catch (error) {
     console.error('Errore nell\'abilitazione delle notifiche:', error);
     res.status(500).json({ message: 'Si è verificato un errore' });
+  }
+});
+
+router.post('/update-leads-rec', async (req, res) => {
+  const { startDate, endDate } = req.body;
+  console.log(req.body)
+  try {
+    const excludedOrientatoreId = '660fc6b59408391f561edc1a';
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const leadsToUpdate = await Lead.find({
+      esito: "Non risponde",
+      utmCampaign: /Meta Web/i,
+      utente: "65d3110eccfb1c0ce51f7492",
+    });
+    const filteredLeads = leadsToUpdate.filter((lead) => {
+      const leadDate = new Date(lead.data);
+      return (
+        leadDate >= start &&
+        leadDate <= end &&
+        Number(lead.tentativiChiamata) > 0
+      );
+    });
+    const orientatore = await Orientatore.findById(excludedOrientatoreId);
+    const numLeads = filteredLeads.length;
+    console.log(numLeads);
+
+    for (const lead of filteredLeads) {
+      lead.orientatori = orientatore._id;
+      lead.esito = 'Da contattare';
+      await lead.save();
+    }
+
+    console.log(`Aggiornamento completato. ${numLeads} lead sono stati aggiornati.`);
+    res.status(200).json({ message: `Aggiornamento completato. ${numLeads} lead sono stati aggiornati.` });
+  } catch (error) {
+    console.error('Si è verificato un errore durante l\'aggiornamento dei lead:', error);
+    res.status(500).json({ error: 'Si è verificato un errore durante l\'aggiornamento dei lead.' });
   }
 });
 

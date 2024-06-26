@@ -900,8 +900,8 @@ async function updateLeads() {
 }
 
 async function updateLeadsRec() {
-  const startDate = new Date('2024-06-01T00:00:00.000Z');
-  const endDate = new Date('2024-06-14T23:59:59.999Z');
+  const startDate = new Date('2024-06-20T00:00:00.000Z');
+  const endDate = new Date('2024-06-26T23:59:59.999Z');
   try {
     const excludedOrientatoreId = '660fc6b59408391f561edc1a';
       const leadsToUpdate = await Lead.find({ esito: "Non risponde", utmCampaign: /Meta Web/i, utente: "65d3110eccfb1c0ce51f7492" });
@@ -917,11 +917,11 @@ async function updateLeadsRec() {
       const numLeads = filteredLeads.length;
     console.log(numLeads);
 
-      for (const lead of filteredLeads) {
+      /*for (const lead of filteredLeads) {
         lead.orientatori = orientatori._id;
         lead.esito = 'Da contattare';
         await lead.save();
-      }
+      }*/
 
       console.log(`Aggiornamento completato. lead sono stati aggiornati.`);
   } catch (error) {

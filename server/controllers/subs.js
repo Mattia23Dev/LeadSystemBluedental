@@ -784,7 +784,7 @@ cron.schedule('30 4 * * *', () => {
   console.log('Eseguito il reset del daily Lead');
 });
 
-/*cron.schedule('10,46,20 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+cron.schedule('10,46,20 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getDentistaLead();
   console.log('Prendo i lead di Bluedental 3.0');
 });
@@ -812,7 +812,7 @@ cron.schedule('15,58,25,40 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *',
 cron.schedule('20,10,35,50 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   calculateAndAssignLeadsEveryDayMetaWeb();
   console.log('Assegno i lead di bludental Meta web');
-});*/
+});
 
 /*cron.schedule('12 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   //getTagLeads();
@@ -997,6 +997,59 @@ async function updateLeadsToOrieDallaCampagna() {
         await lead.save();
       }
       console.log('Campo orientatori aggiornato per le lead estetica');
+}
+
+async function updateLeadPerErrore() {
+  const leads = await Lead.find({
+    orientatori: ["665d9194d7d57110edf34d3d", "6661aadad7d57110edfd4f30"],
+    utente: "65d3110eccfb1c0ce51f7492"
+  })
+  .sort({ data: -1 })
+  .limit(90);
+  let users = await Orientatore.find({
+    //_id: { $nin: excludedOrientatoreIds }, 
+    utente: "65d3110eccfb1c0ce51f7492",
+    daAssegnare: true,
+  });
+  console.log(leads.length)
+  let userIndex = 6;
+  while (leads.length > 0) {
+    const user = users[userIndex % users.length]; //users[userIndex && userIndex < 11 ? userIndex : 0];
+    const leadsNeeded = Math.min(leads.length, 1); //Math.min(user.monthlyLeadCounter, 1);
+
+    if (leadsNeeded === 0) {
+      console.log(`Il contatore mensile dell'utente ${user.nameECP} è insufficiente. Non vengono assegnati ulteriori lead.`);
+      userIndex++;
+      continue;
+    }
+
+    if (!user) {
+      console.error('Nessun utente disponibile per l\'indice', userIndex);
+      continue;
+    }
+
+    const leadsForUser = leads.splice(0, leadsNeeded);
+
+    for (const leadWithoutUser of leadsForUser) {
+      if (leadWithoutUser.assigned) {
+        console.log(`Il lead ${leadWithoutUser?._id} è già stato assegnato.`);
+        continue;
+      }
+      leadWithoutUser.orientatori = user._id;
+      await leadWithoutUser.save();
+      console.log("assegnato la lead " + leadWithoutUser.email + ' a ' + user.nome)
+      const leadIndex = leads.findIndex(lead => lead._id.toString() === leadWithoutUser._id.toString());
+      if (leadIndex !== -1) {
+        leads.splice(leadIndex, 1);
+      }
+    }
+
+    userIndex++;
+    if (userIndex >= users.length) {
+      userIndex = 0;
+    }
+  }
+  console.log('Campo orientatori aggiornato per le lead estetica');
 }
 
 async function updateLeadsOriToOri() {

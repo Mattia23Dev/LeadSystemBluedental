@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { SyncOutlined } from "@ant-design/icons";
 import { SidebarContext } from '../context/SidebarContext';
 import { FaPencilAlt } from "react-icons/fa";
+import Switch from 'react-switch';
 import '../components/Table/popupModify/popupModify.scss';
 
 const Orientatori = () => {
@@ -47,6 +48,8 @@ const Orientatori = () => {
     setNumeroTelefono(event.target.value);
   };
 
+  const userFixId = state.user.role && state.user.role === "orientatore" ? state.user.utente : state.user._id;
+  console.log(userFixId)
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -156,6 +159,47 @@ const Orientatori = () => {
     setModifyOrientatore(false);
   }
 
+  const updateOrientatore = async (id, updatedFields) => {
+    try {
+      const response = await axios.put(`/update-orientatore-assegnazione`, {id,updatedFields});
+      console.log(response)
+      return response.data;
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleSwitchChange = async (orientatoreId, checked) => {
+    try {
+      const updatedOrientatore = await updateOrientatore(orientatoreId, { daAssegnare: checked });
+      setFilteredData(prevState => prevState.map(orientatore => 
+        orientatore._id === orientatoreId ? updatedOrientatore : orientatore
+      ));
+    } catch (error) {
+      console.error('Errore nell\'aggiornamento del campo daAssegnare:', error);
+    }
+  };
+
+  const [esito, setEsito] = useState('');
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [selectedOrientatorePassa, setSelectedOrientatorePassa] = useState('');
+
+  const handleEsitoChange = (e) => {
+    setEsito(e.target.value);
+  };
+
+  const handleStartDateChange = (date) => {
+    setStartDate(date);
+  };
+
+  const handleEndDateChange = (date) => {
+    setEndDate(date);
+  };
+
+  const handleOrientatoreChange = (e) => {
+    setSelectedOrientatorePassa(e.target.value);
+  };
 
   return (
     <>
@@ -178,7 +222,7 @@ const Orientatori = () => {
 
         <div className='orientatori'>
           <div className="Table" id='Table'>
-            <div className="table-big-container-admin" id='table-container'>
+            <div className="table-big-container-admin orientatore-table" id='table-container'>
               <div className="table-filters" id='table-filters-orient'>
                 <div>
                   <h4>Orientatori</h4>
@@ -222,6 +266,7 @@ const Orientatori = () => {
                         <th style={{ color: 'rgba(0, 0, 0, 0.31)', fontSize: '20px', fontWeight: "500" }}>Telefono</th>
                         <th style={{ color: 'rgba(0, 0, 0, 0.31)', fontSize: '20px', fontWeight: "500" }}>Email</th>
                         <th style={{ color: 'rgba(0, 0, 0, 0.31)', fontSize: '20px', fontWeight: "500" }}>Modifica</th>
+                        <th style={{ color: 'rgba(0, 0, 0, 0.31)', fontSize: '20px', fontWeight: "500" }}>Assegna</th>
                       </tr>
                     </thead>
                     <tbody style={{ textAlign: 'left', width: '100%' }} className="table-body-container">
@@ -243,7 +288,19 @@ const Orientatori = () => {
                               <svg style={{cursor: 'pointer', margin: '0 20px'}} onClick={() => handleRowClick(row, 'delete')} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><path d="M135.2 17.7C140.6 6.8 151.7 0 163.8 0H284.2c12.1 0 23.2 6.8 28.6 17.7L320 32h96c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 96 0 81.7 0 64S14.3 32 32 32h96l7.2-14.3zM32 128H416V448c0 35.3-28.7 64-64 64H96c-35.3 0-64-28.7-64-64V128zm96 64c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16z" /></svg>
                               <FaPencilAlt style={{cursor: 'pointer'}} onClick={() => handleRowClick(row, 'modify')} size={18} />
                             </td>
-
+                            <td>
+                              <Switch
+                                onChange={(checked) => handleSwitchChange(row._id, checked)}
+                                checked={row.daAssegnare}
+                                onColor="#3471CC"
+                                onHandleColor="#2693e6"
+                                offColor="#ff9c9c"
+                                offHandleColor="#ff4d4d"
+                                handleDiameter={30}
+                                height={25}
+                                width={48}
+                              />
+                            </td>
                           </tr>
                         )}
                     </tbody>
@@ -251,6 +308,50 @@ const Orientatori = () => {
                 </div>
               }
             </div>
+            {userFixId == "65d3110eccfb1c0ce51f7492" && 
+            <div className='passalead-rec'>
+              <h4>Passa lead alla Rec</h4>
+              <div className='passalead-form'>
+              <div>
+                <label>
+                  Esito:
+                  <select value={esito} onChange={handleEsitoChange}>
+                    <option value="">Seleziona esito</option>
+                    <option value='Da contattare'>Da contattare</option>
+                    <option value='Non risponde'>Non risponde</option>
+                    <option value="Da richiamare">Da richiamare</option>
+                    <option value='Non interessato'>Lead persa</option>
+                  </select>
+                </label>
+              </div>
+              <div>
+                <p style={{ color: "gray", fontSize: '12px' }}>Seleziona una data</p>
+                <div className="wrapper">
+                  <div>
+                    <label>Da</label>
+                    <input value={!startDate ? "" : new Date(startDate).toISOString().split('T')[0]} type="date" onChange={(e) => {setStartDate(e.target.valueAsDate); localStorage.setItem("startDate", e.target.valueAsDate)}} />
+                  </div>
+                  <div>
+                    <label>A</label>
+                    <input value={!endDate ? "" : new Date(endDate).toISOString().split('T')[0]} type="date" onChange={(e) => {setEndDate(e.target.valueAsDate); localStorage.setItem("endDate", e.target.valueAsDate)}} />
+                  </div>
+                </div>            
+              </div>
+              <div>
+                <label>
+                  Orientatore:
+                  <select value={selectedOrientatorePassa} onChange={handleOrientatoreChange}>
+                    <option value="">Seleziona un orientatore</option>
+                    {filteredData.map((orientatore) => (
+                      <option key={orientatore._id} value={orientatore._id}>
+                        {orientatore.nome} {orientatore.cognome}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              </div>
+            </div>}
           </div>
           <div className='right-orientatori'>
             <h5 style={{ fontSize: "20px", width: "90%", color: "grey" }}>Classifica <span style={{ color: "black" }}>orientatori</span></h5>

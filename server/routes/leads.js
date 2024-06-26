@@ -5,7 +5,7 @@ const User = require('../models/user');
 const router = express.Router();
 
 const {getLeadsFb, getLeadsManual, getAllLead, calculateFatturatoByUtente, calculateFatturatoByOrientatore, calculateFatturatoByOrientatoreUser, getLeadsManualWhatsapp, updateLeadRecall, getLeadsManualBase, getOtherLeads, getOrientatoreLeads, getOtherLeadsOri} = require('../controllers/leads');
-const { createOrientatore, deleteOrientatore, createLead, deleteLead, updateLead, getOrientatori, getLeadDeleted, updateOrientatore, deleteRecall } = require('../controllers/orientatore');
+const { createOrientatore, deleteOrientatore, createLead, deleteLead, updateLead, getOrientatori, getLeadDeleted, updateOrientatore, deleteRecall, updateAssegnazioneOrientatore } = require('../controllers/orientatore');
 const { getAllLeadForCounter, LeadForMarketing } = require('../controllers/superAdmin');
 const { getDataCap } = require('../controllers/comparadentista');
 
@@ -32,6 +32,8 @@ router.post('/update-lead-recall', updateLeadRecall);
 router.post('/delete-recall', deleteRecall);
 
 router.get('/get-all-leads-for-counter', getAllLeadForCounter);
+
+router.put('/update-orientatore-assegnazione', updateAssegnazioneOrientatore);
 
 router.get('/leads-for-marketing', LeadForMarketing);
 

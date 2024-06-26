@@ -80,10 +80,15 @@ axios.post(url, data, { headers })
 
 const calculateAndAssignLeadsEveryDay = async () => {
   try {
-    const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
+    //const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
 
-    let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }, utente: "65d3110eccfb1c0ce51f7492"});
-    let leads = await LeadFacebook.find({ 
+    let users = await Orientatore.find({ 
+      //_id: { $nin: excludedOrientatoreIds }, 
+      utente: "65d3110eccfb1c0ce51f7492",
+      daAssegnare: true,
+    });
+    console.log(users.length)
+    let leads = await LeadFacebook.find({
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
       $and: [
         { name: { $not: { $regex: /Meta Web/, $options: 'i' } } },
@@ -356,7 +361,11 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
     const bludental = "65d3110eccfb1c0ce51f7492";
     const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
 
-    let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }});
+    let users = await Orientatore.find({ 
+      //_id: { $nin: excludedOrientatoreIds }, 
+      utente: "65d3110eccfb1c0ce51f7492",
+      daAssegnare: true,
+    });
     let leads = await LeadFacebook.find({
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
       name: { $regex: /Meta Web/, $options: 'i' }
@@ -775,7 +784,7 @@ cron.schedule('30 4 * * *', () => {
   console.log('Eseguito il reset del daily Lead');
 });
 
-cron.schedule('10,46,20 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+/*cron.schedule('10,46,20 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getDentistaLead();
   console.log('Prendo i lead di Bluedental 3.0');
 });
@@ -803,7 +812,7 @@ cron.schedule('15,58,25,40 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *',
 cron.schedule('20,10,35,50 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   calculateAndAssignLeadsEveryDayMetaWeb();
   console.log('Assegno i lead di bludental Meta web');
-});
+});*/
 
 /*cron.schedule('12 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   //getTagLeads();
@@ -1004,37 +1013,26 @@ async function updateLeadsOriToOri() {
 }
 
 async function eliminaEstetica() {
-  const startDate = new Date('2024-06-15T00:00:00.000Z');
-  const endDate = new Date('2024-06-30T23:59:59.999Z');
 
   try {
     // Trova le lead che corrispondono ai criteri utmCampaign e utente
-    const lead = await Lead.find({
-      utmCampaign: /ESTETICA/i,
-      utente: "65d3110eccfb1c0ce51f7492"
+    const lead = await LeadFacebook.find({
+      name: /ESTETICA/i,
+      assigned: false,
     });
 
     console.log('Total leads found:', lead.length);
 
     // Filtra le lead in base alla data e allo stato "esito"
-    const filteredLeads = lead.filter((lead) => {
-      const leadDate = new Date(lead.data);
-      return (
-        leadDate >= startDate &&
-        leadDate <= endDate &&
-        lead.esito !== "Fissato"
-      );
-    });
 
-    console.log('Filtered leads to delete:', filteredLeads.length);
 
-    const leadIdsToDelete = filteredLeads.map((lead) => lead._id);
+    const leadIdsToDelete = lead.map((lead) => lead._id);
 
-    await Lead.deleteMany({
+    await LeadFacebook.deleteMany({
       _id: { $in: leadIdsToDelete }
     });
 
-    console.log('Deleted leads count:', filteredLeads.length);
+    console.log('Deleted leads count:', lead.length);
   } catch (error) {
     console.error('Error deleting leads:', error);
   }

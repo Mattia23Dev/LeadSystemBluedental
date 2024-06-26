@@ -33,6 +33,10 @@ const OrientatoreSchema = new Schema({
   new: {
     type: Boolean,
     default: true,
+  },
+  daAssegnare: {
+    type: Boolean,
+    default: true,
   }
 });
 

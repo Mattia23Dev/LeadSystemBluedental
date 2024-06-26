@@ -148,15 +148,15 @@
     overflow-y: auto;
 }
 
-#overflowhandler::-webkit-scrollbar {
+#overflowhandler::-webkit-scrollbar, .orientatore-table::-webkit-scrollbar {
     width: 8px;
 }
 
-#overflowhandler::-webkit-scrollbar-track {
+#overflowhandler::-webkit-scrollbar-track, .orientatore-table::-webkit-scrollbar-track {
     background-color: #f1f1f1;
 }
 
-#overflowhandler::-webkit-scrollbar-thumb {
+#overflowhandler::-webkit-scrollbar-thumb, .orientatore-table::-webkit-scrollbar-thumb {
     background-color: #3471CC;
     border-radius: 4px;
 }
@@ -169,12 +169,19 @@
     padding: 25px 35px;
     margin-top: 30px;
 }
-
+.passalead-rec{
+    margin-top: 1rem;
+    padding: 0 20px;
+}
 .add-orientatori h4 {
     width: 90%;
     margin-left: 5%;
 }
-
+.passalead-form{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
 
 .input-item {
     display: flex;
@@ -184,7 +191,10 @@
     align-items: start;
     width: 100%;
 }
-
+.orientatore-table{
+    overflow-y: auto;
+    max-height: 100vh;
+}
 .input-item input {
     border: none;
     background-color: #d9d9d95b;

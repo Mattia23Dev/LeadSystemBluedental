@@ -329,3 +329,24 @@ exports.createOrientatore = async (req, res) => {
       res.status(500).json({ error: err.message });
     }
   };
+
+  exports.updateAssegnazioneOrientatore = async (req, res) => {
+    const { updatedFields, id } = req.body;
+    console.log(req.body)
+    try {
+      const updatedOrientatore = await Orientatore.findByIdAndUpdate(
+        id,
+        { daAssegnare: updatedFields.daAssegnare },
+        { new: true }
+      );
+  
+      if (!updatedOrientatore) {
+        return res.status(404).json({ message: 'Orientatore non trovato' });
+      }
+  
+      res.json(updatedOrientatore);
+    } catch (error) {
+      console.error('Errore durante l\'aggiornamento dell\'orientatore:', error);
+      res.status(500).json({ message: 'Errore server durante l\'aggiornamento dell\'orientatore' });
+    }
+  };

@@ -375,6 +375,120 @@ const Lead = require('../models/lead');
       });
   };
 
+  //FUNNEL 1 THL
+  exports.getThlLead1 = () => {
+    const url = 'https://graph.facebook.com/v19.0/act_451086867638673/campaigns';
+    const params = {
+      fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
+      effective_status: "['ACTIVE']",
+      access_token: TOKEN1,
+    };
+
+    axios.get(url, { params })
+      .then(response => {
+        const dataFromFacebook = response.data.data;
+        const logs = [];
+        if (Array.isArray(dataFromFacebook)) {
+          for (const element of dataFromFacebook) {
+            const excludedCampaignIds = [idCampagna, idCampagna2];
+            //PER ESCLUDERE LE CAMPAGNE
+            /*if (excludedCampaignIds.includes(element.id)) {
+              console.log('Ho escluso:', element.id);
+              continue;
+            }*/
+
+            const { account_id, ads, effective_status, id, name, objective, adsets, status } = element;
+
+            if (ads && ads.data && ads.data.length > 0) {
+              for (const ad of ads.data) {
+                if (ad.leads && ad.leads.data && ad.leads.data.length > 0) {
+                  for (const lead of ad.leads.data) {
+                    if (lead && lead.field_data && Array.isArray(lead.field_data)) {
+                      const fieldData = lead.field_data;
+                      const id = lead.id;
+                      const formId = lead.form_id;
+                      const log = {
+                        fieldData: fieldData,
+                        name: name,
+                        id: id,
+                        formId: formId,
+                        annunci: ad.name,
+                        adsets: adsets.data[0].name,
+                      };
+                      logs.push(log);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          console.error("dataFromFacebook non è un array");
+        }
+        saveLeadFromFacebookAndInstagram(logs);
+      })
+      .catch(error => {
+        console.error('Errore:', error);
+      });
+  };
+
+  //FUNNEL 1 THL
+  exports.getThlLead2 = () => {
+    const url = 'https://graph.facebook.com/v19.0/act_451330597692428/campaigns';
+    const params = {
+      fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
+      effective_status: "['ACTIVE']",
+      access_token: TOKEN1,
+    };
+
+    axios.get(url, { params })
+      .then(response => {
+        const dataFromFacebook = response.data.data;
+        const logs = [];
+        if (Array.isArray(dataFromFacebook)) {
+          for (const element of dataFromFacebook) {
+            const excludedCampaignIds = [idCampagna, idCampagna2];
+            //PER ESCLUDERE LE CAMPAGNE
+            /*if (excludedCampaignIds.includes(element.id)) {
+              console.log('Ho escluso:', element.id);
+              continue;
+            }*/
+
+            const { account_id, ads, effective_status, id, name, objective, adsets, status } = element;
+
+            if (ads && ads.data && ads.data.length > 0) {
+              for (const ad of ads.data) {
+                if (ad.leads && ad.leads.data && ad.leads.data.length > 0) {
+                  for (const lead of ad.leads.data) {
+                    if (lead && lead.field_data && Array.isArray(lead.field_data)) {
+                      const fieldData = lead.field_data;
+                      const id = lead.id;
+                      const formId = lead.form_id;
+                      const log = {
+                        fieldData: fieldData,
+                        name: name,
+                        id: id,
+                        formId: formId,
+                        annunci: ad.name,
+                        adsets: adsets.data[0].name,
+                      };
+                      logs.push(log);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          console.error("dataFromFacebook non è un array");
+        }
+        saveLeadFromFacebookAndInstagram(logs);
+      })
+      .catch(error => {
+        console.error('Errore:', error);
+      });
+  };
+
    const client = new GoogleAdsApi({
     client_id: "678629363192-330a44sjgh190ugqvpqq8qa6udk4rocs.apps.googleusercontent.com",
     client_secret: "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",

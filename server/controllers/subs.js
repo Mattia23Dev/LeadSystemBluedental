@@ -4,7 +4,7 @@ const LeadWordpress = require("../models/leadWordpress");
 const Lead = require('../models/lead');
 var cron = require('node-cron');
 const { sendEmailLeadArrivati } = require('../middlewares');
-const { getDentistaLead, getTagLeads, getTagLeads2, getDentistaLead2, getDentistaLead3, getBludentalLead } = require('./Facebook');
+const { getDentistaLead, getTagLeads, getTagLeads2, getDentistaLead2, getDentistaLead3, getBludentalLead, getThlLead1, getThlLead2 } = require('./Facebook');
 const Orientatore = require('../models/orientatori');
 const LastLeadUser = require('../models/lastLeadUser');
 const axios = require('axios')
@@ -786,12 +786,12 @@ cron.schedule('30 4 * * *', () => {
 
 cron.schedule('10,46,20 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getDentistaLead();
-  console.log('Prendo i lead di Bluedental 3.0');
+  console.log('Prendo i lead di Bluedental 1.0');
 });
 
 cron.schedule('20,56,30 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getDentistaLead2();
-  console.log('Prendo i lead di Bluedental 3.0');
+  console.log('Prendo i lead di Bluedental 2.0');
 });
 
 cron.schedule('5,36,15 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
@@ -801,7 +801,17 @@ cron.schedule('5,36,15 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () 
 
 cron.schedule('8,49,18 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getBludentalLead();
-  console.log('Prendo i lead di Bluedental nuovo');
+  console.log('Prendo i lead di Bluedental');
+});
+
+cron.schedule('10,52,33 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+  getThlLead1();
+  console.log('Prendo i lead di THL 1');
+});
+
+cron.schedule('12,44,22 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+  getThlLead2();
+  console.log('Prendo i lead di THL 2');
 });
 
 cron.schedule('15,58,25,40 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {

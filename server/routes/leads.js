@@ -77,7 +77,7 @@ router.post('/update-leads-rec', async (req, res) => {
 
     const leadsToUpdate = await Lead.find({
       esito: "Non risponde",
-      utmCampaign: /Meta Web/i,
+      //utmCampaign: /Meta Web/i,
       utente: "65d3110eccfb1c0ce51f7492",
     });
     const filteredLeads = leadsToUpdate.filter((lead) => {

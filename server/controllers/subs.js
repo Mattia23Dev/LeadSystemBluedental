@@ -1005,7 +1005,7 @@ async function updateLeadPerErrore() {
     utente: "65d3110eccfb1c0ce51f7492"
   })
   .sort({ data: -1 })
-  .limit(90);
+  .limit(100);
   let users = await Orientatore.find({
     //_id: { $nin: excludedOrientatoreIds }, 
     utente: "65d3110eccfb1c0ce51f7492",
@@ -1036,6 +1036,9 @@ async function updateLeadPerErrore() {
         continue;
       }
       leadWithoutUser.orientatori = user._id;
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
+      leadWithoutUser.data = threeDaysAgo;
       await leadWithoutUser.save();
       console.log("assegnato la lead " + leadWithoutUser.email + ' a ' + user.nome)
       const leadIndex = leads.findIndex(lead => lead._id.toString() === leadWithoutUser._id.toString());

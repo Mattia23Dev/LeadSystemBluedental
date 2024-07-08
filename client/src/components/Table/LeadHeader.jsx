@@ -51,6 +51,8 @@ export default function LeadHeader({
           SETtoggles({...toggles, nonPresentato: !toggles.nonPresentato})
         else if (type == "Presentato")
           SETtoggles({...toggles, presentato: !toggles.presentato})
+        else if (type == "Annullato")
+          SETtoggles({ ...toggles, annullato: !toggles.annullato })
           else if (type == "Non risponde")
           SETtoggles({ ...toggles, nonRisponde: !toggles.nonRisponde })
           else if (type == "Iscrizione posticipata")

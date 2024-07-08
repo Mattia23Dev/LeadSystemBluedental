@@ -609,6 +609,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       return nomeCampagna.toLowerCase().includes("messenger");
     } else if (selectedCampagna === "Messenger Bludental") {
       return nomeCampagna.toLowerCase().includes("chat");
+    } else if (selectedCampagna === "Meta Web") {
+      return nomeCampagna.toLowerCase().includes("meta web");
     } else {
       return nomeCampagna.includes(filtro);
     }
@@ -620,8 +622,10 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
     return nomeCampagna.toLowerCase().includes("messenger");
   } else if (filtro === "Messenger Bludental") {
     return nomeCampagna.toLowerCase().includes("chat");
+  } else if (selectedCampagna === "Meta Web") {
+    return nomeCampagna.toLowerCase().includes("meta web");
   } else {
-    return nomeCampagna.includes(filtro);
+    return nomeCampagna.toLowerCase().includes(filtro.toLowerCase());
   }
 }
   const [recallFilter, setRecallFilter] = useState(false);
@@ -798,7 +802,6 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
           telephone.startsWith('+39') && telephone.length === 13
             ? telephone.substring(3)
             : telephone;
-
 
         return {
           name: lead.nome,
@@ -1090,6 +1093,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
     iscrizionePosticipata: false,
     presentato: false,
     nonPresentato: false,
+    annullato: false,
   })
 
 
@@ -1789,6 +1793,34 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
             <div className="entries">
               {toggles.presentato && filteredData && filteredData.filter(x => x.status == "Presentato").reverse().map((row, k) =>
+                <LeadEntry
+                  id={JSON.stringify(row)}
+                  index={k}
+                  handleRowClick={handleRowClick} data={row}
+                  handleModifyPopup={handleModifyPopup}
+                  secref={secref}
+                  handleModifyPopupEsito={handleModifyPopupEsito}
+                  handleDelete={handleDelete}
+                  campagna={row.campagna}
+                  nuovaEtichetta={nuovaEtichetta}
+                  setNuovaEtichetta={setNuovaEtichetta}
+                  selezionOrientatore={openChangeOrientatore}
+                />
+              )}
+            </div>
+          </div>
+          <div className="secwrap"
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, "Annullato")}
+            onDragEnd={handleDragEnd}
+          >
+            <LeadHeader
+              handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
+              type={"Annullato"}
+              refreshate={false}
+              toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
+            <div className="entries">
+              {toggles.annullato && filteredData && filteredData.filter(x => x.status == "Annullato").reverse().map((row, k) =>
                 <LeadEntry
                   id={JSON.stringify(row)}
                   index={k}

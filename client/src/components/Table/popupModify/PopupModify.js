@@ -707,6 +707,10 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                         <span><span>o</span></span>
                                         Presentato
                                     </div>
+                                    <div className={esito === "Annullato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Annullato')}>
+                                        <span><span>o</span></span>
+                                        Annullato
+                                    </div>
                                     <div className={esito === "Non presentato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Non presentato')}>
                                         <span><span>o</span></span>
                                         Non presentato

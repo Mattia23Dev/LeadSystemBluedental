@@ -132,7 +132,11 @@ exports.saveLeadChatbotDentista = async (req, res) => {
         });
         try {
 
-          const existingLead = await Lead.findOne({ $or: conditions });
+          const mostRecentLead = await Lead.find(
+            { $or: conditions },
+          );
+          mostRecentLead.sort((a, b) => new Date(b.data) - new Date(a.data));
+          const existingLead = mostRecentLead[0];
 
           if (!existingLead || (existingLead && day10ago(existingLead.data))) {
             if (!isValidPhoneNumber(phone)){
@@ -212,7 +216,11 @@ exports.saveLeadChatbotDentista = async (req, res) => {
         });
         try {
 
-          const existingLead = await Lead.findOne({ $or: conditions });
+          const mostRecentLead = await Lead.find(
+            { $or: conditions },
+          );
+          mostRecentLead.sort((a, b) => new Date(b.data) - new Date(a.data));
+          const existingLead = mostRecentLead[0];
 
           if (!existingLead || (existingLead && day10ago(existingLead.data))) {
             if (!isValidPhoneNumber(phone)){
@@ -251,3 +259,27 @@ exports.saveLeadChatbotDentista = async (req, res) => {
     res.status(500).json({ error: error, message: 'Errore' });
   }
 };
+
+const funzione = async () => {
+  try {
+    let conditions = [
+      { numeroTelefono: '+393898719009' },
+      {idLeadChatic: "8032942406750263"},
+    ];
+    const mostRecentLead = await Lead.find(
+      { $or: conditions },
+    );
+    mostRecentLead.sort((a, b) => new Date(b.data) - new Date(a.data));
+    const existingLead = mostRecentLead[0];
+
+    console.log(existingLead)
+    if (!existingLead || (existingLead && day10ago(existingLead.data))) {
+      console.log(`Assegnato all'utente Dentista`);
+    } else {
+      console.log(`Già assegnato all'utente Dentista`)
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
+//funzione()

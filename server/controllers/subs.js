@@ -94,7 +94,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
         { name: { $not: { $regex: /Meta Web/, $options: 'i' } } },
         { name: { $not: { $regex: /ESTETICA/, $options: 'i' } } }
       ] // 'i' per ignorare il case sensitivity
-    }).limit(50);
+    }).limit(100);
     const totalLeads = leads.length;
     console.log('Iscrizioni:', totalLeads);
     console.log( 'Utenti:'+ users.length);
@@ -1086,11 +1086,12 @@ async function eliminaEstetica() {
       name: /ESTETICA/i,
       assigned: false,
     });
+    const leadAss = await LeadFacebook.find({
+      assigned: false
+    })
 
     console.log('Total leads found:', lead.length);
-
-    // Filtra le lead in base alla data e allo stato "esito"
-
+    console.log(leadAss.length)
 
     const leadIdsToDelete = lead.map((lead) => lead._id);
 
@@ -1104,8 +1105,201 @@ async function eliminaEstetica() {
   }
 }
 
+//eliminaEstetica()
 //updateLeadsByPhoneNumber(phoneNumbers)
 //deleteLeadsGold()
 //updateLeads();
 //updateLeadsEsito();
 //updateLeadsRec(); //DEI NON RISPONDE OGNI INIZIO SETTIMANA
+
+const emails = [
+  'pinupste92@gmail.com',
+  'archlucioreggiani@gmail.com',
+  'dinoraffog@gmail.com',
+  'ndiayeali7@gmail.com',
+  'irini.scannicchio@gmail.com',
+  'pilarnv3@gmail.com',
+  'raffaello.ch@libero.it',
+  'biondailenia@gmail.com',
+  'marcodifazio@gimoil.it',
+  'mdmalusilva47@gmail.com',
+  'mirthaelisabeth@hotmail.com',
+  'Bellissimo1982@gmail.it',
+  'marcorinaldo40@gmail.com',
+  '2369rpll@libero.it',
+  'ferraram274@gmail.com',
+  'annaconca915@gmail.com',
+  'dichiarolisa1967@gmail.com',
+  'angelamaria.virgilio.61@gmail.com',
+  'berryred@libero.it',
+  'franca13matilde@gmail.com',
+  'fabrybonomelli78@gmail.com',
+  'matteben95@gmail.com',
+  'chettimaiuri@gmail.com',
+  'ottaviozambetti@gmail.com',
+  'murtasliliana@gmail.com',
+  'Jacquesnaim@yahoo.com',
+  'salvator.serra@tiscali.it',
+  'giorgiosmirh@gmail.com',
+  'cassiopella@hotmail.com',
+  'teikoutadiarra@gmail.com',
+  'albert.deiana@gmail.com',
+  'angelamazzuca7@gmail.com',
+  'meaccimusluvittoria@gmail.com',
+  'rhitachaibi@gmail.com',
+  'luigi.medau.45@gmail.com',
+  'aldoavvocato@libero.it',
+  'dicandiapatrizia0@gmail.com',
+  'nicolettafilippi@gmail.com',
+  'immacolatatene@gmail.com',
+  'vilma.chef55@gmail.com',
+  'cristinasecchi9@gmail.com',
+  'cumpamariamagdalena@gmail.com',
+  'fatimabenhbaiba@gmail.com',
+  'massimobigalli412@gmail.com',
+  'dianavalarezo@hotmail.es',
+  'halynashumylo22@gmail.com',
+  'c.biggiogero@outlook.com',
+  'rahmmanisuat150@gmail.com',
+  'maridore64@gmail.com',
+  'cagol.fabrizio@gmail.com',
+  'gabri.sole59@gmail.con',
+  'ivaniramfs@gmail.com',
+  'lapianaanna073@gmail.com',
+  'paola.davio@yahoo.it',
+  'danielabrancolini17@gmail.com',
+  'miriamdelcarmencarocaleyton@gmail.com',
+  'michelaionel@yahoo.com',
+  'annamoretti20@gmail.com',
+  'pri.mo42@yahoo.it',
+  'ivan.brunetta@gmail.com',
+  'silviamaria.petri@gmail.com',
+  'mateoklara@hotmail.it',
+  'anto2634@hotmail.it',
+  'viaverdi@gmail.com',
+  'mellusom@gmail.com',
+  'gabriella.lavalle@yahoo.it',
+  'Sheyron82@gmail.com',
+  'fracchiolla72@gmail.com',
+  'dea.anna66@gmail.com',
+  'slisi1581972@gmail.com',
+  'jamadbadr@gmail.com',
+  'imamericangirl@yahoo.it',
+  'gianlucarutigliano30@libero.it',
+  'salvatoretoriello@libero.it',
+  'fugazz8mary@yahoo.it',
+  'anachicu82@gmail.com',
+  'hiandrivola12@gmail.com',
+  'barletta.mia@gmail.com',
+  'anna.bussu67@virlio.it',
+  'aliagapatillah@gmail.com',
+  'enzo.battista.tablet@gmail.com',
+  'lotta120477@gmail.com',
+  'nat.minervini@gmail.com',
+  'tonycucino@libero.it',
+  'manuel.michelessi92@gmail.com',
+  'Danielvalesi11@gmail.com',
+  'cristian.foddai@hotmail.com',
+  'kessycatacchio@libero.it',
+  'anna005678@gmail.com',
+  'cr.info65@gmail.com',
+  'tonysimo906@gmail.com',
+  'ciammix@gmail.com',
+  'eliabarrale12@gmail.com',
+  'eleonora_russo@live.it',
+  'lucabenevent@gmail.com',
+  'giuse_99_@live.it',
+  'miriamfedele@libero.it',
+  'jorlibeth007-torres@hotmail.com',
+  'roxanne.bejan@gmail.com',
+  'farciv@tiscali.it',
+  'gentiluomo.r@gmail.com',
+  'pietro.gallucci@gmail.com',
+  'alexc87.salemi@yahoo.it',
+  'enzarusso71@virgilio.it',
+  'cardonef@live.it',
+  'ilaria.rocchini@outlook.it',
+  'Teamjennifer@libero.it',
+  'vaniamaritan@gmail.com',
+  'operativoservice1@gmail.com',
+  'elyodetto@gmail.com',
+  '81rita28@gmail.com',
+  'angiola.polimeno@gmail.com',
+  'marialasorsa1974@gmail.com',
+  'valdacorreiadesouza2@gmail.com',
+  'mercuryenterprises.costruzioni@gmail.com',
+  'danielacolella72ore@gmail.com',
+  'katia.reggiani84@gmail.com',
+  'stedani10@yahoo.it',
+  'libellula8633@gmail.com',
+  'jessicasarti.fisioterapista@gmail.com',
+  'catiazetti@gmail.com',
+  'lillideruvo@gmail.com',
+  'fat_hasnaa@hotmail.fr',
+  'dexmype@gmail.com',
+  'jamil.ahmad.mughal@gmail.com',
+  'nsalucci@me.com',
+  'leprincedemilano@hotmail.com',
+  'silvianannipieri@yahoo.it',
+  'roscam83@gmail.com',
+  'florapelleatti33@gmail.com',
+  'pezzonil@hotmail.it',
+  'nadiapasquadibisceglie15@gmail.co.com',
+  'pietrodizinno@msn.com',
+  'ababeielena44@yahoo.com',
+  'manuel233@yahoo.it',
+  'yallayallasourya@gmail.com',
+  'Baglionilaura@hotmail.it',
+  'enzomesiti3@gmail.com',
+  'sarafestino91@gmail.com',
+  'gattimarco80parma@gmail.com',
+  'angela.lategola@virgilio.it',
+  'Costea@imbox.ru',
+  'Fedecerone99@gmail.com',
+  'miki.pagliaro4@hotmail.com',
+  'misa7114@gmail.com',
+  'mirella.corsini67@gmail.com',
+  'gpcaceresrivera@gmail.com',
+  'patriziabelloi22@gmail.com',
+  'tobaldisilvia.78@gmail.com',
+  'pietroluongofabrizio@yahoo.it',
+  'emadnous6@gmail.com',
+  'e.colace@alfa-legal.it',
+  'angdic71@gmail.com',
+  'ballini168@gmail.com',
+  'noemi.yauri@icloud.com',
+  'marta.hyska@yahoo.it',
+  'giusyginestrina@libero.it',
+  'eleonorapavan85@virgilio.it',
+  'rosaferreira2007@gmail.com',
+  'schfrancy@live.it',
+  'aquila6587@gmail.com',
+  'anet.lutecka@gmail.com',
+  'visanimaebe97@gmail.com',
+  'robi.mucchi@gmail.com',
+  'senalithelisinghe98@gmail.com',
+  'gioiart@hotmail.it',
+  'carissima87@hotmail.fr',
+  'dome.telese@gmail.com',
+  'andrea.mac003@gmail.com',
+  'hamzachafra7@gmail.com'
+];
+
+const checkEmails = async () => {
+
+  for (const email of emails) {
+    const lead = await Lead.find({
+      fieldData: {
+        $elemMatch: {
+          name: 'email',
+          value: email
+        }
+      }
+    });
+    if (lead.length > 0) {
+      console.log(`${email}: Si`);
+    } else {
+      console.log(`${email}: No`);
+    }
+  }
+};

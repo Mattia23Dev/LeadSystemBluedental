@@ -11,7 +11,7 @@ const idCampagna2 = '23859089103880152'; //ECP - [LEAD ADS] - Master
 const fields = 'id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}';
 
 //LEADS 
-const TOKENBLUDENTAL = "EAAD6mNGgHKABO9z0lymt7rOtUe7IP1Akf4oayPFMshZCRp7s74IPO7xuUQyFtOSR31ZBE3yeYpY3zsDEBcmGyELgWxl5zk7eFtoQOyaFV5sUwmS9WbdqV2t7e0zuwpSN33hjjRMuZCvp4ZC3VVyKaZBJZBMyMRYIIdqGpr9vrfYJ3bxSSOCUdtXZAq9";
+const TOKENBLUDENTAL = "EAAVDczA2mhEBO0cREdwcIgu335KPkLaropmcJrqVWO7vVDB8ZAT5IaVYCzMIFPsjT6zi5j018bSBcsJxbKTkeoC4Ojg8ZCKYId8agqKrJSLNQmGFEpTFzWacM7e2cOeFboo9upy8uAyhzZBLDOQZBrRKGOK0Md3TQdPHAVmddSUe3ZCH17lbN8QZDZD";
 const TOKENMIO = "EAAD6mNGgHKABOwfM3G4dWeT7mZA1jDy0y0oKV9d4uZAwfXZCQFrglvg7rUHq1fjpS6xROUr4IiK6KDbZCDGwRWX48djhkr9EInopG8ZBoNM74FZAra8hmasKWLAPUCHt54Abj8wkJPCiu6UTZAGkbU5hgJrSDOwD2QqDK7X2dhsarQDs2ElaV2H1TuRHafwaNyGTW1A3ZC5sEUMx51jJcJmqhACD";
 const TOKEN1 = "EAAD6mNGgHKABOZBSNfpz9ApwmL0y8Bl9xxg9bCsDAZB54h7nzFyMsNRt8sPeTqQ2Ji61UtKn7vY2lS2gI2iZADherr7aFb5nQttzDZCsmwKFZBVR1w07XfRca80Af9Bai9JSUVfEQQP29zZCVz5mnsVZC2hQ459X825IMKBpjRX0LQZA04KZCS9wlk888";
 const { GoogleAdsApi, enums  } = require('google-ads-api');
@@ -501,3 +501,81 @@ const Lead = require('../models/lead');
     login_customer_id: "6660112223",
     refresh_token: refreshToken,
   });
+
+
+  const getBludentalLeadManual = () => {
+    const url = 'https://graph.facebook.com/v19.0/act_982532079362123/campaigns';
+    const params = {
+      fields: 'effective_status,account_id,id,name,ads{leads{field_data}}',
+      effective_status: "['ACTIVE']",
+      access_token: TOKENBLUDENTAL,
+    };
+  
+    const targetEmails = [
+      'dinoraffog@gmail.com',
+      'archlucioreggiani@gmail.com',
+      // Aggiungi altre email qui
+    ];
+  
+    axios.get(url, { params })
+      .then(response => {
+        const dataFromFacebook = response.data.data;
+        const logs = [];
+        const loggedCampaigns = new Set(); // Set per tenere traccia delle campagne loggate
+  
+        if (Array.isArray(dataFromFacebook)) {
+          for (const element of dataFromFacebook) {
+            const excludedCampaignIds = [idCampagna, idCampagna2];
+            //PER ESCLUDERE LE CAMPAGNE
+            /*if (excludedCampaignIds.includes(element.id)) {
+              console.log('Ho escluso:', element.id);
+              continue;
+            }*/
+  
+            const { account_id, ads, effective_status, id, name, objective, adsets, status } = element;
+  
+            // Logga il nome della campagna una sola volta
+            if (!loggedCampaigns.has(name)) {
+              console.log(`Campagna trovata: ${name}`);
+              loggedCampaigns.add(name);
+            }
+  
+            if (ads && ads.data && ads.data.length > 0) {
+              for (const ad of ads.data) {
+                if (ad.leads && ad.leads.data && ad.leads.data.length > 0) {
+                  for (const lead of ad.leads.data) {
+                    if (lead && lead.field_data && Array.isArray(lead.field_data)) {
+                      const fieldData = lead.field_data;
+                      const emailField = fieldData.find(field => field.name === 'email');
+                      if (emailField && targetEmails.includes(emailField.values[0])) {
+                        console.log(`Email trovata: ${emailField.values[0]}`);
+                        const id = lead.id;
+                        const formId = lead.form_id;
+                        const log = {
+                          fieldData: fieldData,
+                          name: name,
+                          id: id,
+                          formId: formId,
+                          annunci: ad.name,
+                          adsets: adsets.data[0].name,
+                        };
+                        logs.push(log);
+                      } else {
+                        console.log('no')
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          console.error("dataFromFacebook non è un array");
+        }
+        //saveLeadFromFacebookAndInstagram(logs);
+      })
+      .catch(error => {
+        console.error('Errore:', error);
+        console.log(error.data);
+      });
+  };

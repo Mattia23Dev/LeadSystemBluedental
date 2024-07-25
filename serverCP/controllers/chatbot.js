@@ -71,6 +71,9 @@ exports.saveLeadChatbotDentista = async (req, res) => {
 
     const nextUser = users[nextUserIndex];
 
+    const randomIndex = Math.floor(Math.random() * users.length);
+    const randomUser = users[randomIndex];
+
     if(channel === "5"){
       canale = "Whatsapp"
     }else if (channel === "0"){
@@ -116,7 +119,7 @@ exports.saveLeadChatbotDentista = async (req, res) => {
           esito: 'Da contattare',
           città: città || "",
           trattamento: "Implantologia per singolo dente",
-          orientatori: null, //nextUser ? nextUser._id : null,
+          orientatori: nextUser ? nextUser._id : randomUser._id,
           utente: "65d3110eccfb1c0ce51f7492", //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
           note: "",
           fatturato: "",
@@ -200,7 +203,7 @@ exports.saveLeadChatbotDentista = async (req, res) => {
           esito: 'Da contattare',
           città: città || '',
           trattamento: "Implantologia per singolo dente",
-          orientatori: null, //nextUser ? nextUser._id : null,
+          orientatori: nextUser ? nextUser._id : randomUser._id,
           utente: "65d3110eccfb1c0ce51f7492", //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
           note: "",
           fatturato: "",

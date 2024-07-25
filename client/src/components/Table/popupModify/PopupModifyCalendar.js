@@ -63,9 +63,9 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
             return 'Gold';
         } else if (nomeCampagna.toLowerCase().includes("estetica")){
             return 'Estetica';
-        } else if (nomeCampagna.toLowerCase().includes("chatbot")){
+        } /*else if (nomeCampagna.toLowerCase().includes("chatbot")){
             return 'Conversazionale';
-        } else if (nomeCampagna.toLowerCase().includes("chat")){
+        }*/ else if (nomeCampagna.toLowerCase().includes("chat")){
             return 'Messenger bludental';
         } else if (nomeCampagna.includes('Ambra')){
             return 'Ambra';

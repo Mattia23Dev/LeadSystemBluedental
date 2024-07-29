@@ -19,6 +19,46 @@ function isValidPhoneNumber(phoneNumber) {
     return data.isBefore(dieciGiorniFa);
   }
 
+  function generatePhoneVariants(phoneNumber) {
+    let variants = [];
+  
+    // Rimuove eventuali spazi o trattini
+    phoneNumber = phoneNumber.replace(/\s+/g, '').replace(/-/g, '');
+  
+    const isItalianNumber = (number) => {
+      if (number.startsWith('+39')) {
+        return true;
+      } else if (number.startsWith('39') && number.length == 12) {
+        return true;
+      }
+      return false;
+    };
+  
+    if (isItalianNumber(phoneNumber)) {
+      // Numero normale
+      variants.push(phoneNumber.slice(phoneNumber.startsWith('+39') ? 3 : 2));
+      
+      // Aggiunge variante con 39 davanti
+      variants.push(phoneNumber.startsWith('+39') ? '39' + phoneNumber.slice(3) : phoneNumber);
+      
+      // Aggiunge variante con +39 davanti
+      variants.push(phoneNumber.startsWith('+39') ? phoneNumber : '+39' + phoneNumber);
+    } else {
+      variants.push(phoneNumber);
+  
+      // Aggiunge variante con 39 davanti
+      variants.push('39' + phoneNumber);
+  
+      // Aggiunge variante con +39 davanti
+      variants.push('+39' + phoneNumber);
+    }
+  
+    // Filtra eventuali duplicati
+    variants = [...new Set(variants)];
+  
+    return variants;
+  }
+
 exports.saveLeadChatbotDentista = async (req, res) => {
   console.log(req.body);
   try {
@@ -84,10 +124,14 @@ exports.saveLeadChatbotDentista = async (req, res) => {
       canale = "Nessuno"
     }
 
-    let conditions = [
-      { numeroTelefono: phone },
-      {idLeadChatic: id},
-    ];
+    let phoneVariants = generatePhoneVariants(numeroTelefono);
+  
+    let conditions = {
+      $or: [
+        { numeroTelefono: { $in: phoneVariants } },
+        { idLeadChatic: id }
+      ]
+    };
     
     /*if (email && email.trim() !== "") {
       conditions.push({ email: email });

@@ -606,7 +606,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
     if (selectedCampagna === "Estetica"){
       return nomeCampagna.toLowerCase().includes("estetica")
     } else if (selectedCampagna === "Messenger") {
-      return nomeCampagna.toLowerCase().includes("messenger");
+      return nomeCampagna.toLowerCase().includes("messenger") || nomeCampagna.toLowerCase().includes("chatbot");
     } else if (selectedCampagna === "Messenger Bludental") {
       return nomeCampagna.toLowerCase().includes("chat");
     } else if (selectedCampagna === "Meta Web") {
@@ -619,7 +619,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
   if (filtro === "Estetica"){
     return nomeCampagna.toLowerCase().includes("estetica")
   } else if (filtro === "Messenger") {
-    return nomeCampagna.toLowerCase().includes("messenger");
+    return nomeCampagna.toLowerCase().includes("messenger") || nomeCampagna.toLowerCase().includes("chatbot");
   } else if (filtro === "Messenger Bludental") {
     return nomeCampagna.toLowerCase().includes("chat");
   } else if (selectedCampagna === "Meta Web") {

@@ -9,7 +9,7 @@ const cron = require('node-cron');
 const { parse } = require('json2csv');
 const LeadChatbot = require('./models/leadChatbot');
 const {authenticate} = require('@google-cloud/local-auth');
-const { saveLeadChatbotDentista } = require('./controllers/chatbot');
+const { saveLeadChatbotDentista, saveLeadChatbotDentistaNew } = require('./controllers/chatbot');
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
@@ -132,6 +132,7 @@ const exportLeadsToCSV = async () => {
 
 //exportLeadsToCSV()
 app.post('/api/save-chatbot-dentista', saveLeadChatbotDentista);
+app.post('/api/save-chatbot-dentista-new', saveLeadChatbotDentistaNew);
 
 /*const runDailyJob = () => {
   authorize()

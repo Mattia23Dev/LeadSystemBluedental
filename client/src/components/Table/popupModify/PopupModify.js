@@ -63,9 +63,9 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
             return 'Gold';
         } else if (nomeCampagna.includes('Ambra')){
             return 'Ambra';
-        } /*else if (nomeCampagna.toLowerCase().includes("chatbot")){
+        } else if (nomeCampagna.toLowerCase().includes("chatbot")){
             return 'Conversazionale';
-        }*/ else if (nomeCampagna.toLowerCase().includes("chat")){
+        } else if (nomeCampagna.toLowerCase().includes("chat")){
             return 'Messenger bludental';
         } else if (nomeCampagna.toLowerCase().includes("estetica")){
             return 'Estetica';

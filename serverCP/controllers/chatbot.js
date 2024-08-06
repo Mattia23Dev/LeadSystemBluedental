@@ -59,7 +59,7 @@ function isValidPhoneNumber(phoneNumber) {
     return variants;
   }
 
-exports.saveLeadChatbotDentista = async (req, res) => {
+  exports.saveLeadChatbotDentista = async (req, res) => {
   console.log(req.body);
   try {
     const {
@@ -180,7 +180,7 @@ exports.saveLeadChatbotDentista = async (req, res) => {
         try {
 
           const mostRecentLead = await Lead.find(
-            { $or: conditions },
+            conditions,
           );
           mostRecentLead.sort((a, b) => new Date(b.data) - new Date(a.data));
           const existingLead = mostRecentLead[0];
@@ -264,7 +264,7 @@ exports.saveLeadChatbotDentista = async (req, res) => {
         try {
 
           const mostRecentLead = await Lead.find(
-            { $or: conditions },
+            conditions,
           );
           mostRecentLead.sort((a, b) => new Date(b.data) - new Date(a.data));
           const existingLead = mostRecentLead[0];
@@ -557,12 +557,16 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
 
 const funzione = async () => {
   try {
-    let conditions = [
-      { numeroTelefono: '+393898719009' },
+    const phone = "+393898719009"
+    let phoneVariants = generatePhoneVariants(phone)
+    let conditions = {
+      $or: [
+      { numeroTelefono: { $in: phoneVariants } },
       {idLeadChatic: "8032942406750263"},
-    ];
+      ]
+    };
     const mostRecentLead = await Lead.find(
-      { $or: conditions },
+      conditions,
     );
     mostRecentLead.sort((a, b) => new Date(b.data) - new Date(a.data));
     const existingLead = mostRecentLead[0];

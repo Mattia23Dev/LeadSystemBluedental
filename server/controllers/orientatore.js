@@ -332,7 +332,6 @@ exports.createOrientatore = async (req, res) => {
 
   exports.updateAssegnazioneOrientatore = async (req, res) => {
     const { updatedFields, id } = req.body;
-    console.log(req.body)
     try {
       const updatedOrientatore = await Orientatore.findByIdAndUpdate(
         id,

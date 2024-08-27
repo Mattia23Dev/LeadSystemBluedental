@@ -276,15 +276,25 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         return false;
       });
 
+      const searchWords = searchval.toLowerCase().split(' ');
+      const filteredDataIn = filteredByRecall.filter(r => {
+        const fullName = `${r.name.trim()}`.toLowerCase();
+
+        console.log('Search Words:', searchWords);
+        console.log('Full Name:', fullName);
+
+        return searchWords.every(word => fullName.indexOf(word) !== -1) || r.telephone.toLowerCase().includes(searchval.toLowerCase());
+      })
+
       const startDate = localStorage.getItem("startDate");
       const endDate = localStorage.getItem("endDate");
       if (startDate !== null && endDate !== null && startDate !== undefined && endDate !== undefined){
-        const filteredByDate = filterDataByDate(filteredByRecall, startDate, endDate); 
+        const filteredByDate = filterDataByDate(filteredDataIn, startDate, endDate); 
         setFilteredData(filteredByDate);
         setFiltroDiRiserva(filteredByDate)
        } else {
-        setFilteredData(filteredByRecall);
-        setFiltroDiRiserva(filteredByRecall);
+        setFilteredData(filteredDataIn);
+        setFiltroDiRiserva(filteredDataIn);
        }
 
       const leadNumVenduti = response.data.filter(lead => lead.esito === 'Fissato');
@@ -415,15 +425,25 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         return false;
       });
 
+      const searchWords = searchval.toLowerCase().split(' ');
+      const filteredDataIn = filteredByRecall.filter(r => {
+        const fullName = `${r.name.trim()}`.toLowerCase();
+
+        console.log('Search Words:', searchWords);
+        console.log('Full Name:', fullName);
+
+        return searchWords.every(word => fullName.indexOf(word) !== -1) || r.telephone.toLowerCase().includes(searchval.toLowerCase());
+      })
+
       const startDate = localStorage.getItem("startDate");
       const endDate = localStorage.getItem("endDate");
       if (startDate !== null && endDate !== null && startDate !== undefined && endDate !== undefined){
-        const filteredByDate = filterDataByDate(filteredByRecall, startDate, endDate); 
+        const filteredByDate = filterDataByDate(filteredDataIn, startDate, endDate); 
         setFilteredData(filteredByDate);
         setFiltroDiRiserva(filteredByDate)
        } else {
-        setFilteredData(filteredByRecall);
-        setFiltroDiRiserva(filteredByRecall);
+        setFilteredData(filteredDataIn);
+        setFiltroDiRiserva(filteredDataIn);
        }
 
       const leadNumVenduti = response.data.filter(lead => lead.esito === 'Fissato');
@@ -1129,7 +1149,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
       const searchWords = searchval.toLowerCase().split(' ');
 
       setFilteredData(
-        filteredData.filter(r => {
+        filtroDiRiserva.filter(r => {
           const fullName = `${r.name.trim()}`.toLowerCase();
 
           console.log('Search Words:', searchWords);

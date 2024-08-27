@@ -13,8 +13,8 @@ let lastUserReceivedLead = null;
 function filterOldLeads(leads) {
   const fourteenDaysAgo = new Date();
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  
-  return leads.filter(lead => new Date(lead.data) < fourteenDaysAgo);
+
+  return leads.filter(lead => new Date(lead.data) > fourteenDaysAgo);
 }
 
 const trigger = (lead, orientatore) => {
@@ -194,7 +194,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
         });
 
         try {
-          if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length > 0)){
+          if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length == 0)){
             await newLead.save();
             //await trigger(newLead, user)
             lastUserReceivedLead = user?._id;
@@ -250,6 +250,26 @@ const calculateAndAssignLeadsEveryDay = async () => {
     console.log(error.message);
   }
 };
+
+const prova = async () => {
+  try {
+    const leadsVerify = await Lead.find({
+      $or: [
+        { email: "e-cipollone@hotmail.it" },
+        { phone: "+393334478306" },
+      ]
+    });
+    console.log(leadsVerify.length)
+
+    if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length == 0)){
+      console.log("diocane:", filterOldLeads(leadsVerify))
+    } else {
+      console.log("cazzo dici")
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
 
 const calculateAndAssignLeadsEveryDayEstetica = async () => {
   try {
@@ -325,7 +345,7 @@ const calculateAndAssignLeadsEveryDayEstetica = async () => {
           ]
         });
         try {
-          if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length > 0)){
+          if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length == 0)){
             await newLead.save();
             await users.save();
 
@@ -454,7 +474,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
           ]
         });
         try {
-          if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length > 0)){
+          if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length == 0)){
             await newLead.save();
             callCenterUser.dailyLead += 1;
             callCenterUser.save()
@@ -571,7 +591,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
         });
         const leadesistenti = filterOldLeads(leadsVerify)
         try {
-          if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length > 0)){
+          if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length == 0)){
             await newLead.save();
             //await trigger(newLead, user)
             lastUserReceivedLead = user?._id;

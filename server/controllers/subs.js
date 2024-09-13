@@ -250,6 +250,13 @@ const calculateAndAssignLeadsEveryDay = async () => {
     console.log(error.message);
   }
 };
+const quanteLead = async () => {
+  let leads = await LeadFacebook.find({
+    $or: [{ assigned: false }, { assigned: { $exists: false } }],
+  });
+  const totalLeads = leads.length;
+  console.log('Iscrizioni:', totalLeads);
+}
 
 const prova = async () => {
   try {

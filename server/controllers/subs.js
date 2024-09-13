@@ -256,7 +256,13 @@ const quanteLead = async () => {
   });
   const totalLeads = leads.length;
   console.log('Iscrizioni:', totalLeads);
-}
+
+  /*for (const lead of leads) {
+    lead.assigned = true;
+    await lead.save();
+  }*/
+  console.log('Tutte le lead sono state aggiornate con assigned: true');
+};
 
 const prova = async () => {
   try {
@@ -841,7 +847,7 @@ cron.schedule('12,44,22 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', ()
   console.log('Prendo i lead di THL 2');
 });
 
-/*cron.schedule('15,58,25,40 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+cron.schedule('15,58,25,40 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   calculateAndAssignLeadsEveryDay();
   console.log('Assegno i lead di bludental altro');
 });
@@ -849,7 +855,7 @@ cron.schedule('12,44,22 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', ()
 cron.schedule('20,10,35,50 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   calculateAndAssignLeadsEveryDayMetaWeb();
   console.log('Assegno i lead di bludental Meta web');
-});*/
+});
 
 /*cron.schedule('12 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   //getTagLeads();

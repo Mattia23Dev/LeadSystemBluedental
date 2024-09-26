@@ -374,12 +374,10 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
 
     let phoneVariants = generatePhoneVariants(phone);
   
-    let conditions = {
-      $or: [
-        { numeroTelefono: { $in: phoneVariants } },
-        { idLeadChatic: id }
-      ]
-    };
+    let conditions = [
+      { numeroTelefono: { $in: phoneVariants } },
+      { idLeadChatic: id }
+    ];
     
     /*if (email && email.trim() !== "") {
       conditions.push({ email: email });

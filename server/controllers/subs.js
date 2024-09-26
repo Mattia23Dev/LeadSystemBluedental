@@ -8,6 +8,8 @@ const { getDentistaLead, getTagLeads, getTagLeads2, getDentistaLead2, getDentist
 const Orientatore = require('../models/orientatori');
 const LastLeadUser = require('../models/lastLeadUser');
 const axios = require('axios')
+const fs = require('fs');
+const csv = require('csv-parser');
 
 let lastUserReceivedLead = null;
 function filterOldLeads(leads) {
@@ -82,7 +84,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
   try {
     //const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
 
-    let users = await Orientatore.find({ 
+    let users = await Orientatore.find({
       //_id: { $nin: excludedOrientatoreIds }, 
       utente: "65d3110eccfb1c0ce51f7492",
       daAssegnare: true,
@@ -250,6 +252,102 @@ const calculateAndAssignLeadsEveryDay = async () => {
     console.log(error.message);
   }
 };
+
+async function insertLeadsFromCSV() {
+  const filePath = '20_09.csv';
+  try {
+    let users = await Orientatore.find({
+      utente: "65d3110eccfb1c0ce51f7492",
+      daAssegnare: true,
+    });
+
+    if (users.length === 0) {
+      console.log('Nessun orientatore disponibile.');
+      return;
+    }
+
+    const leads = [];
+    let userIndex = 0; // Iniziamo dal primo orientatore
+
+    // Trova l'ultimo orientatore che ha ricevuto una lead
+    const lastUserLeadData = await LastLeadUser.findOne({});
+    if (lastUserLeadData) {
+      const lastUserReceivedLead = lastUserLeadData.userId;
+      const lastUser = users.find(user => user._id.toString() === lastUserReceivedLead.toString());
+      if (lastUser) {
+        userIndex = users.indexOf(lastUser) + 1; // Inizia dal successivo orientatore
+      }
+    }
+
+    // Leggi i dati dal file CSV
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on('data', (row) => {
+        // Seleziona l'orientatore ciclicamente
+        const user = users[userIndex % users.length];
+        userIndex++; // Aggiorna l'indice per il prossimo orientatore
+
+        leads.push({
+          data: new Date(),
+          nome: row.full_name,
+          email: row.email,
+          numeroTelefono: row.phone_number ? row.phone_number.replace(/^p:/, '').trim() : '',
+          campagna: 'Social',
+          città: row.seleziona_il_centro_più_vicino_a_te ? row.seleziona_il_centro_più_vicino_a_te.replace(/_/g, " ") : '',
+          trattamento: row.seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni ? row.seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni.replace(/_/g, " ") : 'Implantologia a carico immediato',
+          esito: "Da contattare",
+          orientatori: user._id, // Assegna la lead all'orientatore corrente
+          utente: "65d3110eccfb1c0ce51f7492",
+          note: "",
+          fatturato: "",
+          utmContent: row.ad_name ? row.ad_name : '',
+          utmAdset: row.adset_name ? row.adset_name : '',
+          utmCampaign: row.campaign_name ? row.campaign_name : '',
+          tentativiChiamata: '0',
+          giàSpostato: false,
+        });
+      })
+      .on('end', async () => {
+        console.log(`Trovate ${leads.length} lead. Inserimento in corso...`);
+        console.log(leads)
+        // Inserisci le lead nel database
+        const result = await Lead.insertMany(leads);
+
+        // Salva l'ultimo orientatore che ha ricevuto una lead
+        const lastUser = users[(userIndex - 1) % users.length]; // Ultimo orientatore che ha ricevuto una lead
+        await LastLeadUser.findOneAndUpdate({}, { userId: lastUser._id }, { upsert: true });
+      });
+  } catch (error) {
+    console.error('Errore durante l\'inserimento delle lead:', error);
+  } finally {
+    console.log("ok")
+  }
+}
+
+//insertLeadsFromCSV();
+
+async function countAndRemoveLeadsWithP() {
+  try {
+    // Trova tutte le lead che hanno 'p:' all'inizio del numero di telefono
+    const leadsWithP = await Lead.find({ numeroTelefono: { $regex: /^p:/ } });
+    
+    // Conta quante lead hanno il prefisso 'p:'
+    const count = leadsWithP.length;
+    console.log(`Trovate ${count} lead con il prefisso 'p:' nel numero di telefono.`);
+
+    if (count > 0) {
+      // Elimina tutte le lead che hanno 'p:' nel numero di telefono
+      const deleteResult = await Lead.deleteMany({ numeroTelefono: { $regex: /^p:/ } });
+      console.log(`${deleteResult.deletedCount} lead eliminate.`);
+    } else {
+      console.log('Nessuna lead da eliminare.');
+    }
+
+  } catch (error) {
+    console.error('Errore durante il conteggio o l\'eliminazione delle lead:', error);
+  }
+}
+
 const quanteLead = async () => {
   let leads = await LeadFacebook.find({
     $or: [{ assigned: false }, { assigned: { $exists: false } }],

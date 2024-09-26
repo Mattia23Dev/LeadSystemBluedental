@@ -50,7 +50,7 @@ export default function Table2({ onResults, searchval, setLeadsPdf, setNextSched
     "Cantù", "Capena", "Carpi", "Cassino", "Cesena", "Ciampino", "Cinisello Balsamo", "Civitavecchia", "Cologno Monzese", 
     "Como", "Cremona", "Desenzano del Garda", "Ferrara", "Firenze", "Forlì", "Frosinone", "Genova", "Latina", "Lodi", 
     "Lucca", "Mantova", "Melzo", "Mestre", "Milano", "Modena", "Monza", "Ostia", "Padova", "Perugia", "Parma", "Piacenza", 
-    "Pioltello", "Pomezia", "Prato", "Ravenna", "Reggio Emilia", "Rho", "Rimini", "Roma", "Rovigo", "San Giuliano Milanese", "Sassari", "Seregno", 
+    "Pioltello", "Pomezia", "Pordenone", "Prato", "Ravenna", "Reggio Emilia", "Rho", "Rimini", "Roma", "Rovigo", "San Giuliano Milanese", "Sassari", "Seregno", 
     "Terni", "Torino", "Treviso", "Varese", "Verona", "Vicenza", "Vigevano"
   ];
   const campagne = [

@@ -29,17 +29,23 @@ const Lead = require('../models/lead');
   };
 
   exports.getLeadsManualBase = async (req, res) => {
+    console.log("Chiamata")
     try {
       const userId = req.body._id;
-  
-      // Cerca tutti i lead che hanno l'ID dell'utente nel campo "utente" e non hanno esito "Non valido" o "Non interessato"
-      const leads = await Lead.find({ 
+      const oggi = new Date();
+      const dueMesiFa = new Date();
+      dueMesiFa.setMonth(oggi.getMonth() - 1);
+      
+      let leads = await Lead.find({
         utente: userId,
-        $and: [
-          { esito: { $ne: "Non valido" } }, 
-          { esito: { $ne: "Non interessato" } }
-        ]
-      }).populate('orientatori');
+        esito: { $nin: ["Non valido", "Non interessato"] },
+        dataTimestamp: { $gte: dueMesiFa, $lte: oggi }
+      }).select('data nome cognome numeroTelefono esito appDate recallHours recallDate priorità lastModify campagna utmCampaign utmContent summary')
+      .populate({
+        path: 'orientatori',
+      })
+  
+      console.log("Numero di lead trovati:", leads.length);
   
       res.json(leads);
     } catch (err) {

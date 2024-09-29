@@ -945,6 +945,33 @@ cron.schedule('12,44,22 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', ()
   console.log('Prendo i lead di THL 2');
 });
 
+async function updateDataTimestampForAllLeads() {
+  try {
+    const leads = await Lead.find({ dataTimestamp: { $exists: false } });
+    let updatedCount = 0;
+
+    for (const lead of leads) {
+      if (lead.data) {
+        const dataDate = new Date(lead.data);
+        if (!isNaN(dataDate)) {
+          lead.dataTimestamp = dataDate;
+          await lead.save();
+          updatedCount++;
+          console.log(`Aggiornato lead numero: ${updatedCount}`);
+        }
+      }
+    }
+
+    console.log(`Aggiornati ${updatedCount} documenti con il nuovo campo dataTimestamp.`);
+  } catch (error) {
+    console.error('Errore durante l\'aggiornamento dei lead:', error);
+  } finally {
+    console.log("FINITOOOOOO");
+  }
+}
+
+//updateDataTimestampForAllLeads()
+
 cron.schedule('15,58,25,40 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   calculateAndAssignLeadsEveryDay();
   console.log('Assegno i lead di bludental altro');

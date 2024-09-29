@@ -6,6 +6,7 @@ const LeadSchema = new Schema({
       type: String,
       required: true
     },
+    dataTimestamp: { type: Date },
     lastModify: {
       type: String,
     },
@@ -94,6 +95,15 @@ const LeadSchema = new Schema({
     appFissato: String,
   });
 
+  LeadSchema.pre('save', function(next) {
+    if (this.data && !this.dataTimestamp) {
+      const dataDate = new Date(this.data);
+      if (!isNaN(dataDate)) {
+        this.dataTimestamp = dataDate;
+      }
+    }
+    next();
+  });  
 
 const Lead = mongoose.model('Lead', LeadSchema);
 

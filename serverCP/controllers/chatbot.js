@@ -156,6 +156,7 @@ function isValidPhoneNumber(phoneNumber) {
         let user = await User.findById(userId);
         const newLead = new Lead({
           data: new Date(),
+          dataTimestamp: new Date(),
           nome: full_name,
           email: email || '',
           numeroTelefono: phone || '',
@@ -240,6 +241,7 @@ function isValidPhoneNumber(phoneNumber) {
         let user = await User.findById(userId);
         const newLead = new Lead({
           data: new Date(),
+          dataTimestamp: new Date(),
           nome: full_name,
           email: email || '',
           numeroTelefono: phone || '',
@@ -402,6 +404,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
         let user = await User.findById(userId);
         const newLead = new Lead({
           data: new Date(),
+          dataTimestamp: new Date(),
           nome: full_name,
           email: email || '',
           numeroTelefono: phone || '',
@@ -486,6 +489,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
         let user = await User.findById(userId);
         const newLead = new Lead({
           data: new Date(),
+          dataTimestamp: new Date(),
           nome: full_name,
           email: email || '',
           numeroTelefono: phone || '',

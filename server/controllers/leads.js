@@ -34,8 +34,8 @@ const Lead = require('../models/lead');
       const userId = req.body._id;
       const oggi = new Date();
       const dueMesiFa = new Date();
-      dueMesiFa.setMonth(oggi.getMonth() - 1);
-      
+      dueMesiFa.setMonth(oggi.getMonth() - 2);
+
       let leads = await Lead.find({
         utente: userId,
         esito: { $nin: ["Non valido", "Non interessato"] },
@@ -44,9 +44,9 @@ const Lead = require('../models/lead');
       .populate({
         path: 'orientatori',
       })
-  
+
       console.log("Numero di lead trovati:", leads.length);
-  
+
       res.json(leads);
     } catch (err) {
       console.log(err);
@@ -57,14 +57,21 @@ const Lead = require('../models/lead');
   exports.getOrientatoreLeads = async (req, res) => {
     try {
       const userId = req.body._id;
-  
+      const oggi = new Date();
+      const dueMesiFa = new Date();
+      dueMesiFa.setMonth(oggi.getMonth() - 2);
+
       const leads = await Lead.find({ 
         orientatori: userId,
         $and: [
           { esito: { $ne: "Non valido" } }, 
           { esito: { $ne: "Non interessato" } }
-        ]
-      }).populate('orientatori');
+        ],
+        dataTimestamp: { $gte: dueMesiFa, $lte: oggi }
+      }).select('data nome cognome numeroTelefono esito appDate recallHours recallDate priorità lastModify campagna utmCampaign utmContent summary')
+      .populate({
+        path: 'orientatori',
+      })
   
       res.json(leads);
     } catch (err) {

@@ -952,6 +952,7 @@ async function updateDataTimestampForAllLeads() {
 
     for (const lead of leads) {
       if (lead.data) {
+        console.log(lead.nome)
         const dataDate = new Date(lead.data);
         if (!isNaN(dataDate)) {
           lead.dataTimestamp = dataDate;

@@ -4,7 +4,7 @@ const User = require('../models/user');
 
 const router = express.Router();
 
-const {getLeadsFb, getLeadsManual, getAllLead, calculateFatturatoByUtente, calculateFatturatoByOrientatore, calculateFatturatoByOrientatoreUser, getLeadsManualWhatsapp, updateLeadRecall, getLeadsManualBase, getOtherLeads, getOrientatoreLeads, getOtherLeadsOri} = require('../controllers/leads');
+const {getLeadsFb, getLeadsManual, getAllLead, calculateFatturatoByUtente, calculateFatturatoByOrientatore, calculateFatturatoByOrientatoreUser, getLeadsManualWhatsapp, updateLeadRecall, getLeadsManualBase, getOtherLeads, getOrientatoreLeads, getOtherLeadsOri, getLeadById} = require('../controllers/leads');
 const { createOrientatore, deleteOrientatore, createLead, deleteLead, updateLead, getOrientatori, getLeadDeleted, updateOrientatore, deleteRecall, updateAssegnazioneOrientatore } = require('../controllers/orientatore');
 const { getAllLeadForCounter, LeadForMarketing } = require('../controllers/superAdmin');
 const { getDataCap } = require('../controllers/comparadentista');
@@ -17,6 +17,7 @@ router.post("/get-leads-manual-base", getLeadsManualBase);
 router.post("/get-orientatore-lead-base", getOrientatoreLeads);
 router.post("/get-other-leads", getOtherLeads);
 router.post("/get-other-leads-ori", getOtherLeadsOri);
+router.get('/leads/:id', getLeadById);
 router.post("/get-lead-whatsapp", getLeadsManualWhatsapp);
 router.post("/create-orientatore", createOrientatore);
 router.delete("/delete-orientatore", deleteOrientatore);

@@ -99,6 +99,27 @@ const Lead = require('../models/lead');
     }
   };
 
+  exports.getLeadById = async (req, res) => {
+    try {
+      const leadId = req.params.id;
+  
+      const lead = await Lead.findById(leadId)
+        .populate('orientatori')
+
+      if (!lead) {
+        return res.status(404).json({ error: 'Lead non trovato' });
+      }
+  
+      res.json(lead);
+    } catch (err) {
+      console.error(err);
+      if (err.kind === 'ObjectId') {
+        return res.status(400).json({ error: 'ID lead non valido' });
+      }
+      return res.status(500).json({ error: 'Errore nel recupero del lead' });
+    }
+  };
+
   exports.getOtherLeadsOri = async (req, res) => {
     try {
       const userId = req.body._id;

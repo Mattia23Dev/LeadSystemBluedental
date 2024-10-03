@@ -226,24 +226,23 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
 
             setEmail(response.data.email || '');
             setCampagna(response.data.campagna || '');
-            setNumeroTelefono(response.data.telephone || '');
+            setNumeroTelefono(response.data.numeroTelefono || '');
             setOrientatori(response.data.orientatori ? response.data.orientatori._id : '');
             setCittà(response.data.città || '');
             setNote(response.data.note || '');
-            setEsito(response.data.status || '');
+            setEsito(response.data.esito || '');
             setFatturato(response.data.fatturato || '0');
             setOraChiamataRichiesto(response.data.oraChiamataRichiesto || '');
             setMotivo(response.data.motivo || '');
             setSelectedDate(response.data.recallDate ? new Date(response.data.recallDate) : new Date());
             setTrattamento(response.data.trattamento || '');
             setTentativiChiamata(response.data.tentativiChiamata || '0');
-            setName(response.data.name || '');
-            setSurname(response.data.surname || '');
+            setName(response.data.nome || '');
+            setSurname(response.data.cognome || '');
             setRecallType(response.data.recallType || '');
             setPatientType(response.data.tipo || '');
             setTreatment(response.data.trattPrenotato || '');
             setLocation(response.data.luogo || '');
-            setSelectedDate(response.data.recallDate ? new Date(response.data.recallDate) : new Date());
           } catch (err) {
             console.error('Errore nel recupero del lead:', err);
           }

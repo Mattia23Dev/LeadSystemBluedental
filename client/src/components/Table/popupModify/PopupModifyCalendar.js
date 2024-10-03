@@ -93,6 +93,39 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
         }
       }, [lead.recallHours]);
 
+      useEffect(() => {
+        const fetchLead = async () => {
+          try {
+            const response = await axios.get(`/leads/${lead.id}`);
+            console.log(response.data)
+
+            setEmail(response.data.email || '');
+            setCampagna(response.data.campagna || '');
+            setNumeroTelefono(response.data.numeroTelefono || '');
+            setOrientatori(response.data.orientatori ? response.data.orientatori._id : '');
+            setCittà(response.data.città || '');
+            setNote(response.data.note || '');
+            setEsito(response.data.esito || '');
+            setFatturato(response.data.fatturato || '0');
+            setOraChiamataRichiesto(response.data.oraChiamataRichiesto || '');
+            setMotivo(response.data.motivo || '');
+            setSelectedDate(response.data.recallDate ? new Date(response.data.recallDate) : new Date());
+            setTrattamento(response.data.trattamento || '');
+            setTentativiChiamata(response.data.tentativiChiamata || '0');
+            setName(response.data.nome || '');
+            setSurname(response.data.cognome || '');
+            setRecallType(response.data.recallType || '');
+            setPatientType(response.data.tipo || '');
+            setTreatment(response.data.trattPrenotato || '');
+            setLocation(response.data.luogo || '');
+          } catch (err) {
+            console.error('Errore nel recupero del lead:', err);
+          }
+        };
+    
+        fetchLead();
+      }, [lead.id]);
+
     const handleTimeChange = (e) => {
         const { name, value } = e.target;
         setSelectedTime((prevTime) => ({

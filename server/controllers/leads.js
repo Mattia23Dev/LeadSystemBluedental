@@ -40,7 +40,7 @@ const Lead = require('../models/lead');
         utente: userId,
         esito: { $nin: ["Non valido", "Non interessato"] },
         dataTimestamp: { $gte: dueMesiFa, $lte: oggi }
-      }).select('data nome cognome numeroTelefono esito appDate recallHours recallDate priorità lastModify campagna utmCampaign utmContent summary')
+      }).select('data nome cognome numeroTelefono esito appDate recallHours recallDate priorità lastModify campagna utmCampaign utmContent summary tentativiChiamata')
       .populate({
         path: 'orientatori',
       })
@@ -68,7 +68,7 @@ const Lead = require('../models/lead');
           { esito: { $ne: "Non interessato" } }
         ],
         dataTimestamp: { $gte: dueMesiFa, $lte: oggi }
-      }).select('data nome cognome numeroTelefono esito appDate recallHours recallDate priorità lastModify campagna utmCampaign utmContent summary')
+      }).select('data nome cognome numeroTelefono esito appDate recallHours recallDate priorità lastModify campagna utmCampaign utmContent summary tentativiChiamata')
       .populate({
         path: 'orientatori',
       })

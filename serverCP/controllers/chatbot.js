@@ -151,8 +151,8 @@ function isValidPhoneNumber(phoneNumber) {
 
       await lead.save();
       console.log('Lead aggiornata con successo nel database!');
-      if (città !== ''){
-        const userId = '65d3110eccfb1c0ce51f7492'; //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
+
+      const userId = '65d3110eccfb1c0ce51f7492'; //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
         let user = await User.findById(userId);
         const newLead = new Lead({
           data: new Date(),
@@ -216,7 +216,6 @@ function isValidPhoneNumber(phoneNumber) {
         } catch (error) {
           console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
         }
-      }
     } else {
       lead = new LeadChatbot({
         data: new Date(),
@@ -236,8 +235,8 @@ function isValidPhoneNumber(phoneNumber) {
 
       await lead.save();
       console.log('Lead salvato con successo nel database!');
-      if (città !== ''){
-        const userId ='65d3110eccfb1c0ce51f7492'; //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
+
+      const userId ='65d3110eccfb1c0ce51f7492'; //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
         let user = await User.findById(userId);
         const newLead = new Lead({
           data: new Date(),
@@ -284,6 +283,7 @@ function isValidPhoneNumber(phoneNumber) {
           } else {
             console.log(`Già assegnato il lead ${lead.nome} all'utente Dentista`)
             if (!isValidPhoneNumber(phone)){
+              console.log("Cell non valido")
               return
             }
             if(email !== ""){
@@ -299,7 +299,6 @@ function isValidPhoneNumber(phoneNumber) {
         } catch (error) {
           console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
         }
-      }
     }
 
     res.status(200).json({ message: 'Successo' });
@@ -399,8 +398,8 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
 
       await lead.save();
       console.log('Lead aggiornata con successo nel database!');
-      if (città !== ''){
-        const userId = '65d3110eccfb1c0ce51f7492'; //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
+
+      const userId = '65d3110eccfb1c0ce51f7492'; //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
         let user = await User.findById(userId);
         const newLead = new Lead({
           data: new Date(),
@@ -464,7 +463,6 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
         } catch (error) {
           console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
         }
-      }
     } else {
       lead = new LeadChatbot({
         data: new Date(),
@@ -484,8 +482,8 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
 
       await lead.save();
       console.log('Lead salvato con successo nel database!');
-      if (città !== ''){
-        const userId ='65d3110eccfb1c0ce51f7492'; //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
+
+      const userId ='65d3110eccfb1c0ce51f7492'; //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
         let user = await User.findById(userId);
         const newLead = new Lead({
           data: new Date(),
@@ -547,7 +545,6 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
         } catch (error) {
           console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
         }
-      }
     }
 
     res.status(200).json({ message: 'Successo' });

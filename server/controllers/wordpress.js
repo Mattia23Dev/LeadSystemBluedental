@@ -74,7 +74,7 @@ exports.getDataFromWordpress = async (req, res) => { // Converte il corpo della 
         utmMedium: utmMedium,
         utmTerm: utmTerm,
         città: città ? città : '',
-        trattamento: trattamento ? trattamento : 'Implantologia a carico immediato',
+        trattamento: 'Impianti singolo dente',
         esito: "Da contattare",
         orientatori: null,
         utente: "65d3110eccfb1c0ce51f7492",

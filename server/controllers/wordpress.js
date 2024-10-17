@@ -1,3 +1,4 @@
+const Lead = require('../models/lead');
 const LeadWordpress = require('../models/leadWordpress');
 
 exports.getDataFromWordpress = async (req, res) => { // Converte il corpo della richiesta in una stringa JSON
@@ -35,6 +36,52 @@ exports.getDataFromWordpress = async (req, res) => { // Converte il corpo della 
         lavoro: lavoro,
         universita: universita,
         provincia: provincia,
+      });
+  
+      // Salva il nuovo lead nel database dopo un timeout di 5 secondi
+          await newLead.save();
+          console.log('Lead salvato:', newLead);
+          res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('Errore durante il salvataggio del lead:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  };
+
+  exports.getDataFromLanding = async (req, res) => { // Converte il corpo della richiesta in una stringa JSON
+    const nome = req.body['Nome e cognome'];
+    const email = req.body.Email;
+    const numeroTelefono = req.body['Numero di telefono'];
+    const utmCampaign = req.body.utm_campaign ? req.body.utm_campaign : '';
+    const utmSource = req.body.utm_source ? req.body.utm_source : '';
+    const utmMedium = req.body.utm_medium ? req.body.utm_medium : '';
+    const utmTerm = req.body.utm_term ? req.body.utm_term : '';
+    const trattamento = req.body['Tipo di trattamento'] ? req.body['Tipo di trattamento'] : '';
+    const città = req.body['Città'] ? req.body['Città'] : '';
+    const note = req.body['Note aggiuntive'] ? req.body['Note aggiuntive'] : ''
+    try {
+  
+      console.log('webhook ricevuto', req.body);
+      // Crea un nuovo oggetto LeadWordpress e mappa i campi
+      const newLead = new Lead({
+        data: new Date(),
+        nome: nome,
+        email: email,
+        numeroTelefono: numeroTelefono,
+        campagna: 'wordrpess',
+        utmCampaign: utmCampaign,
+        utmSource: utmSource,
+        utmMedium: utmMedium,
+        utmTerm: utmTerm,
+        città: città ? città : '',
+        trattamento: trattamento ? trattamento : 'Implantologia a carico immediato',
+        esito: "Da contattare",
+        orientatori: null,
+        utente: "65d3110eccfb1c0ce51f7492",
+        note: note,
+        fatturato: "",
+        tentativiChiamata: '0',
+        giàSpostato: false,
       });
   
       // Salva il nuovo lead nel database dopo un timeout di 5 secondi

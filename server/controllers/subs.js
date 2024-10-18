@@ -14,7 +14,7 @@ const csv = require('csv-parser');
 let lastUserReceivedLead = null;
 function filterOldLeads(leads) {
   const fourteenDaysAgo = new Date();
-  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 10);
 
   return leads.filter(lead => new Date(lead.data) > fourteenDaysAgo);
 }

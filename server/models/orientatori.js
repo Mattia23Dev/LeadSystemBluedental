@@ -37,6 +37,9 @@ const OrientatoreSchema = new Schema({
   daAssegnare: {
     type: Boolean,
     default: true,
+  },
+  capDaily: {
+    type: Number
   }
 });
 

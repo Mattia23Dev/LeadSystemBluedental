@@ -253,6 +253,17 @@ const calculateAndAssignLeadsEveryDay = async () => {
   }
 };
 
+//calculateAndAssignLeadsEveryDay()
+
+async function setCapDailyToTen() {
+  try {
+    await Orientatore.updateMany({}, { capDaily: 10 });
+    console.log("Cap impostato a 10 per tutti gli orientatori.");
+  } catch (error) {
+    console.error("Errore durante l'aggiornamento del cap:", error);
+  }
+}
+
 async function insertLeadsFromCSV() {
   const filePath = '20_09.csv';
   try {
@@ -1226,12 +1237,12 @@ async function updateLeadPerErrore() {
 
 async function updateLeadsOriToOri() {
   const leads = await Lead.find({
-    esito: "Da contattare",
-    orientatori: "6613a0bd9408391f562152f5"
+    utente: "65d3110eccfb1c0ce51f7492",
+    città: { $regex: /^piacenza$/i }
   });
   console.log(leads.length)
   for (const lead of leads){
-    lead.orientatori = "65ddbe8676b468245d701bc2";
+    lead.orientatori = "660fc6b59408391f561edc1a";
     await lead.save();
   }
   console.log('Campo orientatori aggiornato per le lead estetica');

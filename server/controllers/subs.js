@@ -19,8 +19,13 @@ function filterOldLeads(leads) {
   return leads.filter(lead => new Date(lead.data) > fourteenDaysAgo);
 }
 
-const trigger = (lead, orientatore) => {
-  const url = 'https://app.chaticmedia.com/api/users';
+const flows = {
+  daContattare: "1734106160819",
+  fissato: "1734106194251",
+  nonRisponde: "1734106232317",
+}
+const trigger = (lead, orientatore, flowId) => {
+  const url = 'https://chat.leadsystem.app/api/users';
 
 const data = {
   phone: lead?.numeroTelefono,
@@ -28,7 +33,7 @@ const data = {
   first_name: lead?.nome,
   last_name: lead?.nome,
   full_name: lead?.nome,
-  gender: "male",
+  //gender: "male",
   actions: [
     {
       action: "add_tag",
@@ -41,7 +46,7 @@ const data = {
     },
     {
       action: "set_field_value",
-      field_name: "Numero Operatore",
+      field_name: "Numero_Operatore",
       value: orientatore?.telefono,
     },
     {
@@ -54,12 +59,27 @@ const data = {
       field_name: "Trattamento",
       value: lead?.trattamento,
     },
+    {
+      action: "set_field_value",
+      field_name: "Esito",
+      value: lead?.esito,
+    },
+    lead?.appDate && {
+      action: "set_field_value",
+      field_name: "Appuntamento_Orientatore",
+      value: lead?.appDate,
+    },
+    lead?.luogo && {
+      action: "set_field_value",
+      field_name: "sede",
+      value: lead?.luogo,
+    },
   ]
 }
 
 const headers = {
   'Content-Type': 'application/json',
-  'X-ACCESS-TOKEN': '1114716.GhZ5kU8ZaFOGZ4YXnpZbX4cHWg6Y5zXJ80hxdRr28Mb'
+  'X-ACCESS-TOKEN': '1832534.RwcFj0R5OfNOH4SQ0U0cHLhcUHoj0lfIIEygahubrjukN4p8'
 };
 
 axios.post(url, data, { headers })
@@ -67,7 +87,7 @@ axios.post(url, data, { headers })
     console.log('Response:', response.data);
     if (response.data.success){
       const id = response.data.data.id;
-      axios.post(url+`/${id}/send/1715849419797`, null, {headers}).then((res) => {
+      axios.post(url+`/${id}/send/${flowId}`, null, {headers}).then((res) => {
         console.log(res)
       })
       .catch(error => console.log(error))
@@ -79,6 +99,33 @@ axios.post(url, data, { headers })
     console.error('Error:', error.response ? error.response.data : error.message);
   });
 }
+
+//Da contattare
+/*trigger({
+  nome: "Mario Rossi",
+  email: "mario.rossi@example.com",
+  numeroTelefono: "+393313869850",
+  città: "Roma",
+  trattamento: "Implantologia a carico immediato",
+  esito: "Da contattare",
+}, {
+  nome: "Gianni",
+  telefono: "3334478306",
+}, flows.daContattare)*/
+
+//Fissato
+/*trigger({
+  nome: "Mario Rossi",
+  email: "mario.rossi@example.com",
+  numeroTelefono: "+393313869850",
+  città: "Roma",
+  trattamento: "Implantologia a carico immediato",
+  esito: "Fissato",
+  appDate: "02-01-2025 15:00",
+}, {
+  nome: "Gianni",
+  telefono: "3334478306",
+}, flows.fissato)*/
 
 const calculateAndAssignLeadsEveryDay = async () => {
   try {
@@ -265,7 +312,7 @@ async function setCapDailyToTen() {
 }
 
 async function insertLeadsFromCSV() {
-  const filePath = '20_09.csv';
+  const filePath = './LeadDaricaricareNEW.csv';
   try {
     let users = await Orientatore.find({
       utente: "65d3110eccfb1c0ce51f7492",
@@ -294,6 +341,7 @@ async function insertLeadsFromCSV() {
     fs.createReadStream(filePath)
       .pipe(csv())
       .on('data', (row) => {
+        console.log(row)
         // Seleziona l'orientatore ciclicamente
         const user = users[userIndex % users.length];
         userIndex++; // Aggiorna l'indice per il prossimo orientatore
@@ -604,6 +652,17 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
             lead.assigned = true;
             await lead.save();
+            await trigger({
+              nome: newLead.nome,
+              email: newLead.email,
+              numeroTelefono: newLead.numeroTelefono,
+              città: newLead.città,
+              trattamento: newLead.trattamento,
+              esito: "Da contattare",
+            }, {
+              nome: "Tommaso",
+              telefono: "3791715158",
+            }, flows.daContattare)
             //await sendNotification(user._id);
             //await sendEmailLeadArrivati(user._id);
 
@@ -1005,6 +1064,60 @@ cron.schedule('47 7,8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   calculateAndAssignLeadsEveryDayWordpressComparatore();
 });*/
 
+async function checkAndSendReminders() {
+  try {
+    const leads = await Lead.find({
+      esito: "Fissato",
+      utente: "664c5b2f3055d6de1fcaa22b",
+      $or: [
+        { reminderInviato: false },
+        { reminderInviato: { $exists: false } }
+      ]
+    });
+
+    const now = new Date();
+
+    for (const lead of leads) {
+      const appFissato = lead.appFissato; // Assumendo che appFissato sia una stringa nel formato "dd-MM-yy HH:mm"
+      const [datePart, timePart] = appFissato.split(' ');
+      const [year, month, day] = datePart.split('-').map(Number);
+      const [hours, minutes] = timePart.split(':').map(Number);
+
+      const appointmentDate = new Date(`20${year}`, month - 1, day, hours, minutes);
+
+      const timeDifference = appointmentDate - now;
+      const hoursDifference = timeDifference / (1000 * 60 * 60);
+
+      if (hoursDifference > 0 && hoursDifference < 24) {
+        await trigger({
+          nome: lead.nome,
+          email: lead.email,
+          numeroTelefono: lead.numeroTelefono,
+          città: lead.città,
+          trattamento: lead.trattamento,
+          esito: lead.esito,
+          appDate: lead.appFissato,
+          luogo: lead.luogo,
+        }, {
+          nome: "Tommaso",
+          telefono: "3791715158",
+        }, flows.fissato)
+        lead.reminderInviato = true;
+        await lead.save();
+        console.log(`Reminder inviato per il lead con ID: ${lead.email}`);
+      }
+    }
+  } catch (error) {
+    console.error('Errore durante il controllo dei reminder:', error);
+  }
+}
+
+// Pianifica il cron job per eseguire la funzione ogni ora
+cron.schedule('0 * * * *', () => {
+  console.log('Eseguo il controllo dei reminder per i lead fissati');
+  checkAndSendReminders();
+});
+//checkAndSendReminders();
 
 async function updateAssignedField() {
   try {

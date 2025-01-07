@@ -93,6 +93,8 @@ const LeadSchema = new Schema({
     summary: String,
     appDate: String,
     appFissato: String,
+    reminderInviato: Boolean,
+    idDeasoft: String
   });
 
   LeadSchema.pre('save', function(next) {

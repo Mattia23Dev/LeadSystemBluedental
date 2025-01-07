@@ -997,7 +997,7 @@ async function fetchEmailsFromSheet() {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: '1kKa_lDiRToed9H_4SEo6lDd4hzdyEeXzi87T7OZFilo',
-    range: 'Sheet1!B2:B1000',
+    range: 'EXPORT - Deasoft!A1',
   });
 
   const rows = response.data.values;
@@ -1007,6 +1007,47 @@ async function fetchEmailsFromSheet() {
   } else {
     console.log('No data found.');
     return [];
+  }
+}
+
+async function fetchLeadsUpdatesFromSheet() {
+  const authClient = await authorize();
+  const sheets = google.sheets({ version: 'v4', auth: authClient });
+
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: '1Jvu5oLq2kxvua86qTBU3OSGlBX6SZqTy8j0UjRSMqzU',
+    range: "'EXPORT-Deasoft'!A3:K1000", // Include le colonne I, J e K
+  });
+
+  const rows = response.data.values;
+  console.log(response.data);
+  if (rows.length) {
+    for (const row of rows) {
+      const idDeasoft = row[0]; // Supponendo che l'ID Deasoft sia nella colonna A
+      const esitoI = row[8]; // Colonna I
+      const esitoJ = row[9]; // Colonna J
+      const esitoK = row[10]; // Colonna K
+
+      // Cerca nel database le lead con l'utente specificato e l'idDeasoft
+      const lead = await Lead.findOne({
+        utente: "664c5b2f3055d6de1fcaa22b",
+        idDeasoft: idDeasoft,
+      });
+
+      if (lead) {
+        if (esitoK == "si"){
+          lead.esito = "Fatturato"
+        } else if (esitoI == "si"){
+          lead.esito = "Presentato"
+        }
+        await lead.save();
+        console.log(`Lead aggiornata: ${idDeasoft}`);
+      } else {
+        console.log(`Lead non trovata: ${idDeasoft}`);
+      }
+    }
+  } else {
+    console.log('No data found.');
   }
 }
 
@@ -1058,11 +1099,13 @@ cron.schedule('10 1 * * *', () => {
 cron.schedule('30 1 * * *', () => {
   runExport(writeDataSocial);
 })
-
+//runExport(writeDataSocial);
 cron.schedule('30 2 * * *', () => {
   runExport(writeDataCallCenter);
 })
-
+cron.schedule('30 11 * * *', () => {
+  fetchLeadsUpdatesFromSheet();
+})
 /*cron.schedule('20 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   GetSheetAffiliateData();
 });

@@ -660,8 +660,8 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
               trattamento: newLead.trattamento,
               esito: "Da contattare",
             }, {
-              nome: "Tommaso",
-              telefono: "3791715158",
+              nome: "Lorenzo",
+              telefono: "3514871035",
             }, flows.daContattare)
             //await sendNotification(user._id);
             //await sendEmailLeadArrivati(user._id);
@@ -1099,8 +1099,8 @@ async function checkAndSendReminders() {
           appDate: lead.appFissato,
           luogo: lead.luogo,
         }, {
-          nome: "Tommaso",
-          telefono: "3791715158",
+          nome: "Lorenzo",
+          telefono: "3514871035",
         }, flows.fissato)
         lead.reminderInviato = true;
         await lead.save();

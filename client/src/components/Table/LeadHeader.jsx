@@ -13,10 +13,23 @@ export default function LeadHeader({
   const userId = state.user._id;
   const ref = React.useRef(null);
 
+  const leadTypeToClassName = {
+    "Da contattare": "E1",
+    "Appuntamento": "E2",
+    "Non risponde": "E3",
+    "Da richiamare": "E4",
+    "Non interessato": "E5",
+    "Fissato": "E6",
+    "Presentato": "E7",
+    "Annullato": "E8",
+    "Non presentato": "E9"
+  };
+
+  const classNameNumber = leadTypeToClassName[type] || 0;
 
   return (
     <div
-      className={"secheader "}
+      className={`secheader `}
       ref={ref}
       onClick={() => {
         if (type == "Da contattare")
@@ -36,6 +49,10 @@ export default function LeadHeader({
       }
         else if (type == "Opportunità")
           SETtoggles({ ...toggles, opportunita: !toggles.opportunita })
+        else if (type == "Appuntamento")
+          SETtoggles({ ...toggles, appuntamento: !toggles.appuntamento })
+        else if (type == "Fatturato")
+          SETtoggles({ ...toggles, fatturato: !toggles.fatturato })
         else if (type == "In valutazione")
           SETtoggles({ ...toggles, invalutazione: !toggles.invalutazione })
         else if (type == "Fissato")

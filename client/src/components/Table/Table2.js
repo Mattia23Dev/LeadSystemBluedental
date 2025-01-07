@@ -162,7 +162,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
     }
   }, [])
 
-  const patientTypes = ["Nuovo paziente", "Gia’ paziente"];
+  const patientTypes = ["Nuovo paziente", "Gia' paziente"];
   const treatments = ["Impianti", "Pulizia dei denti", "Protesi Mobile", "Sbiancamento", "Ortodonzia", "Faccette dentali", "Generico"];
   const locations = [
     "Desenzano Del Garda", "Melzo", "Carpi", "Lodi", "Cantù", "Mantova", "Seregno", "Milano Piazza Castelli", "Abbiategrasso",
@@ -1102,6 +1102,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
 
   const [toggles, SETtoggles] = useState({
     dacontattare: false,
+    appuntamento: false,
     inlavorazione: false,
     noninteressato: false,
     opportunita: false,
@@ -1114,6 +1115,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
     presentato: false,
     nonPresentato: false,
     annullato: false,
+    fatturato: false,
   })
 
 
@@ -1654,7 +1656,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
         <div className="sectionswrapper"
           ref={secref}
         >
-          <div className="secwrap"
+          <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E1" : ""}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Da contattare")}
             onDragEnd={handleDragEnd}
@@ -1682,7 +1684,36 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               )}
             </div>
           </div>
-          <div className="secwrap"
+          {userFixId === "664c5b2f3055d6de1fcaa22b" && 
+          <div className="secwrap E2"
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, "Appuntamento")}
+            onDragEnd={handleDragEnd}
+          >
+            <LeadHeader
+              handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
+              type={"Appuntamento"}
+              refreshate={false}
+              toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
+            <div className="entries">
+              {toggles.appuntamento && filteredData && filteredData.filter(x => x.status == "Appuntamento").reverse().map((row, k) =>
+                <LeadEntry
+                  id={JSON.stringify(row)}
+                  index={k}
+                  handleRowClick={handleRowClick} data={row}
+                  handleModifyPopup={handleModifyPopup}
+                  secref={secref}
+                  handleModifyPopupEsito={handleModifyPopupEsito}
+                  handleDelete={handleDelete}
+                  campagna={row.campagna}
+                  nuovaEtichetta={nuovaEtichetta}
+                  setNuovaEtichetta={setNuovaEtichetta}
+                  selezionOrientatore={openChangeOrientatore}
+                />
+              )}
+            </div>
+          </div>}
+          <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E3" : ""}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Non risponde")}
             onDragEnd={handleDragEnd}
@@ -1713,7 +1744,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               )}
             </div>
           </div>
-          <div className="secwrap"
+          <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E4" : ""}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Da richiamare")}
             onDragEnd={handleDragEnd}
@@ -1741,7 +1772,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               )}
             </div>
           </div>
-          <div className="secwrap"
+          <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E5" : ""}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Non interessato")}
             onDragEnd={handleDragEnd}
@@ -1771,7 +1802,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               )}
             </div>
           </div>
-          <div className="secwrap"
+          <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E6" : ""}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Fissato")}
             onDragEnd={handleDragEnd}
@@ -1801,7 +1832,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
           </div>
           {userFixId === "664c5b2f3055d6de1fcaa22b" && 
           <>
-          <div className="secwrap"
+          <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E7" : ""}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Presentato")}
             onDragEnd={handleDragEnd}
@@ -1829,7 +1860,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               )}
             </div>
           </div>
-          <div className="secwrap"
+          <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E8" : ""}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Annullato")}
             onDragEnd={handleDragEnd}
@@ -1857,7 +1888,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               )}
             </div>
           </div>
-          <div className="secwrap"
+          <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E9" : ""}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Non presentato")}
             onDragEnd={handleDragEnd}
@@ -1869,6 +1900,34 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
             <div className="entries">
               {toggles.nonPresentato && filteredData && filteredData.filter(x => x.status == "Non presentato").reverse().map((row, k) =>
+                <LeadEntry
+                  id={JSON.stringify(row)}
+                  index={k}
+                  handleRowClick={handleRowClick} data={row}
+                  handleModifyPopup={handleModifyPopup}
+                  secref={secref}
+                  handleModifyPopupEsito={handleModifyPopupEsito}
+                  handleDelete={handleDelete}
+                  campagna={row.campagna}
+                  nuovaEtichetta={nuovaEtichetta}
+                  setNuovaEtichetta={setNuovaEtichetta}
+                  selezionOrientatore={openChangeOrientatore}
+                />
+              )}
+            </div>
+          </div>
+          <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E10" : ""}`}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, "Fatturato")}
+            onDragEnd={handleDragEnd}
+          >
+            <LeadHeader
+              handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
+              type={"Fatturato"}
+              refreshate={false}
+              toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
+            <div className="entries">
+              {toggles.fatturato && filteredData && filteredData.filter(x => x.status == "Fatturato").reverse().map((row, k) =>
                 <LeadEntry
                   id={JSON.stringify(row)}
                   index={k}

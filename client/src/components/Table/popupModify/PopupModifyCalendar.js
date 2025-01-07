@@ -26,6 +26,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
     const [città, setCittà] = useState(lead.città ? lead.città.charAt(0).toUpperCase() + lead.città.slice(1) : '');
     const [note, setNote] = useState(lead.note ? lead.note : '');
     const [orientatoriOptions, setOrientatoriOptions] = useState([]);
+    const [idDeasoft, setIdDeasoft] = useState(lead.idDeasoft ? lead.idDeasoft : '');
     const [esito, setEsito] = useState(lead.status);
     const [trattamento, setTrattamento] = useState(lead.trattamento ? lead.trattamento.replace(/_/g, ' ') : "");
     const [fatturato, setFatturato] = useState(lead.fatturato ? lead.fatturato : '0');
@@ -744,7 +745,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                 <div className='popup-top'>
                    <div>           
                         <div>
-                            <h4 className={openPage == "scheda" ? "page-scheda" : ""} onClick={() => setOpenPage("scheda")}>Scheda lead</h4>
+                            <h4 className={openPage == "scheda" ? "page-scheda" : ""} onClick={() => setOpenPage("scheda")}>Scheda lead </h4>
                             <hr className={openPage == "scheda" ? "page-scheda-linea" : ""} />
                         </div>
                         {/*<div>
@@ -765,6 +766,12 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                                         <input placeholder={lead.name} value={nome} onChange={(e) => setName(e.target.value)} />
                                         <FaSave className='salva-nome' onClick={handleSaveName} />
                                     </p>
+                                    }
+                                    {userFixId === "664c5b2f3055d6de1fcaa22b" &&
+                                    <>
+                                    <span className='span-id-deasoft'>ID Deasoft</span>
+                                    <input className='input-id-deasoft' placeholder={lead?.idDeasoft} value={idDeasoft} onChange={(e) => setIdDeasoft(e.target.value)} />
+                                    </>
                                     }
                                     <p><FiClock color='#30978B' /> Data di <b>creazione lead</b>: <span>{formatDate(lead.date)}</span></p>
                                     <p>{lead.lastModify && lead.lastModify !== null ? <><FiClock color='#3471CC' /> Data <b>ultima modifica</b>: <span>{formatDate(lead.date)}</span></> : ""}</p>

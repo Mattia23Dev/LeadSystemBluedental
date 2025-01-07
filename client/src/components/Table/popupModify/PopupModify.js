@@ -25,6 +25,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
     const [orientatori, setOrientatori] = useState(lead.orientatore ? lead.orientatore : '');
     const [città, setCittà] = useState(lead.città ? lead.città.charAt(0).toUpperCase() + lead.città.slice(1) : '');
     const [note, setNote] = useState(lead.note ? lead.note : '');
+    const [idDeasoft, setIdDeasoft] = useState(lead.idDeasoft ? lead.idDeasoft : '');
     const [orientatoriOptions, setOrientatoriOptions] = useState([]);
     const [esito, setEsito] = useState(lead.status);
     const [trattamento, setTrattamento] = useState(lead.trattamento ? lead.trattamento.replace(/_/g, ' ') : "");
@@ -40,7 +41,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
     const [tentativiChiamata, setTentativiChiamata] = useState(lead.tentativiChiamata ? lead.tentativiChiamata : "0");
     console.log(location, treatment, patientType)
     const [motivo, setMotivo] = useState(lead.motivo ? lead.motivo : "");
-    const patientTypes = ["Nuovo paziente", "Gia’ paziente"];
+    const patientTypes = ["Nuovo paziente", "Gia' paziente"];
     const treatments = ["Impianti", "Pulizia dei denti", "Protesi Mobile", "Sbiancamento", "Ortodonzia", "Faccette dentali", "Generico"];
     const locations = [
       "Desenzano Del Garda", "Melzo", "Carpi", "Lodi", "Cantù", "Mantova", "Seregno", "Milano Piazza Castelli", "Abbiategrasso",
@@ -243,6 +244,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
             setPatientType(response.data.tipo || '');
             setTreatment(response.data.trattPrenotato || '');
             setLocation(response.data.luogo || '');
+            setIdDeasoft(response.data.idDeasoft || '');
           } catch (err) {
             console.error('Errore nel recupero del lead:', err);
           }
@@ -315,7 +317,8 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                         motivo,
                         città,
                         trattamento,
-                        tentativiChiamata
+                        tentativiChiamata,
+                        idDeasoft: idDeasoft ? idDeasoft : '',
                     };
                     const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
                     fetchLeads();
@@ -338,7 +341,8 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                     motivo: "",
                     città,
                     trattamento,
-                    tentativiChiamata
+                    tentativiChiamata,
+                    idDeasoft: idDeasoft ? idDeasoft : '',
                 };
                 const response = await axios.put(`/lead/${userFixId}/update/${leadId}`, modifyLead);
                 fetchLeads();
@@ -780,6 +784,12 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                         <input placeholder={lead.name} value={nome} onChange={(e) => setName(e.target.value)} />
                                         <FaSave className='salva-nome' onClick={handleSaveName} />
                                     </p>
+                                    }
+                                    {userFixId === "664c5b2f3055d6de1fcaa22b" &&
+                                    <>
+                                    <span className='span-id-deasoft'>ID Deasoft</span>
+                                    <input className='input-id-deasoft' placeholder={leadF?.idDeasoft} value={idDeasoft} onChange={(e) => setIdDeasoft(e.target.value)} />
+                                    </>
                                     }
                                     <p><FiClock color='#30978B' /> Data di <b>creazione lead</b>: <span>{formatDate(lead.date)}</span></p>
                                     <p>{lead.lastModify && lead.lastModify !== null ? <><FiClock color='#3471CC' /> Data <b>ultima modifica</b>: <span>{formatDate(lead.lastModify)}</span></> : ""}</p>

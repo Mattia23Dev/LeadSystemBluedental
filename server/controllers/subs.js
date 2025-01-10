@@ -102,15 +102,15 @@ axios.post(url, data, { headers })
 
 //Da contattare
 /*trigger({
-  nome: "Mario Rossi",
-  email: "mario.rossi@example.com",
-  numeroTelefono: "+393313869850",
+  nome: "Francesca Di Lallo",
+  email: "francescadilallo@example.com",
+  numeroTelefono: "+393400559975",
   città: "Roma",
   trattamento: "Implantologia a carico immediato",
   esito: "Da contattare",
 }, {
-  nome: "Gianni",
-  telefono: "3334478306",
+  nome: "Lorenzo",
+  telefono: "3514871035",
 }, flows.daContattare)*/
 
 //Fissato

@@ -94,12 +94,13 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
         }
       }, [lead.recallHours]);
 
+      const [leadF, setLeadF] = useState();
       useEffect(() => {
         const fetchLead = async () => {
           try {
             const response = await axios.get(`/leads/${lead.id}`);
             console.log(response.data)
-
+            setLeadF(response.data);
             setEmail(response.data.email || '');
             setCampagna(response.data.campagna || '');
             setNumeroTelefono(response.data.numeroTelefono || '');
@@ -776,7 +777,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                                     <p><FiClock color='#30978B' /> Data di <b>creazione lead</b>: <span>{formatDate(lead.date)}</span></p>
                                     <p>{lead.lastModify && lead.lastModify !== null ? <><FiClock color='#3471CC' /> Data <b>ultima modifica</b>: <span>{formatDate(lead.date)}</span></> : ""}</p>
                                     {lead.appDate && lead?.appDate?.trim() !== "" && <h6><FiClock color='#3471CC' /> Data <b>appuntamento:</b> <span>{formatDateString(lead.appDate)}</span></h6>}
-                                    {(lead.appFissato && lead.status === "Fissato" && lead?.appFissato !== null) && <h6><FiClock color='#3471CC' /> Data <b>fissato:</b> <span>{formatDateString(lead.appFissato)}</span></h6>}
+                                    {(leadF?.appFissato && leadF.status === "Fissato" && leadF?.appFissato !== null) && <h6><FiClock color='#3471CC' /> Data <b>fissato:</b> <span>{formatDateString(leadF?.appFissato)}</span></h6>}
                                     <p style={{margin: '17px 0 10px 0'}}>Stato lead: 
                                         <span onClick={() => setChooseMotivo(true)}>{esito == "Non interessato" ? "Lead persa" : esito} <FaPencilAlt size={12} style={{marginLeft: '3px', cursor: 'pointer'}} /></span>
                                         {esito === "Fissato" && fatturato !== "0" && <span>{fatturato}€</span>}

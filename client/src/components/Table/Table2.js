@@ -1489,10 +1489,10 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
                                      <span><span>o</span></span>
                                      Non risponde
                                  </div>
-                                 <div className={esito === "Da richiamare" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Da richiamare')}>
+                                 {userFixId !== "664c5b2f3055d6de1fcaa22b" && <div className={esito === "Da richiamare" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Da richiamare')}>
                                      <span><span>o</span></span>
                                      Da richiamare
-                                 </div>
+                                 </div>}
                                  <div className={esito === "Non interessato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Non interessato')}>
                                      <span><span>o</span></span>
                                      Lead persa
@@ -1744,7 +1744,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               )}
             </div>
           </div>
-          <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E4" : ""}`}
+          {userFixId !== "664c5b2f3055d6de1fcaa22b" && <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E4" : ""}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Da richiamare")}
             onDragEnd={handleDragEnd}
@@ -1771,7 +1771,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
                 />
               )}
             </div>
-          </div>
+          </div>}
           <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E5" : ""}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Non interessato")}

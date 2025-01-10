@@ -705,7 +705,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
             };
             existingLead.summary = conversation_summary;
             existingLead.appDate = specificFieldApp.value;
-            if (specificFieldApp.value && specificFieldApp.value !== ""){
+            if (specificFieldApp.value && specificFieldApp.value !== "" && existingLead.esito !== "Fissato"){
               existingLead.esito = "Appuntamento";
             }
             if (esito && esito === "Annullato"){
@@ -794,7 +794,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
             };
             existingLead.summary = conversation_summary;
             existingLead.appDate = specificFieldApp.value;
-            if (specificFieldApp.value && specificFieldApp.value !== ""){
+            if (specificFieldApp.value && specificFieldApp.value !== "" && existingLead.esito !== "Fissato"){
               existingLead.esito = "Appuntamento";
             }
             existingLead.numeroTelefono = phone;

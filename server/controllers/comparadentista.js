@@ -676,7 +676,10 @@ const writeDataCallCenter = async (auth) => {
   const todayFormatted = formatDate(oggi);
   const yesterdayFormatted = formatDate(ieri);
 
-  const leads = await Lead.find({utente: "664c5b2f3055d6de1fcaa22b"}).populate('orientatori').populate('utente');
+  const leads = await Lead.find({
+    utente: "664c5b2f3055d6de1fcaa22b",
+    dataTimestamp: { $gt: new Date('2025-01-08T00:00:00.000Z') }
+  }).populate('orientatori').populate('utente');
   console.log(leads.length)
   const assegnatiLeadsComp = leads.filter((lead) => {
     const leadDate = new Date(lead.data);
@@ -721,8 +724,8 @@ const writeDataCallCenter = async (auth) => {
   };
   sheets.spreadsheets.values.append(
     {
-      spreadsheetId: '17pmPgqtw4DNzYvczEZuZPSQg6k49lPnOURibUMpbN7s',
-      range: 'EXPORT-CALL-CENTER!A1',
+      spreadsheetId: '1Jvu5oLq2kxvua86qTBU3OSGlBX6SZqTy8j0UjRSMqzU',
+      range: 'EXPORT-LS!A1',
       valueInputOption: 'RAW',
       resource: resource,
     },

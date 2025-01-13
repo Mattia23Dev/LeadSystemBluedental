@@ -4,6 +4,7 @@ const User = require('../models/user');
 const LeadDeleted = require("../models/leadDeleted");
 const {hashPassword, comparePassword} = require('../helpers/auth');
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 
 exports.createOrientatore = async (req, res) => {
     try {
@@ -214,6 +215,81 @@ exports.createOrientatore = async (req, res) => {
     }
   };
 
+  const trigger = (lead, orientatore, flowId) => {
+    const url = 'https://chat.leadsystem.app/api/users';
+  
+  const data = {
+    phone: lead?.numeroTelefono,
+    email: lead?.email,
+    first_name: lead?.nome,
+    last_name: lead?.nome,
+    full_name: lead?.nome,
+    //gender: "male",
+    actions: [
+      {
+        action: "add_tag",
+        tag_name: "Da contattare"
+      },
+      {
+        action: "set_field_value",
+        field_name: "City",
+        value: lead?.città,
+      },
+      {
+        action: "set_field_value",
+        field_name: "Numero_Operatore",
+        value: orientatore?.telefono,
+      },
+      {
+        action: "set_field_value",
+        field_name: "Operatore",
+        value: orientatore?.nome,
+      },
+      {
+        action: "set_field_value",
+        field_name: "Trattamento",
+        value: lead?.trattamento,
+      },
+      {
+        action: "set_field_value",
+        field_name: "Esito",
+        value: lead?.esito,
+      },
+      lead?.appDate && {
+        action: "set_field_value",
+        field_name: "Appuntamento_Orientatore",
+        value: lead?.appDate,
+      },
+      lead?.luogo && {
+        action: "set_field_value",
+        field_name: "sede",
+        value: lead?.luogo,
+      },
+    ]
+  }
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-ACCESS-TOKEN': '1832534.RwcFj0R5OfNOH4SQ0U0cHLhcUHoj0lfIIEygahubrjukN4p8'
+  };
+  
+  axios.post(url, data, { headers })
+    .then(response => {
+      console.log('Response:', response.data);
+      if (response.data.success){
+        const id = response.data.data.id;
+        axios.post(url+`/${id}/send/${flowId}`, null, {headers}).then((res) => {
+          console.log(res)
+        })
+        .catch(error => console.log(error))
+      } else {
+        console.log("Nientee")
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error.response ? error.response.data : error.message);
+    });
+  }
 
   exports.updateLead = async (req, res) => {
     try {
@@ -239,6 +315,22 @@ exports.createOrientatore = async (req, res) => {
         if (typeof req.body.orientatori === 'string' && req.body.orientatori.trim() === '') {
           req.body.orientatori = null;
         }
+      }
+
+      if (req.body.esito === "Fissato" && lead.esito !== "Fissato"){
+        await trigger({
+          nome: lead.nome,
+          email: lead.email,
+          numeroTelefono: lead.numeroTelefono,
+          città: lead.città,
+          trattamento: req.body.trattPrenotato,
+          esito: req.body.esito,
+          appDate: req.body.appFissato,
+          luogo: req.body.luogo,
+        }, {
+          nome: "Lorenzo",
+          telefono: "3514871035",
+        }, "1736760347221")
       }
 
       const mantenereAppFissato = lead.utente.toString() === "664c5b2f3055d6de1fcaa22b" && req.body.esito !== "Fissato" && lead.esito === "Fissato";

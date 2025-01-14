@@ -584,8 +584,9 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
     console.log(`Lead per Call Center: ${leadsForCallCenter.length}`);
     console.log(`Lead per Bludental: ${leadsForBludental.length}`);
     
-
-    if (callCenterUser.dailyLead < callCenterUser.dailyCap){
+    const today = new Date();
+    const isWeekend = today.getDay() === 6 || today.getDay() === 0; // 6 = Sabato, 0 = Domenica
+    if (!isWeekend && callCenterUser.dailyLead < callCenterUser.dailyCap){
       for (const lead of leadsForCallCenter) {
         if (lead.assigned) {
           console.log(`Il lead ${lead?._id} è già stato assegnato.`);

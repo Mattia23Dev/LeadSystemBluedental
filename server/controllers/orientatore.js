@@ -404,7 +404,7 @@ exports.createOrientatore = async (req, res) => {
         }
       }
 
-      if (req.body.esito === "Fissato" && lead.esito !== "Fissato"){
+      if (req.body.esito === "Fissato" && lead.esito !== "Fissato" && userId == "664c5b2f3055d6de1fcaa22b"){
         await trigger({
           nome: lead.nome,
           email: lead.email,

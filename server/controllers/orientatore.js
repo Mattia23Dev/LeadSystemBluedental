@@ -347,7 +347,7 @@ exports.createOrientatore = async (req, res) => {
         field_name: "sede",
         value: lead?.luogo,
       },
-      {
+      lead?.luogo && {
         action: "set_field_value",
         field_name: "link_sede",
         value: getLocationUrl(lead?.luogo),
@@ -418,6 +418,17 @@ exports.createOrientatore = async (req, res) => {
           nome: "Lorenzo",
           telefono: "3514871035",
         }, "1736760347221")
+      }
+      if (req.body.esito === "Non risponde" && lead.esito !== "Non risponde" && userId == "664c5b2f3055d6de1fcaa22b"){
+        await trigger({
+          nome: lead.nome,
+          email: lead.email,
+          numeroTelefono: lead.numeroTelefono,
+          città: lead.città,
+        }, {
+          nome: "Lorenzo",
+          telefono: "3514871035",
+        }, "1734106232317")
       }
 
       const mantenereAppFissato = lead.utente.toString() === "664c5b2f3055d6de1fcaa22b" && req.body.esito !== "Fissato" && lead.esito === "Fissato";

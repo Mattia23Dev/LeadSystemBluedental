@@ -425,6 +425,7 @@ exports.createOrientatore = async (req, res) => {
           email: lead.email,
           numeroTelefono: lead.numeroTelefono,
           città: lead.città,
+          esito: "Non risponde",
         }, {
           nome: "Lorenzo",
           telefono: "3514871035",

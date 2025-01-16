@@ -711,6 +711,9 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
             if (esito && esito === "Annullato"){
               existingLead.esito = "Annullato";
             }
+            if (esito && esito === "Lead persa"){
+              existingLead.esito = "Non interessato";
+            }
             existingLead.numeroTelefono = phone;
             existingLead.nome = full_name;
             await existingLead.save()

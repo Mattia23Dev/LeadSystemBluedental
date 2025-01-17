@@ -7,6 +7,87 @@ const moment = require('moment');
 const Orientatore = require("../models/orientatori")
 const LastLeadUser = require("../models/lastLeadUser");
 
+const flows = {
+  daContattare: "1734106160819",
+  fissato: "1734106194251",
+  nonRisponde: "1734106232317",
+}
+const trigger = (lead, orientatore, flowId) => {
+  const url = 'https://chat.leadsystem.app/api/users';
+
+const data = {
+  phone: lead?.numeroTelefono,
+  email: lead?.email,
+  first_name: lead?.nome,
+  last_name: lead?.nome,
+  full_name: lead?.nome,
+  //gender: "male",
+  actions: [
+    {
+      action: "add_tag",
+      tag_name: "Da contattare"
+    },
+    {
+      action: "set_field_value",
+      field_name: "City",
+      value: lead?.città,
+    },
+    {
+      action: "set_field_value",
+      field_name: "Numero_Operatore",
+      value: orientatore?.telefono,
+    },
+    {
+      action: "set_field_value",
+      field_name: "Operatore",
+      value: orientatore?.nome,
+    },
+    {
+      action: "set_field_value",
+      field_name: "Trattamento",
+      value: lead?.trattamento,
+    },
+    {
+      action: "set_field_value",
+      field_name: "Esito",
+      value: lead?.esito,
+    },
+    lead?.appDate && {
+      action: "set_field_value",
+      field_name: "Appuntamento_Orientatore",
+      value: lead?.appDate,
+    },
+    lead?.luogo && {
+      action: "set_field_value",
+      field_name: "sede",
+      value: lead?.luogo,
+    },
+  ]
+}
+
+const headers = {
+  'Content-Type': 'application/json',
+  'X-ACCESS-TOKEN': '1832534.RwcFj0R5OfNOH4SQ0U0cHLhcUHoj0lfIIEygahubrjukN4p8'
+};
+
+axios.post(url, data, { headers })
+  .then(response => {
+    console.log('Response:', response.data);
+    if (response.data.success){
+      const id = response.data.data.id;
+      axios.post(url+`/${id}/send/${flowId}`, null, {headers}).then((res) => {
+        console.log(res)
+      })
+      .catch(error => console.log(error))
+    } else {
+      console.log("Nientee")
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error.response ? error.response.data : error.message);
+  });
+}
+
 function isValidPhoneNumber(phoneNumber) {
     const phoneRegex = /^(?:\+?39)?(?:\d{10})$/;
     return phoneRegex.test(phoneNumber);
@@ -411,7 +492,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
           esito: 'Da contattare',
           città: città || "",
           trattamento: "Implantologia per singolo dente",
-          orientatori: nextUser ? nextUser._id : randomUser._id,
+          orientatori: null, //nextUser ? nextUser._id : randomUser._id,
           utente: "664c5b2f3055d6de1fcaa22b", //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
           note: "",
           fatturato: "",
@@ -443,6 +524,17 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
             await newLead.save();
             console.log(`Assegnato il lead ${lead.nome} all'utente Dentista`);
             await user.save();
+            await trigger({
+              nome: newLead.nome,
+              email: newLead.email,
+              numeroTelefono: newLead.numeroTelefono,
+              città: newLead.città,
+              trattamento: newLead.trattamento,
+              esito: "Da contattare",
+            }, {
+              nome: "Lorenzo",
+              telefono: "3514871035",
+            }, flows.daContattare)
           } else {
             console.log(`Già assegnato il lead ${lead.nome} all'utente Dentista`)
             if (!isValidPhoneNumber(phone)){
@@ -495,7 +587,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
           esito: 'Da contattare',
           città: città || '',
           trattamento: "Implantologia per singolo dente",
-          orientatori: nextUser ? nextUser._id : randomUser._id,
+          orientatori: null, //nextUser ? nextUser._id : randomUser._id,
           utente: "664c5b2f3055d6de1fcaa22b", //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
           note: "",
           fatturato: "",
@@ -525,6 +617,17 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
             lead.assigned = true;
             await lead.save();
             await newLead.save();
+            await trigger({
+              nome: newLead.nome,
+              email: newLead.email,
+              numeroTelefono: newLead.numeroTelefono,
+              città: newLead.città,
+              trattamento: newLead.trattamento,
+              esito: "Da contattare",
+            }, {
+              nome: "Lorenzo",
+              telefono: "3514871035",
+            }, flows.daContattare)
             console.log(`Assegnato il lead ${lead.nome} all'utente Dentista`);
             await user.save();
           } else {

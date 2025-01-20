@@ -141,7 +141,8 @@ const calculateAndAssignLeadsEveryDay = async () => {
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
       $and: [
         { name: { $not: { $regex: /Meta Web/, $options: 'i' } } },
-        { name: { $not: { $regex: /ESTETICA/, $options: 'i' } } }
+        { name: { $not: { $regex: /ESTETICA/, $options: 'i' } } },
+        { name: { $not: { $regex: /GFU/, $options: 'i' } } }
       ] // 'i' per ignorare il case sensitivity
     }).limit(100);
     const totalLeads = leads.length;
@@ -560,13 +561,13 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
       name: { $regex: /Meta Web/, $options: 'i' }
     }).limit(50);
-    let leadsN = await LeadFacebook.find({
+    let leadsGfu = await LeadFacebook.find({
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
-      name: { $regex: /Meta Web/, $options: 'i' }
+      name: { $regex: /GFU/, $options: 'i' }
     });
     
     const totalLeads = leads.length;
-    console.log('Iscrizioni:', leadsN.length);
+    console.log('Iscrizioni:', leadsGfu.length);
     console.log( 'Utenti:'+ users.length);
 
     if (totalLeads === 0) {
@@ -578,7 +579,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
     const leadsForBludentalCount = totalLeads - leadsForCallCenterCount;
     
     // Divide l'array di lead in due parti
-    const leadsForCallCenter = leads.slice(0, leadsForCallCenterCount);
+    const leadsForCallCenter = leads.slice(0, leadsForCallCenterCount).concat(leadsGfu);
     let leadsForBludental = leads.slice(leadsForCallCenterCount);
     
     console.log(`Lead per Call Center: ${leadsForCallCenter.length}`);

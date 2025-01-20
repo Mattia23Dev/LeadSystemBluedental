@@ -1038,11 +1038,11 @@ async function fetchLeadsUpdatesFromSheet() {
       });
 
       if (lead) {
-        if (esitoK == "si"){
-          lead.esito = "Fatturato"
-        } else if (esitoI == "si"){
-          lead.esito = "Presentato"
-        }
+        if (esitoK?.toString().toLowerCase() === "si") {
+          lead.esito = "Fatturato";
+        } else if (esitoI?.toString().toLowerCase() === "si") {
+          lead.esito = "Presentato";
+        }        
         await lead.save();
         console.log(`Lead aggiornata: ${idDeasoft}`);
       } else {

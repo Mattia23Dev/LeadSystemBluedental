@@ -55,7 +55,7 @@ export default function LeadEntry({ secref, id, index, data, handleModifyPopup, 
 
   if (data)
     return (
-      <div key={index} className={data.appDate && data.appDate !== "" ? "leadentry mgm-lead" : "leadentry"}
+      <div key={index} className={data.appDate && data.appDate !== "" ? "leadentry mgm-lead" : data.campagna.includes("GFU") ? "leadentry gfu-lead" : "leadentry"}
         ref={ref}
         draggable="true"
         onDragStart={handleDragStart}

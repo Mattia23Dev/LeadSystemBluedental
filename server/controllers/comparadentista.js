@@ -693,7 +693,7 @@ const writeDataCallCenter = async (auth) => {
       lead.email,
       lead.numeroTelefono,
       lead.campagna ? lead.campagna.trim().toLocaleLowerCase() === 'messenger' ? "Messenger" : lead.campagna : '',
-      "meta",
+      lead.utmCampaign.includes("GFU") ? "GFU" : "meta",
       "Lead form",
       lead.utmCampaign ? lead.utmCampaign.toString() : lead.campagna.trim().toLocaleLowerCase() === 'messenger' ? "Messenger" : '', 
       lead.utmAdset ? lead.utmAdset.toString() : lead.campagna.trim().toLocaleLowerCase() === "messenger" ? 'Messenger' : '',

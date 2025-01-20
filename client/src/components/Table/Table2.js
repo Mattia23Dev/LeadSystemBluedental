@@ -1245,7 +1245,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
         fatturato,
         motivo,
         tipo,
-        trattPrenotato, 
+        trattPrenotato,
         luogo,
         appFissato: appFissato ? appFissato : null,
       };

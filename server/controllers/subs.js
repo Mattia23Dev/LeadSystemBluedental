@@ -668,7 +668,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
             //await sendNotification(user._id);
             //await sendEmailLeadArrivati(user._id);
 
-            console.log(`Assegnato il lead ${lead?._id} all'utente ${callCenterUser.name}`);            
+            console.log(`Assegnato il lead ${lead?._id} all'utente ${callCenterUser.name}`);
           } else {
             callCenterUser.save()
 

@@ -1023,13 +1023,14 @@ async function fetchLeadsUpdatesFromSheet() {
   });
 
   const rows = response.data.values;
-  console.log(response.data);
+  //console.log(response.data);
   if (rows.length) {
     for (const row of rows) {
       const idDeasoft = row[0]; // Supponendo che l'ID Deasoft sia nella colonna A
       const esitoI = row[8]; // Colonna I
       const esitoJ = row[9]; // Colonna J
       const esitoK = row[10]; // Colonna K
+      //console.log(esitoI, esitoK)
 
       // Cerca nel database le lead con l'utente specificato e l'idDeasoft
       const lead = await Lead.findOne({
@@ -1038,11 +1039,11 @@ async function fetchLeadsUpdatesFromSheet() {
       });
 
       if (lead) {
-        if (esitoK?.toString().toLowerCase() === "si") {
+        if (esitoK?.toString().toLowerCase() === "sì") {
           lead.esito = "Fatturato";
-        } else if (esitoI?.toString().toLowerCase() === "si") {
+        } else if (esitoI?.toString().toLowerCase() === "sì") {
           lead.esito = "Presentato";
-        }        
+        }
         await lead.save();
         console.log(`Lead aggiornata: ${idDeasoft}`);
       } else {
@@ -1053,7 +1054,7 @@ async function fetchLeadsUpdatesFromSheet() {
     console.log('No data found.');
   }
 }
-
+//fetchLeadsUpdatesFromSheet();
 async function findLeadsByEmails(emails) {
   for (const email of emails) {
     const lead = await LeadFacebook.findOne({

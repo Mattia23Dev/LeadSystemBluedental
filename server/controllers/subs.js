@@ -644,15 +644,15 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
     const leadsForBludentalCount = totalLeads - leadsForCallCenterCount;
     
     // Divide l'array di lead in due parti
-    const leadsForCallCenter = leads.slice(0, leadsForCallCenterCount).concat(leadsGfu);
-    let leadsForBludental = leads.slice(leadsForCallCenterCount);
+    const leadsForCallCenter = leadsGfu;
+    let leadsForBludental = leads;
     
     console.log(`Lead per Call Center: ${leadsForCallCenter.length}`);
     console.log(`Lead per Bludental: ${leadsForBludental.length}`);
     
     const today = new Date();
     const isWeekend = today.getDay() === 6 || today.getDay() === 0; // 6 = Sabato, 0 = Domenica
-    if (!isWeekend && callCenterUser.dailyLead < callCenterUser.dailyCap){
+    //if (!isWeekend && callCenterUser.dailyLead < callCenterUser.dailyCap){
       for (const lead of leadsForCallCenter) {
         if (lead.assigned) {
           console.log(`Il lead ${lead?._id} è già stato assegnato.`);
@@ -733,7 +733,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
             const currentHour = new Date().getHours();
             if (currentHour >= 9 && currentHour < 20) {
-                makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome);
+                //makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome);
             }
             //await sendNotification(user._id);
             //await sendEmailLeadArrivati(user._id);
@@ -751,9 +751,9 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
           console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
         }
       }      
-    } else {
-      leadsForBludental = leads;
-    }
+    //} else {
+    //  leadsForBludental = leads;
+    //}
 
     const lastUserLeadData = await LastLeadUser.findOne({});
     if (lastUserLeadData) {

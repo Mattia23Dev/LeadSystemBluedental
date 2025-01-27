@@ -396,6 +396,10 @@ exports.createOrientatore = async (req, res) => {
       const appuntamentoFissato = lead.appFissato;
       if (req.body.esito && req.body.esito !== lead.esito) {
         lead.dataCambiamentoEsito = new Date();
+
+        if (!lead.dataPrimaModifica) {
+          lead.dataPrimaModifica = new Date();
+        }
       }
 
       if ('orientatori' in req.body) {

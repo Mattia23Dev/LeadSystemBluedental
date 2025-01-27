@@ -328,6 +328,17 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
+function formatDateCambio(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 const logs = [];
 const getRequestFromFacebook = async () => {
   logs.splice(0, logs.length);
@@ -615,6 +626,7 @@ const writeDataSocial = async (auth) => {
       lead.orientatori && lead.orientatori !== null ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : "Non assegnato",
       lead.motivo ? lead.motivo : "",
       lead.esito === "Non interessato" ? "Lead persa" : lead.esito.toString(),
+      lead.dataPrimaModifica ? formatDate(lead.dataPrimaModifica) : 'Nessuna Data',
       lead.dataCambiamentoEsito ? formatDate(lead.dataCambiamentoEsito) : 'Nessuna Data', 
       lead.tipo ? lead.tipo : "",
       lead.trattPrenotato ? lead.trattPrenotato : "", 
@@ -701,6 +713,7 @@ const writeDataCallCenter = async (auth) => {
       lead.orientatori && lead.orientatori !== null ? lead.orientatori.nome + ' ' + lead.orientatori.cognome : "Non assegnato",
       lead.motivo ? lead.motivo : "",
       lead.esito === "Non interessato" ? "Lead persa" : lead.esito.toString(),
+      lead.dataPrimaModifica ? formatDate(lead.dataPrimaModifica) : 'Nessuna Data',
       lead.dataCambiamentoEsito ? formatDate(lead.dataCambiamentoEsito) : 'Nessuna Data', 
       lead.tipo ? lead.tipo : "",
       lead.trattPrenotato ? lead.trattPrenotato : "", 
@@ -1030,6 +1043,7 @@ async function fetchLeadsUpdatesFromSheet() {
       const esitoI = row[8]; // Colonna I
       const esitoJ = row[9]; // Colonna J
       const esitoK = row[10]; // Colonna K
+      const dataAppuntamento = row[11]; // Colonna L
       //console.log(esitoI, esitoK)
 
       // Cerca nel database le lead con l'utente specificato e l'idDeasoft

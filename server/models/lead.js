@@ -60,6 +60,10 @@ const LeadSchema = new Schema({
       type: Date,
       default: null,
     },
+    dataPrimaModifica: {
+      type: Date,
+      default: null,
+    },
     trattamento: {
       type: String,
     },

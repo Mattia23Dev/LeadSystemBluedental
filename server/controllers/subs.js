@@ -100,6 +100,36 @@ axios.post(url, data, { headers })
   });
 }
 
+async function makeOutboundCall(number, city, name) {
+  const url = 'https://twilio-11labs-call-agent-production.up.railway.app/outbound-call';
+  //const url = 'https://db25-217-138-198-165.ngrok-free.app/outbound-call';
+  number = number.replace(/\s+/g, '');
+
+  // Controlla e aggiusta il prefisso
+  if (!number.startsWith('+39')) {
+    if (number.startsWith('39') && number.length === 12) {
+      number = '+' + number;
+    } else if (number.length === 10) {
+      number = '+39' + number;
+    }
+  }
+
+  const data = {
+    number: number,
+    citta: city,
+    nome: name
+  };
+
+  try {
+    const response = await axios.post(url, data);
+    console.log('Risposta dal server:', response.data);
+  } catch (error) {
+    console.error('Errore durante la chiamata:', error);
+  }
+}
+
+//makeOutboundCall('+393313869850', 'Roma', 'Mattia');
+
 //Da contattare
 /*trigger({
   nome: "Francesca Di Lallo",
@@ -312,8 +342,9 @@ async function setCapDailyToTen() {
   }
 }
 
-async function insertLeadsFromCSV() {
-  const filePath = './LeadDaricaricareNEW.csv';
+async function checkAndInsertLeadsFromCSV() {
+  const filePath = './AMBRA.csv';
+
   try {
     let users = await Orientatore.find({
       utente: "65d3110eccfb1c0ce51f7492",
@@ -325,66 +356,100 @@ async function insertLeadsFromCSV() {
       return;
     }
 
-    const leads = [];
     let userIndex = 0; // Iniziamo dal primo orientatore
-
-    // Trova l'ultimo orientatore che ha ricevuto una lead
-    const lastUserLeadData = await LastLeadUser.findOne({});
-    if (lastUserLeadData) {
-      const lastUserReceivedLead = lastUserLeadData.userId;
-      const lastUser = users.find(user => user._id.toString() === lastUserReceivedLead.toString());
-      if (lastUser) {
-        userIndex = users.indexOf(lastUser) + 1; // Inizia dal successivo orientatore
-      }
-    }
 
     // Leggi i dati dal file CSV
     fs.createReadStream(filePath)
       .pipe(csv())
       .on('data', (row) => {
-        console.log(row)
-        // Seleziona l'orientatore ciclicamente
-        const user = users[userIndex % users.length];
-        userIndex++; // Aggiorna l'indice per il prossimo orientatore
+        const email = row.email ? row.email.trim() : '';
+        const numeroTelefono = row.phone_number ? row.phone_number.replace(/^p:/, '').trim() : '';
 
-        leads.push({
-          data: new Date(),
-          nome: row.full_name,
-          email: row.email,
-          numeroTelefono: row.phone_number ? row.phone_number.replace(/^p:/, '').trim() : '',
-          campagna: 'Social',
-          città: row.seleziona_il_centro_più_vicino_a_te ? row.seleziona_il_centro_più_vicino_a_te.replace(/_/g, " ") : '',
-          trattamento: row.seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni ? row.seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni.replace(/_/g, " ") : 'Implantologia a carico immediato',
-          esito: "Da contattare",
-          orientatori: user._id, // Assegna la lead all'orientatore corrente
-          utente: "65d3110eccfb1c0ce51f7492",
-          note: "",
-          fatturato: "",
-          utmContent: row.ad_name ? row.ad_name : '',
-          utmAdset: row.adset_name ? row.adset_name : '',
-          utmCampaign: row.campaign_name ? row.campaign_name : '',
-          tentativiChiamata: '0',
-          giàSpostato: false,
-        });
+        if (email) {
+          const leadData = {
+            data: new Date(),
+            nome: row.full_name,
+            email: email,
+            numeroTelefono: numeroTelefono,
+            campagna: 'Social',
+            città: row.seleziona_il_centro_più_vicino_a_te ? row.seleziona_il_centro_più_vicino_a_te.replace(/_/g, " ") : '',
+            trattamento: row.seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni ? row.seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni.replace(/_/g, " ") : 'Implantologia a carico immediato',
+            esito: "Da contattare",
+            orientatori: users[userIndex % users.length]._id, // Assegna la lead all'orientatore corrente
+            utente: "65d3110eccfb1c0ce51f7492",
+            note: "",
+            fatturato: "",
+            utmContent: row.ad_name ? row.ad_name : '',
+            utmAdset: row.adset_name ? row.adset_name : '',
+            utmCampaign: row.campaign_name ? row.campaign_name : '',
+            tentativiChiamata: '0',
+            giàSpostato: false,
+          };
+
+          Lead.findOne({ email: email })
+            .then(existingLead => {
+              if (existingLead) {
+                console.log(`Esiste: email: ${email}`);
+              } else {
+                console.log(`Non esiste: email: ${email}, creando la lead...`);
+                Lead.create(leadData)
+                  .then(() => console.log(`Lead creata per email: ${email}`))
+                  .catch(err => console.error(`Errore durante la creazione della lead: ${err}`));
+              }
+            })
+            .catch(err => console.error(`Errore durante la ricerca della lead: ${err}`));
+
+          userIndex++; // Aggiorna l'indice per il prossimo orientatore
+        }
       })
-      .on('end', async () => {
-        console.log(`Trovate ${leads.length} lead. Inserimento in corso...`);
-        console.log(leads)
-        // Inserisci le lead nel database
-        const result = await Lead.insertMany(leads);
-
-        // Salva l'ultimo orientatore che ha ricevuto una lead
-        const lastUser = users[(userIndex - 1) % users.length]; // Ultimo orientatore che ha ricevuto una lead
-        await LastLeadUser.findOneAndUpdate({}, { userId: lastUser._id }, { upsert: true });
+      .on('end', () => {
+        console.log('Verifica e creazione completate.');
       });
   } catch (error) {
-    console.error('Errore durante l\'inserimento delle lead:', error);
-  } finally {
-    console.log("ok")
+    console.error('Errore durante la verifica e creazione delle lead:', error);
   }
 }
+//checkAndInsertLeadsFromCSV()
 
-//insertLeadsFromCSV();
+async function checkLeadsFromCSV() {
+  const filePath = './AMBRA.csv';
+
+  try {
+    // Array per memorizzare le lead dal CSV
+    const leads = [];
+
+    // Leggi i dati dal file CSV
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on('data', (row) => {
+        const email = row.email ? row.email.trim() : '';
+        const numeroTelefono = row.phone_number ? row.phone_number.replace(/^p:/, '').trim() : '';
+
+        if (email) {
+          leads.push({ email, numeroTelefono });
+        }
+      })
+      .on('end', async () => {
+        console.log(`Trovate ${leads.length} lead nel file CSV. Verifica in corso...`);
+
+        // Itera su ogni lead per verificare l'esistenza nel database
+        for (const lead of leads) {
+          const existingLead = await Lead.findOne({ email: lead.email });
+
+          if (existingLead) {
+            console.log(`Esiste: email: ${lead.email}`);
+          } else {
+            console.log(`Non esiste: email: ${lead.email}`);
+          }
+        }
+
+        console.log('Verifica completata.');
+      });
+  } catch (error) {
+    console.error('Errore durante la verifica delle lead:', error);
+  }
+}
+//checkLeadsFromCSV()
 
 async function countAndRemoveLeadsWithP() {
   try {
@@ -665,6 +730,11 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
               nome: "Lorenzo",
               telefono: "3514871035",
             }, flows.daContattare)
+
+            const currentHour = new Date().getHours();
+            if (currentHour >= 9 && currentHour < 20) {
+                makeOutboundCall(newLead.numeroTelefono, newLead.nome, newLead.città);
+            }
             //await sendNotification(user._id);
             //await sendEmailLeadArrivati(user._id);
 

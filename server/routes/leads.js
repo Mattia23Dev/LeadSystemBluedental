@@ -294,7 +294,7 @@ router.post('/webhook-elevenlabs', async (req, res) => {
     if (lead) {
       console.log('Lead trovato:', lead);
       if (Data_e_Orario && Data_e_Orario !== "" && Centro_Scelto && Centro_Scelto !== "" && Tipo_Cliente && Tipo_Cliente !== "") {
-        lead.appDate = Data_e_Orario;
+        lead.appFissato = Data_e_Orario;
         lead.luogo = Centro_Scelto;
         lead.tipo = Tipo_Cliente === "Gia' paziente" ? "Gia' paziente" : "Nuovo paziente";
         lead.trattPrenotato = "Impianti";

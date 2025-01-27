@@ -733,7 +733,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
             const currentHour = new Date().getHours();
             if (currentHour >= 9 && currentHour < 20) {
-                makeOutboundCall(newLead.numeroTelefono, newLead.nome, newLead.città);
+                makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome);
             }
             //await sendNotification(user._id);
             //await sendEmailLeadArrivati(user._id);

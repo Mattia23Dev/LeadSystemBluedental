@@ -299,6 +299,7 @@ router.post('/webhook-elevenlabs', async (req, res) => {
         lead.tipo = Tipo_Cliente === "Gia' paziente" ? "Gia' paziente" : "Nuovo paziente";
         lead.trattPrenotato = "Impianti";
         lead.esito = "Fissato";
+        lead.appVoiceBot = true;
         await lead.save();
         await trigger({
           nome: lead.nome,

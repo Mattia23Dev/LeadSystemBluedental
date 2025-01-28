@@ -279,8 +279,8 @@ axios.post(url, data, { headers })
 router.post('/webhook-elevenlabs', async (req, res) => {
   try {
     console.log(req.body);
-    const { Citta, Data_e_Orario, Centro_Scelto, Numero_Telefono, Tipo_Cliente } = req.body;
-    console.log('Dati ricevuti da ElevenLabs:', { Citta, Data_e_Orario, Centro_Scelto, Numero_Telefono, Tipo_Cliente });
+    const { Citta, Data_e_Orario, Centro_Scelto, Numero_Telefono } = req.body;
+    console.log('Dati ricevuti da ElevenLabs:', { Citta, Data_e_Orario, Centro_Scelto, Numero_Telefono });
 
     // Trova il lead più recente con l'utente specificato e numero di telefono
     const lead = await Lead.findOne({
@@ -293,10 +293,10 @@ router.post('/webhook-elevenlabs', async (req, res) => {
 
     if (lead) {
       console.log('Lead trovato:', lead);
-      if (Data_e_Orario && Data_e_Orario !== "" && Centro_Scelto && Centro_Scelto !== "" && Tipo_Cliente && Tipo_Cliente !== "") {
+      if (Data_e_Orario && Data_e_Orario !== "" && Centro_Scelto && Centro_Scelto !== "") {
         lead.appFissato = Data_e_Orario;
         lead.luogo = Centro_Scelto;
-        lead.tipo = Tipo_Cliente === "Gia' paziente" ? "Gia' paziente" : "Nuovo paziente";
+        lead.tipo = "Nuovo paziente";
         lead.trattPrenotato = "Impianti";
         lead.esito = "Da richiamare";
         lead.appVoiceBot = true;

@@ -301,7 +301,7 @@ router.post('/webhook-elevenlabs', async (req, res) => {
         lead.esito = "Da richiamare";
         lead.appVoiceBot = true;
         await lead.save();
-        await trigger({
+        /*await trigger({
           nome: lead.nome,
           email: lead.email,
           numeroTelefono: lead.numeroTelefono,
@@ -313,7 +313,7 @@ router.post('/webhook-elevenlabs', async (req, res) => {
         }, {
           nome: "Lorenzo",
           telefono: "3514871035",
-        }, "1736760347221")
+        }, "1736760347221")*/
       } else {
         console.log('Lead non ha appuntamento o centro scelto');
       }

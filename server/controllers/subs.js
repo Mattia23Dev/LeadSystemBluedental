@@ -129,6 +129,7 @@ async function makeOutboundCall(number, city, name) {
 }
 
 //makeOutboundCall('+393313869850', 'Roma', 'Mattia');
+//makeOutboundCall('+393334478306', 'Roma', 'Mattia');
 
 //Da contattare
 /*trigger({

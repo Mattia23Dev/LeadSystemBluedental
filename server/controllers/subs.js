@@ -128,8 +128,8 @@ async function makeOutboundCall(number, city, name) {
   }
 }
 
-//makeOutboundCall('+393313869850', 'Roma', 'Mattia');
-//makeOutboundCall('+393334478306', 'Roma', 'Mattia');
+//makeOutboundCall('+393452919512', 'Roma', 'Stefano');
+//makeOutboundCall('+393409610597', 'Roma', 'Alessandro');
 
 //Da contattare
 /*trigger({
@@ -734,7 +734,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
             const currentHour = new Date().getHours();
             if (currentHour >= 9 && currentHour < 20) {
-                //makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome);
+                makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome);
             }
             //await sendNotification(user._id);
             //await sendEmailLeadArrivati(user._id);

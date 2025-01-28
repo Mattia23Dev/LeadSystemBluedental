@@ -289,7 +289,7 @@ router.post('/webhook-elevenlabs', async (req, res) => {
         { numeroTelefono: Numero_Telefono },
         { numeroTelefono: `+39${Numero_Telefono}` }
       ]
-    }).sort({ data: -1 }); // Ordina per data decrescente per ottenere il più recente
+    }); // Ordina per data decrescente per ottenere il più recente
 
     if (lead) {
       console.log('Lead trovato:', lead);

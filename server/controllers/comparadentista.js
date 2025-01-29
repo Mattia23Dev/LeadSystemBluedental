@@ -604,7 +604,7 @@ const writeDataSocial = async (auth) => {
   const todayFormatted = formatDate(oggi);
   const yesterdayFormatted = formatDate(ieri);
 
-  const leads = await Lead.find().populate('orientatori').populate('utente');
+  const leads = await Lead.find({utente: "65d3110eccfb1c0ce51f7492"}).populate('orientatori').populate('utente');
 
   const assegnatiLeadsComp = leads.filter((lead) => {
     const leadDate = new Date(lead.data);
@@ -690,7 +690,12 @@ const writeDataCallCenter = async (auth) => {
 
   const leads = await Lead.find({
     utente: "664c5b2f3055d6de1fcaa22b",
-    dataTimestamp: { $gt: new Date('2025-01-08T00:00:00.000Z') }
+    dataTimestamp: { $gt: new Date('2025-01-08T00:00:00.000Z') },
+    $or: [
+      { utmCampaign: { $regex: /GFU/, $options: 'i' } },
+      { campagna: { $regex: /^messenger$/i } },
+      { campagna: "AI chatbot" }
+    ]
   }).populate('orientatori').populate('utente');
   console.log(leads.length)
   const assegnatiLeadsComp = leads.filter((lead) => {
@@ -1046,6 +1051,11 @@ async function fetchLeadsUpdatesFromSheet() {
       const dataAppuntamento = row[11]; // Colonna L
       //console.log(esitoI, esitoK)
 
+      const appointmentDateString = dataAppuntamento;
+      const appointmentDate = moment(appointmentDateString, 'M/D/YY').toDate();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Imposta l'ora a mezzanotte per un confronto solo di data
+      console.log(dataAppuntamento)
       // Cerca nel database le lead con l'utente specificato e l'idDeasoft
       const lead = await Lead.findOne({
         utente: "664c5b2f3055d6de1fcaa22b",
@@ -1057,7 +1067,10 @@ async function fetchLeadsUpdatesFromSheet() {
           lead.esito = "Fatturato";
         } else if (esitoI?.toString().toLowerCase() === "sì") {
           lead.esito = "Presentato";
-        }
+        } /*else if (dataAppuntamento &&today > appointmentDate && esitoI?.toString().toLowerCase() === "no") {
+          console.log("Lead non presentato", idDeasoft)
+          lead.esito = "Non presentato";
+        }*/
         await lead.save();
         console.log(`Lead aggiornata: ${idDeasoft}`);
       } else {
@@ -1118,6 +1131,7 @@ cron.schedule('30 1 * * *', () => {
   runExport(writeDataSocial);
 })
 //runExport(writeDataSocial);
+//runExport(writeDataCallCenter);
 cron.schedule('30 2 * * *', () => {
   runExport(writeDataCallCenter);
 })

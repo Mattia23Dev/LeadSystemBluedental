@@ -691,11 +691,11 @@ const writeDataCallCenter = async (auth) => {
   const leads = await Lead.find({
     utente: "664c5b2f3055d6de1fcaa22b",
     dataTimestamp: { $gt: new Date('2025-01-08T00:00:00.000Z') },
-    $or: [
+    /*$or: [
       { utmCampaign: { $regex: /GFU/, $options: 'i' } },
       { campagna: { $regex: /^messenger$/i } },
       { campagna: "AI chatbot" }
-    ]
+    ]*/
   }).populate('orientatori').populate('utente');
   console.log(leads.length)
   const assegnatiLeadsComp = leads.filter((lead) => {

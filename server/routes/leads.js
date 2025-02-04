@@ -328,4 +328,55 @@ router.post('/webhook-elevenlabs', async (req, res) => {
   }
 });
 
+router.post('/webhook-elevenlabs-sql', async (req, res) => {
+  try {
+    console.log(req.body);
+    const { Punteggio, Conversation_Summary, Centro_Scelto, Numero_Telefono } = req.body;
+    console.log('Dati ricevuti da ElevenLabs:', { Punteggio, Conversation_Summary, Centro_Scelto, Numero_Telefono });
+
+    // Trova il lead più recente con l'utente specificato e numero di telefono
+    const lead = await Lead.findOne({
+      utente: "65d3110eccfb1c0ce51f7492",
+      $or: [
+        { numeroTelefono: Numero_Telefono },
+        { numeroTelefono: `+39${Numero_Telefono}` }
+      ]
+    }); // Ordina per data decrescente per ottenere il più recente
+
+    if (lead) {
+      console.log('Lead trovato:', lead);
+      if (Punteggio && Punteggio !== "" && Conversation_Summary && Conversation_Summary !== "") {
+        lead.luogo = Centro_Scelto;
+        lead.summary = Conversation_Summary;
+        lead.punteggio = Punteggio;
+        lead.esito = "Lead qualificata";
+        lead.appVoiceBot = true;
+        await lead.save();
+        /*await trigger({
+          nome: lead.nome,
+          email: lead.email,
+          numeroTelefono: lead.numeroTelefono,
+          città: lead.città,
+          trattamento: "Impianti",
+          esito: "Fissato",
+          appDate: Data_e_Orario,
+          luogo: Centro_Scelto,
+        }, {
+          nome: "Lorenzo",
+          telefono: "3514871035",
+        }, "1736760347221")*/
+      } else {
+        console.log('Lead non ha appuntamento o centro scelto');
+      }
+    } else {
+      console.log('Nessun lead trovato con i criteri specificati.');
+    }
+
+    res.status(200).json({ message: 'Dati ricevuti con successo' });
+  } catch (error) {
+    console.error('Errore nel ricevere i dati da ElevenLabs:', error);
+    res.status(500).json({ message: 'Errore nel ricevere i dati' });
+  }
+});
+
 module.exports = router;

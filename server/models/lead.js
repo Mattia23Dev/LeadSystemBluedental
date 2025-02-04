@@ -100,6 +100,7 @@ const LeadSchema = new Schema({
     reminderInviato: Boolean,
     idDeasoft: String,
     appVoiceBot: Boolean,
+    punteggio: Number,
   });
 
   LeadSchema.pre('save', function(next) {

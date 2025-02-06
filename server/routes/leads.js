@@ -334,7 +334,8 @@ router.post('/webhook-elevenlabs-sql', async (req, res) => {
     const { Punteggio, Conversation_Summary, Centro_Scelto, Numero_Telefono } = req.body;
     console.log('Dati ricevuti da ElevenLabs:', { Punteggio, Conversation_Summary, Centro_Scelto, Numero_Telefono });
 
-    // Trova il lead più recente con l'utente specificato e numero di telefono
+    const user = await User.findById("664c5b2f3055d6de1fcaa22b");
+
     const lead = await Lead.findOne({
       utente: "65d3110eccfb1c0ce51f7492",
       $or: [
@@ -352,9 +353,12 @@ router.post('/webhook-elevenlabs-sql', async (req, res) => {
         lead.esito = "Lead qualificata";
         lead.appVoiceBot = true;
         await lead.save();
+        user.dailyLead = user.dailyLead + 1;
+        await user.save();
         /*await trigger({
           nome: lead.nome,
           email: lead.email,
+
           numeroTelefono: lead.numeroTelefono,
           città: lead.città,
           trattamento: "Impianti",

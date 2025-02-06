@@ -100,7 +100,7 @@ axios.post(url, data, { headers })
   });
 }
 
-async function makeOutboundCall(number, city, name) {
+async function makeOutboundCall(number, city, name, type) {
   const url = 'https://twilio-11labs-call-agent-production.up.railway.app/outbound-call';
   //const url = 'https://db25-217-138-198-165.ngrok-free.app/outbound-call';
   number = number.replace(/\s+/g, '');
@@ -117,7 +117,8 @@ async function makeOutboundCall(number, city, name) {
   const data = {
     number: number,
     citta: city,
-    nome: name
+    nome: name,
+    type: type || null,
   };
 
   try {
@@ -128,8 +129,10 @@ async function makeOutboundCall(number, city, name) {
   }
 }
 
-//makeOutboundCall('+393452919512', 'Roma', 'Stefano');
-//makeOutboundCall('+393409610597', 'Roma', 'Alessandro');
+let lastFunctionExecuted = null;
+
+//makeOutboundCall('+393409610597', 'Roma', 'Alessandro Grandoni', 'bludental');
+//makeOutboundCall('+393387668735', 'Prato', 'Lolita');
 
 //Da contattare
 /*trigger({
@@ -161,7 +164,7 @@ async function makeOutboundCall(number, city, name) {
 const calculateAndAssignLeadsEveryDay = async () => {
   try {
     //const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
-
+    let bludentalUser = await User.findById("65d3110eccfb1c0ce51f7492");
     let users = await Orientatore.find({
       //_id: { $nin: excludedOrientatoreIds }, 
       utente: "65d3110eccfb1c0ce51f7492",
@@ -287,6 +290,11 @@ const calculateAndAssignLeadsEveryDay = async () => {
             //await sendNotification(user._id);
 
             //await sendEmailLeadArrivati(user._id);
+            if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDay' && bludentalUser.dailyLead < bludentalUser.dailyCap) {
+              console.log("Eseguo la chiamata di Ambra e Gold");
+              await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
+              lastFunctionExecuted = 'calculateAndAssignLeadsEveryDay';
+            }
 
             console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);            
           } else {
@@ -617,7 +625,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
     const callCenterUser = await User.findById(callCenter)
     const bludental = "65d3110eccfb1c0ce51f7492";
     const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
-
+    let bludentalUser = await User.findById(bludental);
     let users = await Orientatore.find({ 
       //_id: { $nin: excludedOrientatoreIds }, 
       utente: "65d3110eccfb1c0ce51f7492",
@@ -857,6 +865,11 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
             //await sendNotification(user._id);
 
             //await sendEmailLeadArrivati(user._id);
+            if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' && bludentalUser.dailyLead < bludentalUser.dailyCap) {
+              console.log("Eseguo la chiamata di Ambra e Gold");
+              await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
+              lastFunctionExecuted = 'calculateAndAssignLeadsEveryDayMetaWeb';
+            }
 
             console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);            
           } else {

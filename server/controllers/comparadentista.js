@@ -1135,6 +1135,7 @@ cron.schedule('30 1 * * *', () => {
 cron.schedule('30 2 * * *', () => {
   runExport(writeDataCallCenter);
 })
+
 cron.schedule('30 11 * * *', () => {
   fetchLeadsUpdatesFromSheet();
 })

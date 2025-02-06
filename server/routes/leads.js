@@ -354,7 +354,7 @@ router.post('/webhook-elevenlabs-sql', async (req, res) => {
         lead.appVoiceBot = true;
         await lead.save();
         user.dailyLead += 1;
-        await user.save();
+        user.save();
 
         /*await trigger({
           nome: lead.nome,

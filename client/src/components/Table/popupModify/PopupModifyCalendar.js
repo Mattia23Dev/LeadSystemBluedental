@@ -629,10 +629,14 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                                         <span><span>o</span></span>
                                         Non risponde
                                     </div>
-                                    <div className={esito === "Da richiamare" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Da richiamare')}>
+                                    {userFixId !== "664c5b2f3055d6de1fcaa22b" && <div className={esito === "Da richiamare" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Da richiamare')}>
                                         <span><span>o</span></span>
                                         Da richiamare
-                                    </div>
+                                    </div>}
+                                    {userFixId == "664c5b2f3055d6de1fcaa22b" && <div className={esito === "Appuntamento" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Appuntamento')}>
+                                        <span><span>o</span></span>
+                                        Appuntamento
+                                    </div>}
                                     <div className={esito === "Non interessato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Non interessato')}>
                                         <span><span>o</span></span>
                                         Lead persa
@@ -803,6 +807,11 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                             </div> 
                             
                         </div>
+                        {leadF.punteggio && leadF.punteggio !== null && 
+                        <div className='punteggio-container'>
+                            <p>Punteggio: {leadF?.punteggio}/5</p>
+                            <p>Riassunto: {leadF?.summary}</p>
+                        </div>}
                         <hr className='linea-che-serve' />
                         <div className='maggiori-informazioni'>
                             <h4>TENTATIVI DI CONTATTO</h4>

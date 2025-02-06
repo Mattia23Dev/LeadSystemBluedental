@@ -7,7 +7,7 @@ import '../MainDash/MainDash.scss';
 import './LeadEntry.scss'
 
 export default function LeadHeader({ 
-  esito, SETtoggles, toggles, filteredData, type, getOtherLeads, refreshate, getOtherLeadsOri }) {
+  esito, SETtoggles, toggles, filteredData, type, getOtherLeads, refreshate, getOtherLeadsOri, selectedScores, setSelectedScores }) {
 
   const [state, setState] = useContext(UserContext);
   const userId = state.user._id;
@@ -27,7 +27,30 @@ export default function LeadHeader({
 
   const classNameNumber = leadTypeToClassName[type] || 0;
 
+  const handleScoreChange = (score) => {
+    setSelectedScores(prevScores =>
+      prevScores.includes(score)
+        ? prevScores.filter(s => s !== score)
+        : [...prevScores, score]
+    );
+  };
+
   return (
+    <>
+    {type == "Lead qualificata" && 
+      <div className='lead-sql-punteggio-filter'>
+        {[1, 2, 3, 4, 5].map((num) => (
+          <label key={num}>
+            <input 
+              type="checkbox" 
+              value={num} 
+              checked={selectedScores.includes(num)}
+              onChange={() => handleScoreChange(num)}
+            />
+            {num}
+          </label>
+        ))}
+      </div>}
     <div
       className={`secheader `}
       ref={ref}
@@ -51,6 +74,8 @@ export default function LeadHeader({
           SETtoggles({ ...toggles, opportunita: !toggles.opportunita })
         else if (type == "Appuntamento")
           SETtoggles({ ...toggles, appuntamento: !toggles.appuntamento })
+        else if (type == "Lead qualificata")
+          SETtoggles({ ...toggles, leadQualificata: !toggles.leadQualificata })
         else if (type == "Fatturato")
           SETtoggles({ ...toggles, fatturato: !toggles.fatturato })
         else if (type == "In valutazione")
@@ -86,5 +111,6 @@ export default function LeadHeader({
         filteredData && filteredData.filter(x => x.status == type).length}
       </span>
     </div>
+    </>
   )
 }

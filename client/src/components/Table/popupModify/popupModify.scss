@@ -1270,3 +1270,18 @@ textarea {
     font-size: 13px;
     padding: 4px 10px;
   }
+  .punteggio-container{
+    width: 90%;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 0rem;
+    flex-direction: column;
+  }
+  .punteggio-container > p{
+    font-size: 13px;
+    color: #000000c0;
+    font-weight: 500;
+    margin-top: -10px;
+  }
+

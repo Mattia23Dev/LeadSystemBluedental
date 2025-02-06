@@ -45,6 +45,7 @@ export default function Table2({ onResults, searchval, setLeadsPdf, setNextSched
   const [filtroDiRiserva, setFiltroDiRiserva] = useState([]);
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedCampagna, setSelectedCampagna] = useState('');
+  const [selectedScores, setSelectedScores] = useState([]);
   const cities = [
     "Abbiategrasso", "Anzio", "Arezzo", "Bari", "Bergamo", "Biella", "Bologna", "Brescia", "Busto Arsizio", "Cagliari", 
     "Cantù", "Capena", "Carpi", "Cassino", "Cesena", "Ciampino", "Cinisello Balsamo", "Civitavecchia", "Cologno Monzese", 
@@ -244,6 +245,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           trattPrenotato: lead.trattPrenotato ? lead.trattPrenotato : "",
           luogo: lead.luogo ? lead.luogo : "",
           tipo: lead.tipo ? lead.tipo : "",
+          appVoiceBot: lead.appVoiceBot ? lead.appVoiceBot : false,
+          punteggio: lead.punteggio ? lead.punteggio : null,
         };
       });
 
@@ -376,6 +379,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           trattPrenotato: lead.trattPrenotato ? lead.trattPrenotato : "",
           luogo: lead.luogo ? lead.luogo : "",
           tipo: lead.tipo ? lead.tipo : "",
+          appVoiceBot: lead.appVoiceBot ? lead.appVoiceBot : false,
+          punteggio: lead.punteggio ? lead.punteggio : null,
         };
       });
 
@@ -549,6 +554,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         trattPrenotato: row.trattPrenotato ? row.trattPrenotato : "",
         luogo: row.luogo ? row.luogo : "",
         tipo: row.tipo ? row.tipo : "",
+        appVoiceBot: row.appVoiceBot ? row.appVoiceBot : false,
+        punteggio: row.punteggio ? row.punteggio : null,
       };
     });
     setFilteredData(filteredDataIn);
@@ -620,6 +627,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
     localStorage.removeItem("endDate");
     localStorage.removeItem("recallFilter");
     setRecallFilter(false);
+    setSelectedScores([]);
   };
 
   function mapCampagnaPerLeadsystem(nomeCampagna, filtro) {
@@ -687,6 +695,9 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
     if (selectedCampagna){
       combinedFilteredData = combinedFilteredData.filter(row => mapCampagnaPerLeadsystem(row.campagna,selectedCampagna));
     }
+    if (userFixId !== "664c5b2f3055d6de1fcaa22b") {
+      combinedFilteredData = combinedFilteredData.filter(row => selectedScores.length === 0 || selectedScores.includes(row.punteggio));
+    }
      setFilteredData(combinedFilteredData);
      setFiltroDiRiserva(combinedFilteredData);
     } else {
@@ -697,12 +708,15 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
       if (selectedCampagna){
         combinedFilteredData = combinedFilteredData.filter(row => mapCampagnaPerLeadsystem(row.campagna,selectedCampagna));
       }
+      if (userFixId !== "664c5b2f3055d6de1fcaa22b") {
+        combinedFilteredData = combinedFilteredData.filter(row => selectedScores.length === 0 || selectedScores.includes(row.punteggio));
+      }
       setFilteredData(combinedFilteredData);
       setFiltroDiRiserva(combinedFilteredData);
     }
     
     
-  }, [recallFilter, selectedOrientatore, startDate, endDate, selectedCity, selectedCampagna]);
+  }, [recallFilter, selectedOrientatore, startDate, endDate, selectedCity, selectedCampagna, selectedScores]);
 
   const getOtherLeads = async () => {
     try {
@@ -745,6 +759,8 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
           trattPrenotato: lead.trattPrenotato ? lead.trattPrenotato : "",
           luogo: lead.luogo ? lead.luogo : "",
           tipo: lead.tipo ? lead.tipo : "",
+          appVoiceBot: lead.appVoiceBot ? lead.appVoiceBot : false,
+          punteggio: lead.punteggio ? lead.punteggio : null,
         };
       });
 
@@ -848,6 +864,8 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
           trattPrenotato: lead.trattPrenotato ? lead.trattPrenotato : "",
           luogo: lead.luogo ? lead.luogo : "",
           tipo: lead.tipo ? lead.tipo : "",
+          appVoiceBot: lead.appVoiceBot ? lead.appVoiceBot : false,
+          punteggio: lead.punteggio ? lead.punteggio : null,
         };
       });
 
@@ -959,6 +977,8 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               trattPrenotato: updatedLead.trattPrenotato ? updatedLead.trattPrenotato : "",
               luogo: updatedLead.luogo ? updatedLead.luogo : "",
               tipo: updatedLead.tipo ? updatedLead.tipo : "",
+              appVoiceBot: updatedLead.appVoiceBot ? updatedLead.appVoiceBot : false,
+              punteggio: updatedLead.punteggio ? updatedLead.punteggio : null,
             };
             return { ...lead, ...adaptedLead };
           } else {
@@ -989,6 +1009,8 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
             trattPrenotato: updatedLead.trattPrenotato ? updatedLead.trattPrenotato : "",
             luogo: updatedLead.luogo ? updatedLead.luogo : "",
             tipo: updatedLead.tipo ? updatedLead.tipo : "",
+            appVoiceBot: updatedLead.appVoiceBot ? updatedLead.appVoiceBot : false,
+            punteggio: updatedLead.punteggio ? updatedLead.punteggio : null,
           };
           return { ...lead, ...adaptedLead };
         } else {
@@ -1116,6 +1138,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
     nonPresentato: false,
     annullato: false,
     fatturato: false,
+    leadQualificata: false
   })
 
 
@@ -1489,10 +1512,14 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
                                      <span><span>o</span></span>
                                      Non risponde
                                  </div>
-                                 {userFixId !== "664c5b2f3055d6de1fcaa22b" && <div className={esito === "Da richiamare" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Da richiamare')}>
+                                 <div className={esito === "Da richiamare" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Da richiamare')}>
                                      <span><span>o</span></span>
                                      Da richiamare
-                                 </div>}
+                                 </div>
+                                 {userFixId == "664c5b2f3055d6de1fcaa22b" && <div className={esito === "Appuntamento" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Appuntamento')}>
+                                        <span><span>o</span></span>
+                                        Appuntamento
+                                  </div>}
                                  <div className={esito === "Non interessato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Non interessato')}>
                                      <span><span>o</span></span>
                                      Lead persa
@@ -1684,7 +1711,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               )}
             </div>
           </div>
-          {userFixId === "664c5b2f3055d6de1fcaa22b" && 
+          {userFixId === "664c5b2f3055d6de1fcaa22b" ?
           <div className="secwrap E2"
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Appuntamento")}
@@ -1697,6 +1724,45 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
             <div className="entries">
               {toggles.appuntamento && filteredData && filteredData.filter(x => x.status == "Appuntamento").reverse().map((row, k) =>
+                <LeadEntry
+                  id={JSON.stringify(row)}
+                  index={k}
+                  handleRowClick={handleRowClick} data={row}
+                  handleModifyPopup={handleModifyPopup}
+                  secref={secref}
+                  handleModifyPopupEsito={handleModifyPopupEsito}
+                  handleDelete={handleDelete}
+                  campagna={row.campagna}
+                  nuovaEtichetta={nuovaEtichetta}
+                  setNuovaEtichetta={setNuovaEtichetta}
+                  selezionOrientatore={openChangeOrientatore}
+                />
+              )}
+            </div>
+          </div> : 
+          <div className="secwrap E2"
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, "Lead qualificata")}
+            onDragEnd={handleDragEnd}
+          >
+            <LeadHeader
+              handleModifyPopupEsito={(r) => handleModifyPopupEsito(r)}
+              selectedScores={selectedScores}
+              setSelectedScores={setSelectedScores}
+              type={"Lead qualificata"}
+              refreshate={false}
+              toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
+
+            <div className="entries">
+              {toggles.leadQualificata && filteredData && filteredData
+                .filter(x => x.status == "Lead qualificata")
+                .filter(x => selectedScores.length === 0 || selectedScores.includes(x.punteggio))
+                .sort((a, b) => {
+                  if (a.punteggio === null || a.punteggio === undefined) return 1;
+                  if (b.punteggio === null || b.punteggio === undefined) return -1;
+                  return b.punteggio - a.punteggio;
+                })
+                .map((row, k) =>
                 <LeadEntry
                   id={JSON.stringify(row)}
                   index={k}
@@ -1744,7 +1810,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               )}
             </div>
           </div>
-          {userFixId !== "664c5b2f3055d6de1fcaa22b" && <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E4" : ""}`}
+          <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E4" : ""}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Da richiamare")}
             onDragEnd={handleDragEnd}
@@ -1771,7 +1837,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
                 />
               )}
             </div>
-          </div>}
+          </div>
           <div className={`secwrap ${userFixId === "664c5b2f3055d6de1fcaa22b" ? "E5" : ""}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, "Non interessato")}

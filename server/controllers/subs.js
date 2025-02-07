@@ -1051,7 +1051,7 @@ const resetDailyCap = async () => {
   console.log('Eseguo il reset del cap');
 
   try {
-    const user = await User.findById("664c5b2f3055d6de1fcaa22b");
+    const user = await User.findById("65d3110eccfb1c0ce51f7492");
 
     user.dailyLead = 0;
     await user.save();

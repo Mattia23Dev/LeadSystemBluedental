@@ -291,11 +291,11 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
             //await sendEmailLeadArrivati(user._id);
             const currentHour = new Date().getHours();
-            /*if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDay' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
+            if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDay' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
               console.log("Eseguo la chiamata di Ambra e Gold");
               await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
               lastFunctionExecuted = 'calculateAndAssignLeadsEveryDay';
-            }*/
+            }
 
             console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);            
           } else {
@@ -742,9 +742,9 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
             }, flows.daContattare)
 
             const currentHour = new Date().getHours();
-            /*if (currentHour >= 9 && currentHour < 20) {
+            if (currentHour >= 9 && currentHour < 20) {
                 makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome);
-            }*/
+            }
             //await sendNotification(user._id);
             //await sendEmailLeadArrivati(user._id);
 
@@ -867,11 +867,11 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
             //await sendEmailLeadArrivati(user._id);
             const currentHour = new Date().getHours();
-            /*if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
+            if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
               console.log("Eseguo la chiamata di Ambra e Gold");
               await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
               lastFunctionExecuted = 'calculateAndAssignLeadsEveryDayMetaWeb';
-            }*/
+            }
 
             console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);            
           } else {

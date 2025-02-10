@@ -731,7 +731,8 @@ const writeDataCallCenter = async (auth) => {
       "Meta web",
       lead.appFissato ? formatDateString(lead.appFissato) : "",
       lead.appDate ? formatDateString(lead.appDate) : "",
-      lead.recallType ? lead.recallType : ""
+      lead.recallType ? lead.recallType : "",
+      lead.idDeasoft ? lead.idDeasoft : "",
     ];
   
     dataToUpdate.push(leadData);

@@ -10,6 +10,8 @@ const { GoogleSpreadsheet } = require('google-spreadsheet');
 const axios = require('axios');
 const moment = require("moment");
 const LeadFacebook = require('../models/leadFacebook');
+const { ElevenLabsClient } = require("elevenlabs");
+const client = new ElevenLabsClient({ apiKey: "sk_6ea6b886a8c412f6dfd06ec6b9e6e9d1fb6b96ca42817040" });
 
 exports.getDataCap = async (req, res) => { 
     console.log(req.body);
@@ -84,50 +86,17 @@ exports.getDataCap = async (req, res) => {
           numeroTelefono: row.phone_number,
           corsoDiLaurea: row["quale_percorso_di_studi_ti_interessa?"],
           facolta: "",
-          università: row["frequenti_già_l’università?"] == 'Si' ? true : false,
+          università: row["frequenti_già_l'università?"] == 'Si' ? true : false,
           campagna: 'affiliati',
           utmCampaign: "Affiliati",
           utmSource: "Affiliati",
           orario: row.fascia_oraria,
           lavoro: row["stai_già_lavorando?"] == 'Si' ? true : false,
-          universita: row["frequenti_già_l’università?"] == 'Si' ? true : false,
+          universita: row["frequenti_già_l'università?"] == 'Si' ? true : false,
           provincia: row.province,
           utmContent: "Affiliati",
         });
         await newLead.save();
-      }
-    }
-  }
-
-  const GetSheetAffiliateChatbotData = async () => {
-    const sheetBestResponse = await axios.get('https://sheet.best/api/sheets/dd9f587c-abe2-452b-a780-2c631b2183b5');
-    const sheetData = sheetBestResponse.data;
-    console.log(sheetData.length);
-
-    for (const row of sheetData) {
-      const { 'Submission Date': submissionDate, Nome, Cognome, 'Città' : city, 'Perfetto! Adesso inserisci il tuo numero di telefono': telefono, 'Come ultima cosa inserisci il tuo indirizzo Email ?': email, 'Ti contatteremo per l’offerta migliore come da informativa sulla privacy policy': consenso, 'Submission ID': submissionID } = row;
-
-      const existingLead = await LeadWordpress.findOne({ email });
-      const existingLeadAss = await Lead.findOne({ email });
-
-      if (!existingLead && !existingLeadAss) {
-        const newLead = new LeadWordpress({
-          data: new Date(),
-          nome: Nome,
-          cognome: Cognome,
-          email: email,
-          numeroTelefono: telefono,
-          facolta: "",
-          campagna: 'chatbot',
-          utmCampaign: "Chatbot",
-          utmSource: "Chatbot",
-          provincia: city,
-          utmContent: "Chatbot",
-        });
-        await newLead.save();
-        console.log('Salvato')
-      } else {
-        console.log('Già salvato');
       }
     }
   }
@@ -1103,31 +1072,7 @@ async function findLeadsByEmails(emails) {
   }
 }
 
-/*(async () => {
-  try {
-    const emails = await fetchEmailsFromSheet();
-    await findLeadsByEmails(emails);
-  } catch (error) {
-    console.error('Errore:', error);
-  }
-})();*/
 
-//runExport(writeDataComparatore);
-//runDailyJob();
-//getRequestFromFacebook();
-
-/*const runDailyMeta = () => {
-  getRequestFromFacebook();
-};
-
-cron.schedule('0 1 * * *', () => {
-  runExport(writeDataComparatore);
-});
-
-cron.schedule('10 1 * * *', () => {
-  runDailyJob();
-});
-*/
 cron.schedule('30 1 * * *', () => {
   runExport(writeDataSocial);
 })
@@ -1143,11 +1088,278 @@ cron.schedule('30 11 * * *', () => {
 /*cron.schedule('20 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   GetSheetAffiliateData();
 });
-
-cron.schedule('30 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
-  GetSheetAffiliateChatbotData();
-});*/
+*/
 
 /*cron.schedule('0 2 * * *', () => {
   runDailyMeta();
 });*/
+
+const writeDataPrequalificati = async (auth) => {
+  const dataToUpdate = [];
+  const sheets = google.sheets({ version: 'v4', auth });
+  const oggi = new Date();
+  const domani = new Date(oggi);
+  domani.setDate(oggi.getDate() + 1);
+  //oggi.setDate(oggi.getDate())
+  oggi.setHours(0, 0, 0, 0);
+  domani.setHours(0, 0, 0, 0);
+  const ieri = new Date('2023-02-20');
+  ieri.setHours(0, 0, 0, 0);
+
+  const leads = await Lead.find({utente: "65d3110eccfb1c0ce51f7492", appVoiceBot: true});
+
+  leads.forEach((lead) => {
+    const leadData = [
+      lead.data ? formatDate(new Date(lead.data)) : '', 
+      lead.nome,
+      lead.email,
+      lead.numeroTelefono,
+      lead.utmCampaign ? lead.utmCampaign.toString() : lead.campagna.trim().toLocaleLowerCase() === 'messenger' ? "Messenger" : '', 
+      lead.esito === "Non interessato" ? "Lead persa" : lead.esito.toString(),
+      lead.dataPrimaModifica ? formatDate(lead.dataPrimaModifica) : 'Nessuna Data',
+      lead.dataCambiamentoEsito ? formatDate(lead.dataCambiamentoEsito) : 'Nessuna Data', 
+      lead.punteggio ? lead.punteggio : '',
+      lead.summary ? lead.summary : '',
+    ];
+  
+    dataToUpdate.push(leadData);
+  });
+
+  const resource = {
+    values: dataToUpdate,
+  };
+  sheets.spreadsheets.values.append(
+    {
+      spreadsheetId: '1fZqZv5r5dKFgChQe-lLcBDiQAYlO0baGCiA4_pTUCSg',
+      range: 'Prequalifica-ls!A1',
+      valueInputOption: 'RAW',
+      resource: resource,
+    },
+    async (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(
+          '%d cells updated on range: %s',
+          result.data.updates.updatedCells,
+          result.data.updates.updatedRange
+        );
+      }
+    }
+  );
+};
+
+async function fetchConversations(agentId) {
+  try {
+    let results = [];
+    let nextCursor = null;
+    let hasMore = true;
+
+    while (hasMore) {
+      // 1️⃣ Recupera tutte le conversazioni con paginazione
+      const response = await client.conversationalAi.getConversations({
+        agent_id: agentId,
+        page_size: 100,
+        cursor: nextCursor, // Usa il cursore per la paginazione
+      });
+
+      const conversations = response.conversations;
+      hasMore = response.has_more;
+      nextCursor = response.next_cursor;
+
+      // 2️⃣ Itera su ogni conversazione per ottenere i dettagli
+      for (const conv of conversations) {
+        const convDetails = await client.conversationalAi.getConversation(conv.conversation_id);
+        //console.log(convDetails)
+        // 3️⃣ Estrarre i dati richiesti
+        const dataChiamata = new Date(convDetails.metadata.start_time_unix_secs * 1000).toISOString();
+        const idConversazione = convDetails.conversation_id;
+        const durata = convDetails.metadata.call_duration_secs + " sec";
+        const registrazione = "N/A"; // Se disponibile, sostituire con il link della registrazione
+        const esitoChiamata = conv.call_successful; // success, failed, etc.
+        const transcript = convDetails.transcript.map(entry => `${entry.role}: ${entry.message}`).join(" | ");
+
+        // 4️⃣ Salvare i dati in un array di array
+        results.push([dataChiamata, idConversazione, durata, registrazione, esitoChiamata, transcript]);
+      }
+    }
+
+    //console.log(results); // Stampare i risultati
+    return results;
+
+  } catch (error) {
+    console.error("Errore nel recupero delle conversazioni:", error);
+    return [];
+  }
+}
+
+async function fetchConversationsAudio(agentId) {
+  try {
+    const url = `https://api.elevenlabs.io/v1/convai/conversations/${agentId}/audio`;
+    const response = await axios.get(url, {
+      headers: {
+        'xi-api-key': 'sk_6ea6b886a8c412f6dfd06ec6b9e6e9d1fb6b96ca42817040'
+      },
+      responseType: 'arraybuffer' // Importante per ottenere i dati binari
+    });
+
+    // Salva i dati binari in un file audio
+    //fs.writeFileSync('audio.mp3', response.data);
+    console.log('Audio salvato come audio.mp3');
+  } catch (error) {
+    console.error("Errore nel recupero delle conversazioni:", error);
+  }
+}
+//fetchConversationsAudio("RcS9MXWhEgrqWV8VnlAE");
+
+const writeDataElevenLabsPrequalifica = async (auth) => {
+  const sheets = google.sheets({ version: 'v4', auth });
+  const dataToUpdate = await fetchConversations("rD5JoYkfxa771fTLxwdc");
+  
+  dataToUpdate.forEach((lead) => {
+    const leadData = [
+      lead[0],
+      lead[1],
+      lead[2],
+      lead[3],
+      lead[4],
+      lead[5],
+    ];
+  
+    dataToUpdate.push(leadData);
+  });
+
+  const resource = {
+    values: dataToUpdate,
+  };
+  sheets.spreadsheets.values.append(
+    {
+      spreadsheetId: '1fZqZv5r5dKFgChQe-lLcBDiQAYlO0baGCiA4_pTUCSg',
+      range: 'Prequalifica-elevenlabs!A1',
+      valueInputOption: 'RAW',
+      resource: resource,
+    },
+    async (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(
+          '%d cells updated on range: %s',
+          result.data.updates.updatedCells,
+          result.data.updates.updatedRange
+        );
+      }
+    }
+  );
+};
+
+//runExport(writeDataElevenLabsPrequalifica);
+cron.schedule('30 4 * * *', async () => {
+  await runExport(writeDataPrequalificati);
+  await runExport(writeDataElevenLabsPrequalifica);
+})
+
+
+const writeDataGFUQualificati = async (auth) => {
+  const dataToUpdate = [];
+  const sheets = google.sheets({ version: 'v4', auth });
+  const oggi = new Date();
+  const domani = new Date(oggi);
+  domani.setDate(oggi.getDate() + 1);
+  //oggi.setDate(oggi.getDate())
+  oggi.setHours(0, 0, 0, 0);
+  domani.setHours(0, 0, 0, 0);
+  const ieri = new Date('2023-02-20');
+  ieri.setHours(0, 0, 0, 0);
+
+  const leads = await Lead.find({utente: "664c5b2f3055d6de1fcaa22b", appVoiceBot: true});
+
+  leads.forEach((lead) => {
+    const leadData = [
+      lead.data ? formatDate(new Date(lead.data)) : '', 
+      lead.nome,
+      lead.email,
+      lead.numeroTelefono,
+      lead.utmCampaign ? lead.utmCampaign.toString() : lead.campagna.trim().toLocaleLowerCase() === 'messenger' ? "Messenger" : '', 
+      lead.esito === "Non interessato" ? "Lead persa" : lead.esito.toString(),
+      lead.dataPrimaModifica ? formatDate(lead.dataPrimaModifica) : 'Nessuna Data',
+      lead.dataCambiamentoEsito ? formatDate(lead.dataCambiamentoEsito) : 'Nessuna Data',
+      lead.appFissato ? formatDateString(lead.appFissato) : 'Nessuna Data',
+      lead.luogo ? lead.luogo : '',
+      lead.tipo ? lead.tipo : '',
+      lead.trattPrenotato ? lead.trattPrenotato : '',
+    ];
+  
+    dataToUpdate.push(leadData);
+  });
+
+  const resource = {
+    values: dataToUpdate,
+  };
+  sheets.spreadsheets.values.append(
+    {
+      spreadsheetId: '1fZqZv5r5dKFgChQe-lLcBDiQAYlO0baGCiA4_pTUCSg',
+      range: 'GFU-ls!A1',
+      valueInputOption: 'RAW',
+      resource: resource,
+    },
+    async (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(
+          '%d cells updated on range: %s',
+          result.data.updates.updatedCells,
+          result.data.updates.updatedRange
+        );
+      }
+    }
+  );
+};
+
+const writeDataElevenLabsGFUPrequalifica = async (auth) => {
+  const sheets = google.sheets({ version: 'v4', auth });
+  const dataToUpdate = await fetchConversations("YMVIPXvCvx7X9Q1xu8SG");
+  
+  dataToUpdate.forEach((lead) => {
+    const leadData = [
+      lead[0],
+      lead[1],
+      lead[2],
+      lead[3],
+      lead[4],
+      lead[5],
+    ];
+  
+    dataToUpdate.push(leadData);
+  });
+
+  const resource = {
+    values: dataToUpdate,
+  };
+  sheets.spreadsheets.values.append(
+    {
+      spreadsheetId: '1fZqZv5r5dKFgChQe-lLcBDiQAYlO0baGCiA4_pTUCSg',
+      range: 'GFU-elevenlabs!A1',
+      valueInputOption: 'RAW',
+      resource: resource,
+    },
+    async (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(
+          '%d cells updated on range: %s',
+          result.data.updates.updatedCells,
+          result.data.updates.updatedRange
+        );
+      }
+    }
+  );
+};
+
+//runExport(writeDataElevenLabsGFUPrequalifica);
+cron.schedule('30 4 * * *', async () => {
+  await runExport(writeDataGFUQualificati);
+  await runExport(writeDataElevenLabsGFUPrequalifica);
+})

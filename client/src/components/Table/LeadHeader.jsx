@@ -37,7 +37,7 @@ export default function LeadHeader({
 
   return (
     <>
-    {type == "Lead qualificata" && 
+    {/*type == "Lead qualificata" && 
       <div className='lead-sql-punteggio-filter'>
         {[1, 2, 3, 4, 5].map((num) => (
           <label key={num}>
@@ -50,7 +50,7 @@ export default function LeadHeader({
             {num}
           </label>
         ))}
-      </div>}
+      </div>*/}
     <div
       className={`secheader `}
       ref={ref}

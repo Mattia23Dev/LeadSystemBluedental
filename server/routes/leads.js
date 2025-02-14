@@ -384,4 +384,69 @@ router.post('/webhook-elevenlabs-sql', async (req, res) => {
   }
 });
 
+router.post('/webhook-elevenlabs-errore-chiamata', async (req, res) => {
+  try {
+    console.log(req.body);
+    const { Numero_Telefono, Motivo_Errore } = req.body;
+    console.log('Dati ricevuti da ElevenLabs:', { Numero_Telefono, Motivo_Errore });
+
+    // Trova il lead più recente con l'utente specificato e numero di telefono
+    const lead = await Lead.findOne({
+      utente: "664c5b2f3055d6de1fcaa22b",
+      $or: [
+        { numeroTelefono: Numero_Telefono },
+        { numeroTelefono: `+39${Numero_Telefono}` }
+      ]
+    }); // Ordina per data decrescente per ottenere il più recente
+
+    if (lead) {
+      console.log('Lead trovato');
+      lead.recallAgent.recallType += 1;
+      lead.recallAgent.recallDate.push(new Date());
+      lead.recallAgent.recallReason = Motivo_Errore || "Errore chiamata";
+      await lead.save();
+    } else {
+      console.log('Nessun lead trovato con i criteri specificati.');
+    }
+
+    res.status(200).json({ message: 'Dati ricevuti con successo' });
+  } catch (error) {
+    console.error('Errore nel ricevere i dati da ElevenLabs:', error);
+    res.status(500).json({ message: 'Errore nel ricevere i dati' });
+  }
+});
+
+router.post('/webhook-elevenlabs-sql-errore-chiamata', async (req, res) => {
+  try {
+    console.log(req.body);
+    const { Numero_Telefono, Motivo_Errore } = req.body;
+    console.log('Dati ricevuti da ElevenLabs:', { Numero_Telefono, Motivo_Errore });
+
+    const user = await User.findById("65d3110eccfb1c0ce51f7492");
+
+    const lead = await Lead.findOne({
+      utente: "65d3110eccfb1c0ce51f7492",
+      $or: [
+        { numeroTelefono: Numero_Telefono },
+        { numeroTelefono: `+39${Numero_Telefono}` }
+      ]
+    }); // Ordina per data decrescente per ottenere il più recente
+
+    if (lead) {
+      console.log('Lead trovato:', lead);
+      lead.recallAgent.recallType += 1;
+      lead.recallAgent.recallDate.push(new Date());
+      lead.recallAgent.recallReason = Motivo_Errore || "Errore chiamata";
+      await lead.save();
+    } else {
+      console.log('Nessun lead trovato con i criteri specificati.');
+    }
+
+    res.status(200).json({ message: 'Dati ricevuti con successo' });
+  } catch (error) {
+    console.error('Errore nel ricevere i dati da ElevenLabs:', error);
+    res.status(500).json({ message: 'Errore nel ricevere i dati' });
+  }
+});
+
 module.exports = router;

@@ -101,6 +101,11 @@ const LeadSchema = new Schema({
     idDeasoft: String,
     appVoiceBot: Boolean,
     punteggio: Number,
+    recallAgent: {
+      recallType: {type: Number, default: 0},
+      recallDate: [Date],
+      recallReason: String,
+    },
   });
 
   LeadSchema.pre('save', function(next) {

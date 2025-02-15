@@ -103,8 +103,12 @@ const LeadSchema = new Schema({
     punteggio: Number,
     recallAgent: {
       recallType: {type: Number, default: 0},
-      recallDate: [Date],
-      recallReason: String,
+      recallInfo: [
+        {
+          recallDate: Date,
+          recallReason: String,
+        }
+      ],
     },
   });
 

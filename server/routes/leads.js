@@ -402,8 +402,10 @@ router.post('/webhook-elevenlabs-errore-chiamata', async (req, res) => {
     if (lead) {
       console.log('Lead trovato');
       lead.recallAgent.recallType += 1;
-      lead.recallAgent.recallDate.push(new Date());
-      lead.recallAgent.recallReason = Motivo_Errore || "Errore chiamata";
+      lead.recallAgent.recallInfo.push({
+        recallDate: new Date(),
+        recallReason: Motivo_Errore || "Errore chiamata",
+      });
       await lead.save();
     } else {
       console.log('Nessun lead trovato con i criteri specificati.');
@@ -435,8 +437,10 @@ router.post('/webhook-elevenlabs-sql-errore-chiamata', async (req, res) => {
     if (lead) {
       console.log('Lead trovato:', lead);
       lead.recallAgent.recallType += 1;
-      lead.recallAgent.recallDate.push(new Date());
-      lead.recallAgent.recallReason = Motivo_Errore || "Errore chiamata";
+      lead.recallAgent.recallInfo.push({
+        recallDate: new Date(),
+        recallReason: Motivo_Errore || "Errore chiamata",
+      });
       await lead.save();
     } else {
       console.log('Nessun lead trovato con i criteri specificati.');

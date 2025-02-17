@@ -384,7 +384,7 @@ router.post('/webhook-elevenlabs-sql', async (req, res) => {
   }
 });
 
-async function makeOutboundCall(number, city, name, type) {
+async function makeOutboundCall(number, city, name, type, transcript) {
   const url = 'https://twilio-11labs-call-agent-production.up.railway.app/outbound-call';
   //const url = 'https://cd9f-185-199-103-50.ngrok-free.app/outbound-call';
   number = number.replace(/\s+/g, '');
@@ -403,6 +403,7 @@ async function makeOutboundCall(number, city, name, type) {
     citta: city,
     nome: name,
     type: type || null,
+    transcript: transcript || null,
   };
 
   try {

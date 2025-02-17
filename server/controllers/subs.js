@@ -102,7 +102,7 @@ axios.post(url, data, { headers })
 
 async function makeOutboundCall(number, city, name, type) {
   const url = 'https://twilio-11labs-call-agent-production.up.railway.app/outbound-call';
-  //const url = 'https://9351-86-62-29-86.ngrok-free.app/outbound-call';
+  //const url = 'https://cd9f-185-199-103-50.ngrok-free.app/outbound-call';
   number = number.replace(/\s+/g, '');
 
   // Controlla e aggiusta il prefisso

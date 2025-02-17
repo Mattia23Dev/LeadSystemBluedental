@@ -387,8 +387,8 @@ router.post('/webhook-elevenlabs-sql', async (req, res) => {
 router.post('/webhook-elevenlabs-errore-chiamata', async (req, res) => {
   try {
     console.log(req.body);
-    const { Numero_Telefono, Motivo_Errore } = req.body;
-    console.log('Dati ricevuti da ElevenLabs:', { Numero_Telefono, Motivo_Errore });
+    const { Numero_Telefono, Motivo_Errore, Transcript } = req.body;
+    console.log('Dati ricevuti da ElevenLabs:', { Numero_Telefono, Motivo_Errore, Transcript });
 
     // Trova il lead più recente con l'utente specificato e numero di telefono
     const lead = await Lead.findOne({
@@ -405,6 +405,7 @@ router.post('/webhook-elevenlabs-errore-chiamata', async (req, res) => {
       lead.recallAgent.recallInfo.push({
         recallDate: new Date(),
         recallReason: Motivo_Errore || "Errore chiamata",
+        transcript: Transcript,
       });
       await lead.save();
     } else {
@@ -421,8 +422,8 @@ router.post('/webhook-elevenlabs-errore-chiamata', async (req, res) => {
 router.post('/webhook-elevenlabs-sql-errore-chiamata', async (req, res) => {
   try {
     console.log(req.body);
-    const { Numero_Telefono, Motivo_Errore } = req.body;
-    console.log('Dati ricevuti da ElevenLabs:', { Numero_Telefono, Motivo_Errore });
+    const { Numero_Telefono, Motivo_Errore, Transcript } = req.body;
+    console.log('Dati ricevuti da ElevenLabs:', { Numero_Telefono, Motivo_Errore, Transcript });
 
     const user = await User.findById("65d3110eccfb1c0ce51f7492");
 
@@ -440,6 +441,7 @@ router.post('/webhook-elevenlabs-sql-errore-chiamata', async (req, res) => {
       lead.recallAgent.recallInfo.push({
         recallDate: new Date(),
         recallReason: Motivo_Errore || "Errore chiamata",
+        transcript: Transcript,
       });
       await lead.save();
     } else {

@@ -107,6 +107,7 @@ const LeadSchema = new Schema({
         {
           recallDate: Date,
           recallReason: String,
+          transcript: String,
         }
       ],
     },

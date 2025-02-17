@@ -384,6 +384,35 @@ router.post('/webhook-elevenlabs-sql', async (req, res) => {
   }
 });
 
+async function makeOutboundCall(number, city, name, type) {
+  const url = 'https://twilio-11labs-call-agent-production.up.railway.app/outbound-call';
+  //const url = 'https://cd9f-185-199-103-50.ngrok-free.app/outbound-call';
+  number = number.replace(/\s+/g, '');
+
+  // Controlla e aggiusta il prefisso
+  if (!number.startsWith('+39')) {
+    if (number.startsWith('39') && number.length === 12) {
+      number = '+' + number;
+    } else if (number.length === 10) {
+      number = '+39' + number;
+    }
+  }
+
+  const data = {
+    number: number,
+    citta: city,
+    nome: name,
+    type: type || null,
+  };
+
+  try {
+    const response = await axios.post(url, data);
+    console.log('Risposta dal server:', response.data);
+  } catch (error) {
+    console.error('Errore durante la chiamata:', error);
+  }
+}
+
 router.post('/webhook-elevenlabs-errore-chiamata', async (req, res) => {
   try {
     console.log(req.body);
@@ -408,6 +437,9 @@ router.post('/webhook-elevenlabs-errore-chiamata', async (req, res) => {
         transcript: Transcript,
       });
       await lead.save();
+      if (Motivo_Errore === "Errore Chiamata" && lead.recallAgent.recallType < 6){
+        makeOutboundCall(lead.numeroTelefono, lead.città, lead.nome, '', Transcript);
+      }
     } else {
       console.log('Nessun lead trovato con i criteri specificati.');
     }
@@ -444,6 +476,9 @@ router.post('/webhook-elevenlabs-sql-errore-chiamata', async (req, res) => {
         transcript: Transcript,
       });
       await lead.save();
+      if (Motivo_Errore === "Errore Chiamata" && lead.recallAgent.recallType < 6){
+        makeOutboundCall(lead.numeroTelefono, lead.città, lead.nome, 'bludental', Transcript);
+      }
     } else {
       console.log('Nessun lead trovato con i criteri specificati.');
     }

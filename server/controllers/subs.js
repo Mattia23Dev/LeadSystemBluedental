@@ -1202,8 +1202,8 @@ async function checkAndSendReminders() {
 
 // Pianifica il cron job per eseguire la funzione ogni ora
 cron.schedule('0 * * * *', () => {
-  recallSegreteria();
-  console.log('Eseguo la recall delle segreterie');
+  console.log('Eseguo il controllo dei reminder per i lead fissati');
+  checkAndSendReminders();
 });
 //checkAndSendReminders();
 
@@ -1501,12 +1501,14 @@ const recallSegreteria = async () => {
       return false;
     });
 
-    console.log(filteredLeads)
+    //console.log(filteredLeads)
     for (const lead of filteredLeads) {
       if (lead.utente.toString() === "65d3110eccfb1c0ce51f7492") {
         await makeOutboundCall(lead.numeroTelefono, lead.città, lead.nome, 'bludental');
+        console.log('Chiamata effettuata per la lead ' + lead.email)
       } else {
         await makeOutboundCall(lead.numeroTelefono, lead.città, lead.nome);
+        console.log('Chiamata effettuata per la lead ' + lead.email)
       }
     }
   } catch (error) {

@@ -1503,12 +1503,14 @@ const recallSegreteria = async () => {
 
     //console.log(filteredLeads)
     for (const lead of filteredLeads) {
-      if (lead.utente.toString() === "65d3110eccfb1c0ce51f7492") {
-        await makeOutboundCall(lead.numeroTelefono, lead.città, lead.nome, 'bludental');
-        console.log('Chiamata effettuata per la lead ' + lead.email)
-      } else {
-        await makeOutboundCall(lead.numeroTelefono, lead.città, lead.nome);
-        console.log('Chiamata effettuata per la lead ' + lead.email)
+      if (lead.recallAgent.recallType < 4) {
+        if (lead.utente.toString() === "65d3110eccfb1c0ce51f7492") {
+          await makeOutboundCall(lead.numeroTelefono, lead.città, lead.nome, 'bludental');
+          console.log('Chiamata effettuata per la lead ' + lead.email)
+        } else {
+          await makeOutboundCall(lead.numeroTelefono, lead.città, lead.nome);
+          console.log('Chiamata effettuata per la lead ' + lead.email)
+        }        
       }
     }
   } catch (error) {
@@ -1571,12 +1573,14 @@ const recallErroreChiamata = async () => {
 
     //console.log(filteredLeads)
     for (const lead of filteredLeads) {
-      if (lead.utente.toString() === "65d3110eccfb1c0ce51f7492") {
-        await makeOutboundCallErrore(lead.numeroTelefono, lead.città, lead.nome, 'bludental', lastRecall.transcript);
-        console.log('Chiamata effettuata per la lead ' + lead.email)
+      if (lead.recallAgent.recallType < 4) {
+        if (lead.utente.toString() === "65d3110eccfb1c0ce51f7492") {
+          await makeOutboundCallErrore(lead.numeroTelefono, lead.città, lead.nome, 'bludental', lastRecall.transcript);
+          console.log('Chiamata effettuata per la lead ' + lead.email)
       } else {
         await makeOutboundCallErrore(lead.numeroTelefono, lead.città, lead.nome, '', lastRecall.transcript);
-        console.log('Chiamata effettuata per la lead ' + lead.email)
+          console.log('Chiamata effettuata per la lead ' + lead.email)
+        }
       }
     }
   } catch (error) {

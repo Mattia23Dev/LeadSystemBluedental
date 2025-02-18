@@ -1516,8 +1516,81 @@ const recallSegreteria = async () => {
   }
 }
 
-cron.schedule('0 * * * *', () => {
-  recallSegreteria();
-  console.log('Eseguo la recall delle segreterie');
-});
+async function makeOutboundCallErrore(number, city, name, type, transcript) {
+  const url = 'https://twilio-11labs-call-agent-production.up.railway.app/outbound-call';
+  //const url = 'https://cd9f-185-199-103-50.ngrok-free.app/outbound-call';
+  number = number.replace(/\s+/g, '');
+
+  // Controlla e aggiusta il prefisso
+  if (!number.startsWith('+39')) {
+    if (number.startsWith('39') && number.length === 12) {
+      number = '+' + number;
+    } else if (number.length === 10) {
+      number = '+39' + number;
+    }
+  }
+
+  // Troncamento del transcript se supera i 3500 caratteri
+  if (transcript && transcript.length > 2500) {
+    transcript = transcript.substring(0, 2500);
+  }
+
+  const data = {
+    number: number,
+    citta: city,
+    nome: name,
+    type: type || null,
+    transcript: transcript || null,
+  };
+
+  try {
+    const response = await axios.post(url, data);
+    console.log('Risposta dal server:', response.data);
+  } catch (error) {
+    console.error('Errore durante la chiamata:', error);
+  }
+}
+
+const recallErroreChiamata = async () => {
+  try {
+    const leads = await Lead.find({
+      'recallAgent.recallType': { $gt: 0 }
+    });
+    let lastRecall;
+    const twoHoursAgo = new Date();
+    twoHoursAgo.setHours(twoHoursAgo.getHours() - 3);
+
+    const filteredLeads = leads.filter(lead => {
+      const recallInfo = lead.recallAgent.recallInfo;
+      if (recallInfo && recallInfo.length > 0) {
+        lastRecall = recallInfo[recallInfo.length - 1];
+        return lastRecall.recallReason === "Errore Chiamata" && new Date(lastRecall.recallDate) > twoHoursAgo;
+      }
+      return false;
+    });
+
+    //console.log(filteredLeads)
+    for (const lead of filteredLeads) {
+      if (lead.utente.toString() === "65d3110eccfb1c0ce51f7492") {
+        await makeOutboundCallErrore(lead.numeroTelefono, lead.città, lead.nome, 'bludental', lastRecall.transcript);
+        console.log('Chiamata effettuata per la lead ' + lead.email)
+      } else {
+        await makeOutboundCallErrore(lead.numeroTelefono, lead.città, lead.nome, '', lastRecall.transcript);
+        console.log('Chiamata effettuata per la lead ' + lead.email)
+      }
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+  cron.schedule('0 * * * *', () => {
+    recallSegreteria();
+    console.log('Eseguo la recall delle segreterie');
+  });
+  
+  cron.schedule('0 */2 * * *', () => {
+    recallErroreChiamata();
+    console.log('Eseguo la recall degli errori di chiamata');
+  });
 //recallSegreteria()

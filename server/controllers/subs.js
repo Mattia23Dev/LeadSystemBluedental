@@ -129,7 +129,7 @@ async function makeOutboundCall(number, city, name, type) {
   }
 }
 
-let lastFunctionExecuted = null;
+let lastFunctionExecuted = "calculateAndAssignLeadsEveryDay";
 
 //makeOutboundCall('+393409610597', 'Roma', 'Alessandro Grandoni', 'bludental');
 //makeOutboundCall('+393313869850', 'Roma', 'Mattia Noris');

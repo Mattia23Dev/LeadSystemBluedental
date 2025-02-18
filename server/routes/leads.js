@@ -398,6 +398,11 @@ async function makeOutboundCall(number, city, name, type, transcript) {
     }
   }
 
+  // Troncamento del transcript se supera i 3500 caratteri
+  if (transcript && transcript.length > 2500) {
+    transcript = transcript.substring(0, 2500);
+  }
+
   const data = {
     number: number,
     citta: city,
@@ -413,6 +418,8 @@ async function makeOutboundCall(number, city, name, type, transcript) {
     console.error('Errore durante la chiamata:', error);
   }
 }
+
+//makeOutboundCall("+393473815084", "arezzo", "Giuseppe Gio Botindari", "bludental", "Agente: Si Pronto?, ehm parlo con Giuseppe Gio Botindari? Utente: Da che telefono chiamate però? Non si sente niente. Agente: Mi scusi, signor Botindari, sembra che ci siano problemi di linea. Sto chiamando da Bludental, e la stavo contattando riguardo alla sua richiesta di informazioni sui trattamenti odontoiatrici. Mi sente meglio adesso? Utente: Sì, quello l'ho capito, ditemi. Agente: Perfetto! Visto che la linea è un po' disturbata, cercherò di essere breve. Ehm... allora, per quanto riguarda i denti fissi completi che vorrebbe mettere, ha in mente un budget massimo di spesa? Utente: Non ho idea. Agente: Capisco. Ehm... Vediamo... Da quanto tempo sta valutando di fare questo tipo di intervento? Utente: Non ho idea dei costi. Agente: Certo, capisco perfettamente. Non sono in grado di fornirle una stima precisa dei costi in questa sede, ma posso metterla in contatto con il centro Bludental più vicino a lei. Lì potranno valutare la sua situazione specifica e fornirle tutte le informazioni necessarie. Ehm... Vediamo... Le farebbe piacere fissare una visita gratuita? Utente: Che sarebbe? Agente: Lei si trova ad Arezzo, giusto? Utente: Addio patria! Agente: Ehm... Vediamo... Conferma che si trova ad Arezzo? In questo caso, il centro Bludental più vicino si trova proprio lì, in Via Leone Leoni, numero quattro. Utente: Non t'ho più sentito. Agente: Mi scusi, signor Botindari, la linea è un po' instabile. Conferma che si trova ad Arezzo? In questo modo posso metterla in contatto con il centro Bludental più vicino per una visita gratuita.\\n Utente: Da chi ami? Dall'India? Agente: Mi scusi, non capisco bene la domanda. Potrebbe riformularla? Vorrebbe sapere se il centro Bludental è in India? Oppure... Ehm... vediamo... forse intendeva... Utente: Oh God, no Emilia! Agente: Mi scusi, non riesco a capire cosa intende. Ha problemi di linea? Utente: Ma che Emilia? Agente: Mi scusi, signor Botindari, non capisco a cosa si riferisce. Forse c'è un problema di linea e non riesco a sentire bene. Posso richiamarla tra qualche minuto? Utente: Ho detto da dove chiami, dall'India?! Agente: No, signor Botindari, non chiamo dall'India. Chiamo dall'Italia, sono Andrea, assistente virtuale di Bludental. Stavo cercando di capire se lei si trova ancora ad Arezzo per metterla in contatto con il centro più vicino. Conferma? Utente: Sì, ma mi riferisco alla linea. Agente: Ah, capisco! Purtroppo non ho informazioni precise sulla provenienza della linea telefonica. Però, se mi conferma la sua posizione, posso metterla in contatto con il centro Bludental più vicino, e magari loro possono fornirle maggiori dettagli sui trattamenti. Si trova ancora ad Arezzo?\\n Utente: Benissimo! Arezzo, ho detto Arezzo. Agente: Perfetto! Allora, ad Arezzo abbiamo un centro in Via Leone Leoni, quattro. Le è comodo come zona?\\n Utente: Sì benissimo se mi mandate un messaggio con l'indirizzo o un numero di contatto li contatto io. Agente: Certo, posso farle contattare direttamente dalla collega del centro di Arezzo per fissare un appuntamento. Posso usare questo numero di telefono per metterla in contatto con loro?\\n Utente: Benissimo! Agente: Perfetto! Allora, ricapitolando, lei è interessato a un appuntamento nel centro di Arezzo, corretto?\\n Utente: ... Agente: Signor Botindari, è ancora in linea?")
 
 router.post('/webhook-elevenlabs-errore-chiamata', async (req, res) => {
   try {
@@ -438,9 +445,9 @@ router.post('/webhook-elevenlabs-errore-chiamata', async (req, res) => {
         transcript: Transcript,
       });
       await lead.save();
-      if (Motivo_Errore === "Errore Chiamata" && lead.recallAgent.recallType < 6){
+      /*if (Motivo_Errore === "Errore Chiamata" && lead.recallAgent.recallType < 6){
         makeOutboundCall(lead.numeroTelefono, lead.città, lead.nome, '', Transcript);
-      }
+      }*/
     } else {
       console.log('Nessun lead trovato con i criteri specificati.');
     }
@@ -477,9 +484,9 @@ router.post('/webhook-elevenlabs-sql-errore-chiamata', async (req, res) => {
         transcript: Transcript,
       });
       await lead.save();
-      if (Motivo_Errore === "Errore Chiamata" && lead.recallAgent.recallType < 6){
+      /*if (Motivo_Errore === "Errore Chiamata" && lead.recallAgent.recallType < 6){
         makeOutboundCall(lead.numeroTelefono, lead.città, lead.nome, 'bludental', Transcript);
-      }
+      }*/
     } else {
       console.log('Nessun lead trovato con i criteri specificati.');
     }

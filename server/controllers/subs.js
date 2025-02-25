@@ -291,7 +291,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
             //await sendEmailLeadArrivati(user._id);
             const currentHour = new Date().getHours();
-            if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDay' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20 && newLead.utmCampaign.includes('Gold')) {
+            if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDay' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
               console.log("Eseguo la chiamata di Ambra e Gold");
               await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
               lastFunctionExecuted = 'calculateAndAssignLeadsEveryDay';

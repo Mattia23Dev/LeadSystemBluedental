@@ -1094,6 +1094,63 @@ cron.schedule('30 11 * * *', () => {
   runDailyMeta();
 });*/
 
+const writeDataNonPrequalificati = async (auth) => {
+  const dataToUpdate = [];
+  const sheets = google.sheets({ version: 'v4', auth });
+  const oggi = new Date();
+  oggi.setDate(oggi.getDate() - 1); // Imposta
+  oggi.setUTCHours(23, 59, 59, 999); // Imposta la fine del giorno in UTC
+
+  const inizioPeriodo = new Date(Date.UTC(2025, 1, 10, 0, 1, 0, 0));// Assicurati che 'inizioPeriodo' sia all'inizio del giorno
+
+  console.log("Inizio Periodo:", inizioPeriodo.toISOString());
+  console.log("Oggi:", oggi.toISOString());
+  const leads = await Lead.find({
+    utente: "65d3110eccfb1c0ce51f7492",
+    appVoiceBot: { $exists: false, $ne: true },
+    dataTimestamp: { $gte: inizioPeriodo, $lte: oggi } // Assicurati che il confronto delle date sia corretto
+  });
+
+  console.log(leads.length)
+  leads.forEach((lead) => {
+    const leadData = [
+      lead.data ? formatDate(new Date(lead.data)) : '', 
+      lead.nome,
+      lead.email,
+      lead.numeroTelefono,
+      lead.utmCampaign ? lead.utmCampaign.toString() : lead.campagna.trim().toLocaleLowerCase() === 'messenger' ? "Messenger" : '', 
+      lead.esito === "Non interessato" ? "Lead persa" : lead.esito.toString(),
+      lead.dataPrimaModifica ? formatDate(lead.dataPrimaModifica) : 'Nessuna Data',
+      lead.dataCambiamentoEsito ? formatDate(lead.dataCambiamentoEsito) : 'Nessuna Data', 
+    ];
+  
+    dataToUpdate.push(leadData);
+  });
+
+  const resource = {
+    values: dataToUpdate,
+  };
+  sheets.spreadsheets.values.append(
+    {
+      spreadsheetId: '1fZqZv5r5dKFgChQe-lLcBDiQAYlO0baGCiA4_pTUCSg',
+      range: 'No-prequalifica-ls!A1',
+      valueInputOption: 'RAW',
+      resource: resource,
+    },
+    async (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(
+          '%d cells updated on range: %s',
+          result.data.updates.updatedCells,
+          result.data.updates.updatedRange
+        );
+      }
+    }
+  );
+};
+
 const writeDataPrequalificati = async (auth) => {
   const dataToUpdate = [];
   const sheets = google.sheets({ version: 'v4', auth });
@@ -1254,7 +1311,8 @@ const writeDataElevenLabsPrequalifica = async (auth) => {
 };
 
 //runExport(writeDataElevenLabsPrequalifica);
-cron.schedule('30 4 * * *', async () => {
+//runExport(writeDataNonPrequalificati);
+cron.schedule('30 3 * * *', async () => {
   await runExport(writeDataPrequalificati);
   await runExport(writeDataElevenLabsPrequalifica);
 })

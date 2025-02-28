@@ -291,12 +291,12 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
             //await sendEmailLeadArrivati(user._id);
             const currentHour = new Date().getHours();
-            if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDay' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
+            /*if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDay' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
               console.log("Eseguo la chiamata di Ambra e Gold");
               await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
               lastFunctionExecuted = 'calculateAndAssignLeadsEveryDay';
             }
-
+*/
             console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);            
           } else {
             //await trigger(newLead, user)
@@ -867,7 +867,8 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
             //await sendEmailLeadArrivati(user._id);
             const currentHour = new Date().getHours();
-            if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
+           // if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
+            if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' && currentHour >= 9 && currentHour <= 20) {
               console.log("Eseguo la chiamata di Ambra e Gold");
               await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
               lastFunctionExecuted = 'calculateAndAssignLeadsEveryDayMetaWeb';
@@ -1588,13 +1589,13 @@ const recallErroreChiamata = async () => {
   }
 }
 
-  cron.schedule('0 * * * *', () => {
+  /*cron.schedule('0 * * * *', () => {
     recallSegreteria();
     console.log('Eseguo la recall delle segreterie');
   });
-  
-  cron.schedule('0 */2 * * *', () => {
-    recallErroreChiamata();
-    console.log('Eseguo la recall degli errori di chiamata');
-  });
+  */
+  //cron.schedule('0 */2 * * *', () => {
+  //  recallErroreChiamata();
+  //  console.log('Eseguo la recall degli errori di chiamata');
+  //});
 //recallSegreteria()

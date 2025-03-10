@@ -428,7 +428,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
     }
 
     const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
-    let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }, utente: "664c5b2f3055d6de1fcaa22b"});
+    let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }, utente: "65d3110eccfb1c0ce51f7492"});
 
     const lastUserId = lastUserReceivedLead;
 
@@ -480,7 +480,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
       await lead.save();
       console.log('Lead aggiornata con successo nel database!');
 
-      const userId = '664c5b2f3055d6de1fcaa22b'; //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
+      const userId = '65d3110eccfb1c0ce51f7492'; //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
         let user = await User.findById(userId);
         const newLead = new Lead({
           data: new Date(),
@@ -493,7 +493,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
           città: città || "",
           trattamento: "Implantologia per singolo dente",
           orientatori: null, //nextUser ? nextUser._id : randomUser._id,
-          utente: "664c5b2f3055d6de1fcaa22b", //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
+          utente: "65d3110eccfb1c0ce51f7492", //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
           note: "",
           fatturato: "",
           utmContent: canale || "",
@@ -575,7 +575,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
       await lead.save();
       console.log('Lead salvato con successo nel database!');
 
-      const userId ='664c5b2f3055d6de1fcaa22b'; //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
+      const userId ='65d3110eccfb1c0ce51f7492'; //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
         let user = await User.findById(userId);
         const newLead = new Lead({
           data: new Date(),
@@ -588,7 +588,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
           città: città || '',
           trattamento: "Implantologia per singolo dente",
           orientatori: null, //nextUser ? nextUser._id : randomUser._id,
-          utente: "664c5b2f3055d6de1fcaa22b", //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
+          utente: "65d3110eccfb1c0ce51f7492", //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
           note: "",
           fatturato: "",
           utmContent: canale || "",

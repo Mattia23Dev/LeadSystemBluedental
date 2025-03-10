@@ -295,8 +295,8 @@ const calculateAndAssignLeadsEveryDay = async () => {
               console.log("Eseguo la chiamata di Ambra e Gold");
               await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
               lastFunctionExecuted = 'calculateAndAssignLeadsEveryDay';
-            }*/
-
+            }
+*/
             console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);            
           } else {
             //await trigger(newLead, user)
@@ -867,8 +867,14 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
             //await sendEmailLeadArrivati(user._id);
             const currentHour = new Date().getHours();
+<<<<<<< HEAD
             if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
               console.log("Eseguo la chiamata di Meta web");
+=======
+           // if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
+            if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' && currentHour >= 9 && currentHour <= 20) {
+              console.log("Eseguo la chiamata di Ambra e Gold");
+>>>>>>> 7dfe32412b931f2cc07a4fe77583cfe24fa0166b
               await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
               lastFunctionExecuted = 'calculateAndAssignLeadsEveryDayMetaWeb';
             }
@@ -1588,13 +1594,13 @@ const recallErroreChiamata = async () => {
   }
 }
 
-  cron.schedule('0 * * * *', () => {
+  /*cron.schedule('0 * * * *', () => {
     recallSegreteria();
     console.log('Eseguo la recall delle segreterie');
   });
-  
-  cron.schedule('0 */2 * * *', () => {
-    recallErroreChiamata();
-    console.log('Eseguo la recall degli errori di chiamata');
-  });
+  */
+  //cron.schedule('0 */2 * * *', () => {
+  //  recallErroreChiamata();
+  //  console.log('Eseguo la recall degli errori di chiamata');
+  //});
 //recallSegreteria()

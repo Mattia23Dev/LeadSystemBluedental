@@ -867,7 +867,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
             //await sendEmailLeadArrivati(user._id);
             const currentHour = new Date().getHours();
-            if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
+            if (/*lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' &&*/ bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
               console.log("Eseguo la chiamata di Meta web");
               await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
               lastFunctionExecuted = 'calculateAndAssignLeadsEveryDayMetaWeb';

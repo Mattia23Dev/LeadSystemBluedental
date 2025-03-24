@@ -867,6 +867,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
             //await sendEmailLeadArrivati(user._id);
             const currentHour = new Date().getHours();
+            console.log(currentHour)
             if (/*lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' &&*/ currentHour >= 8 && currentHour <= 20) {
               console.log("Eseguo la chiamata di Meta web");
               await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
@@ -917,6 +918,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
   }
 };
 
+console.log(new Date().getHours())
 const calculateAndAssignLeadsEveryDayWordpressComparatore = async () => {
   try {
     const userId = '655f707143a59f06d5d4dc3b';

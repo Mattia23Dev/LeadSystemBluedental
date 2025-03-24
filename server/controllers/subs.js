@@ -1504,8 +1504,9 @@ const recallSegreteria = async () => {
     });
 
     //console.log(filteredLeads)
+    const currentHour = new Date().getHours();
     for (const lead of filteredLeads) {
-      if (lead.recallAgent.recallType < 4) {
+      if (lead.recallAgent.recallType < 4 && currentHour >= 8 && currentHour <= 20) {
         if (lead.utente.toString() === "65d3110eccfb1c0ce51f7492") {
           await makeOutboundCall(lead.numeroTelefono, lead.città, lead.nome, 'bludental');
           console.log('Chiamata effettuata per la lead ' + lead.email)
@@ -1513,6 +1514,8 @@ const recallSegreteria = async () => {
           await makeOutboundCall(lead.numeroTelefono, lead.città, lead.nome);
           console.log('Chiamata effettuata per la lead ' + lead.email)
         }        
+      } else {
+        console.log('Chiamata non effettuata per la lead ' + lead.email + ' perché non è tra le 8 e le 20 o più di 4 recall')
       }
     }
   } catch (error) {
@@ -1520,7 +1523,7 @@ const recallSegreteria = async () => {
   }
 }
 
-async function makeOutboundCallErrore(number, city, name, type, transcript) {
+async function makeOutboundCallErrore(number, city, name, type) {
   const url = 'https://twilio-11labs-call-agent-production.up.railway.app/outbound-call';
   //const url = 'https://cd9f-185-199-103-50.ngrok-free.app/outbound-call';
   number = number.replace(/\s+/g, '');
@@ -1534,17 +1537,11 @@ async function makeOutboundCallErrore(number, city, name, type, transcript) {
     }
   }
 
-  // Troncamento del transcript se supera i 3500 caratteri
-  if (transcript && transcript.length > 2500) {
-    transcript = transcript.substring(0, 2500);
-  }
-
   const data = {
     number: number,
     citta: city,
     nome: name,
     type: type || null,
-    transcript: transcript || null,
   };
 
   try {
@@ -1574,15 +1571,18 @@ const recallErroreChiamata = async () => {
     });
 
     //console.log(filteredLeads)
+    const currentHour = new Date().getHours();
     for (const lead of filteredLeads) {
-      if (lead.recallAgent.recallType < 4) {
+      if (lead.recallAgent.recallType < 4 && currentHour >= 8 && currentHour <= 20) {
         if (lead.utente.toString() === "65d3110eccfb1c0ce51f7492") {
-          await makeOutboundCallErrore(lead.numeroTelefono, lead.città, lead.nome, 'bludental', lastRecall.transcript);
+          await makeOutboundCallErrore(lead.numeroTelefono, lead.città, lead.nome, 'bludental');
           console.log('Chiamata effettuata per la lead ' + lead.email)
       } else {
-        await makeOutboundCallErrore(lead.numeroTelefono, lead.città, lead.nome, '', lastRecall.transcript);
+        await makeOutboundCallErrore(lead.numeroTelefono, lead.città, lead.nome, '');
           console.log('Chiamata effettuata per la lead ' + lead.email)
         }
+      } else {
+        console.log('Chiamata non effettuata per la lead ' + lead.email + ' perché non è tra le 8 e le 20 o più di 4 recall')
       }
     }
   } catch (error) {
@@ -1590,13 +1590,13 @@ const recallErroreChiamata = async () => {
   }
 }
 
-  /*cron.schedule('0 * * * *', () => {
+  cron.schedule('0 * * * *', () => {
     recallSegreteria();
     console.log('Eseguo la recall delle segreterie');
   });
-  */
-  //cron.schedule('0 */2 * * *', () => {
-  //  recallErroreChiamata();
-  //  console.log('Eseguo la recall degli errori di chiamata');
-  //});
+  
+  cron.schedule('0 */2 * * *', () => {
+    recallErroreChiamata();
+    console.log('Eseguo la recall degli errori di chiamata');
+  });
 //recallSegreteria()

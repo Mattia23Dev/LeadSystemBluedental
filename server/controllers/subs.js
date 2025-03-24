@@ -1093,7 +1093,7 @@ cron.schedule('8,49,18 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () 
   console.log('Prendo i lead di Bluedental');
 });
 
-cron.schedule('10,52,33 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+/*cron.schedule('10,52,33 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getThlLead1();
   console.log('Prendo i lead di THL 1');
 });
@@ -1101,7 +1101,7 @@ cron.schedule('10,52,33 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', ()
 cron.schedule('12,44,22 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getThlLead2();
   console.log('Prendo i lead di THL 2');
-});
+});*/
 
 async function updateDataTimestampForAllLeads() {
   try {

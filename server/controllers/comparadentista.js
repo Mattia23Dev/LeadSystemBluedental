@@ -1317,6 +1317,8 @@ cron.schedule('30 3 * * *', async () => {
   await runExport(writeDataElevenLabsPrequalifica);
 })
 
+//runExport(writeDataPrequalificati);
+
 
 const writeDataGFUQualificati = async (auth) => {
   const dataToUpdate = [];

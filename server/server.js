@@ -8,7 +8,65 @@ const path = require("path");
 const Lead = require('./models/lead');
 const bodyParser = require("body-parser")
 const axios = require('axios')
+const XLSX = require('xlsx');
 
+const esportaLeadIeri = async () => {
+  try {
+    // Imposta l'intervallo di tempo per ieri dalle 9:00 alle 22:00
+    const ieri = new Date();
+    ieri.setDate(ieri.getDate() - 1);
+    
+    const inizioIntervallo = new Date(ieri);
+    inizioIntervallo.setHours(9, 0, 0, 0);
+    
+    const fineIntervallo = new Date(ieri);
+    fineIntervallo.setHours(22, 0, 0, 0);
+
+    // Trova le lead che corrispondono ai criteri
+    const leads = await Lead.find({
+      utente: "65d3110eccfb1c0ce51f7492",
+      dataTimestamp: {
+        $gte: inizioIntervallo,
+        $lte: fineIntervallo
+      },
+      utmCampaign: { $regex: /Meta Web/i }
+    });
+
+    // Prepara i dati per il file Excel
+    const datiPerExcel = leads.map(lead => ({
+      Nome: lead.nome,
+      Email: lead.email,
+      Telefono: lead.numeroTelefono,
+      Città: lead.città,
+      Trattamento: lead.trattamento,
+      Esito: lead.esito,
+      Data: lead.dataTimestamp ? new Date(lead.dataTimestamp).toLocaleString('it-IT') : '',
+      Campagna: lead.campagna,
+      'UTM Campaign': lead.utmCampaign,
+      'UTM Content': lead.utmContent,
+      'UTM Adset': lead.utmAdset
+    }));
+
+    // Crea un nuovo workbook
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(datiPerExcel);
+
+    // Aggiungi il worksheet al workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Lead di Ieri");
+
+    // Genera il nome del file con la data di ieri
+    const dataFile = ieri.toISOString().split('T')[0];
+    const nomeFile = `lead_${dataFile}.xlsx`;
+
+    // Salva il file
+    XLSX.writeFile(wb, nomeFile);
+
+    console.log(`Esportazione completata: ${leads.length} lead esportate in ${nomeFile}`);
+    
+  } catch (error) {
+    console.error('Errore durante l\'esportazione delle lead:', error);
+  }
+};
 const app = express();
 
 mongoose.set('strictQuery', false); 
@@ -343,7 +401,7 @@ const checkLeadDoppie = async () => {
   const idsToRemove = leadDuplicate.map(lead => lead._id);
 }
 //checkLeadDoppie()
-
+//esportaLeadIeri();
 //deleteAllLeads();
 const port = process.env.PORT || 8000;
 app.listen(port, () => console.log(`Server is running on port ${port}`));

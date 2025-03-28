@@ -10,6 +10,7 @@ const { parse } = require('json2csv');
 const LeadChatbot = require('./models/leadChatbot');
 const {authenticate} = require('@google-cloud/local-auth');
 const { saveLeadChatbotDentista, saveLeadChatbotDentistaNew, saveLeadChatbotDentistaNewCallCenter } = require('./controllers/chatbot');
+const axios = require('axios');
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
@@ -134,6 +135,48 @@ const exportLeadsToCSV = async () => {
 app.post('/api/save-chatbot-dentista', saveLeadChatbotDentista);
 app.post('/api/save-chatbot-dentista-new', saveLeadChatbotDentistaNew);
 app.post('/api/save-chatbot-dentista-new-callcenter', saveLeadChatbotDentistaNewCallCenter);
+
+app.post('/api/webhook-test-deepsystem', function(req, res) {
+  try {
+    console.log(req.body)
+    res.status(200).json({ message: 'ok!' });
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'error!' });
+  }
+});
+
+const inviaWebhookFlow = async (customerData) => {
+  try {
+    const response = await axios.post('http://localhost:3000/webhooks/flows/29b87450-335f-442d-88f6-813bf9db3a04', {
+      customerName: customerData.nome,
+      phoneNumber: customerData.telefono,
+      productId: customerData.prodottoId,
+      message: customerData.messaggio
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('Risposta dal webhook:', response.data);
+    return response.data;
+
+  } catch (error) {
+    console.error('Errore durante l\'invio del webhook:', error.message);
+    throw error;
+  }
+};
+
+// Esempio di utilizzo:
+
+/*inviaWebhookFlow({
+  nome: "Mattia",
+  telefono: "+393513257290",
+  prodottoId: "PROD123",
+  messaggio: "Ciao, vorrei informazioni sul prodotto PROD123"
+});*/
+
 
 /*const runDailyJob = () => {
   authorize()

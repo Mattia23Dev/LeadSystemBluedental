@@ -855,6 +855,8 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
         const leadesistenti = filterOldLeads(leadsVerify)
         try {
           if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length == 0)){
+            const currentHour = new Date().getHours();
+            newLead.outHour = currentHour < 8 || currentHour > 20;
             await newLead.save();
             //await trigger(newLead, user)
             lastUserReceivedLead = user?._id;
@@ -866,7 +868,6 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
             //await sendNotification(user._id);
 
             //await sendEmailLeadArrivati(user._id);
-            const currentHour = new Date().getHours();
             console.log(currentHour)
             if (/*lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' &&*/ currentHour >= 8 && currentHour <= 20) {
               console.log("Eseguo la chiamata di Meta web");
@@ -1600,3 +1601,44 @@ const recallErroreChiamata = async () => {
     console.log('Eseguo la recall degli errori di chiamata');
   });
 //recallSegreteria()
+
+const gestisciChiamatePendenti = async () => {
+  try {
+    // Trova tutte le lead con outHour: true
+    const leadsPendenti = await Lead.find({ 
+      outHour: true,
+      utente: "65d3110eccfb1c0ce51f7492"
+    });
+
+    console.log(`Trovate ${leadsPendenti.length} chiamate pendenti da processare`);
+
+    for (const lead of leadsPendenti) {
+      try {
+        // Esegue la chiamata
+        await makeOutboundCall(lead.numeroTelefono, lead.città, lead.nome, 'bludental');
+        
+        // Aggiorna lo stato della lead
+        lead.outHour = false;
+        await lead.save();
+        
+        console.log(`Chiamata eseguita con successo per ${lead.nome} (${lead.numeroTelefono})`);
+        
+        // Attende 2 secondi tra una chiamata e l'altra per evitare sovraccarichi
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (error) {
+        console.error(`Errore durante la chiamata per ${lead.nome}:`, error);
+        // Continua con la prossima lead anche se questa fallisce
+      }
+    }
+
+    console.log('Processo di gestione chiamate pendenti completato');
+  } catch (error) {
+    console.error('Errore durante la gestione delle chiamate pendenti:', error);
+  }
+};
+
+// Cron job che si esegue ogni giorno alle 10:00
+cron.schedule('0 10 * * *', () => {
+  console.log('Avvio gestione chiamate pendenti...');
+  gestisciChiamatePendenti();
+});

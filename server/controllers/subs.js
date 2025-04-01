@@ -1134,7 +1134,7 @@ async function updateDataTimestampForAllLeads() {
 
 //updateDataTimestampForAllLeads()
 
-cron.schedule('15,58,25,40 6,78,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+cron.schedule('15,58,25,40 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   calculateAndAssignLeadsEveryDay();
   console.log('Assegno i lead di bludental altro');
 });

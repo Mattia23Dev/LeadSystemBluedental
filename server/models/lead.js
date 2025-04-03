@@ -100,6 +100,7 @@ const LeadSchema = new Schema({
     reminderInviato: Boolean,
     idDeasoft: String,
     appVoiceBot: Boolean,
+    chiamato: Boolean,
     outHour: Boolean,
     punteggio: Number,
     recallAgent: {

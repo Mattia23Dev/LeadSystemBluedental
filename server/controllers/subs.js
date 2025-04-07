@@ -1593,13 +1593,13 @@ const recallErroreChiamata = async () => {
   }
 }
 
-  cron.schedule('0 * * * *', () => {
+  /*cron.schedule('0 * * * *', () => {
     recallSegreteria();
     console.log('Eseguo la recall delle segreterie');
-  });
+  });*/
   
   cron.schedule('0 */2 * * *', () => {
-    recallErroreChiamata();
+    //recallErroreChiamata();
     console.log('Eseguo la recall degli errori di chiamata');
   });
 //recallSegreteria()
@@ -1640,7 +1640,7 @@ const gestisciChiamatePendenti = async () => {
 };
 
 // Cron job che si esegue ogni giorno alle 10:00
-cron.schedule('0 10 * * *', () => {
+/*cron.schedule('0 10 * * *', () => {
   console.log('Avvio gestione chiamate pendenti...');
   gestisciChiamatePendenti();
-});
+});*/

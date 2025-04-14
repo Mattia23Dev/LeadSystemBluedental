@@ -113,6 +113,7 @@ const LeadSchema = new Schema({
         }
       ],
     },
+    status: String,
   });
 
   LeadSchema.pre('save', function(next) {

@@ -328,6 +328,67 @@ router.post('/webhook-elevenlabs', async (req, res) => {
   }
 });
 
+router.post('/webhook-n8n-bludental', async (req, res) => {
+  try {
+    console.log(req.body);
+    const { punteggio_qualifica, call_summary, centro_scelto, user_phone, status, success } = req.body;
+    console.log('Dati ricevuti da ElevenLabs:', { punteggio_qualifica, call_summary, centro_scelto, user_phone, status, success });
+
+    const user = await User.findById("65d3110eccfb1c0ce51f7492");
+
+    const lead = await Lead.findOne({
+      utente: "65d3110eccfb1c0ce51f7492",
+      $or: [
+        { numeroTelefono: user_phone },
+        { numeroTelefono: `+39${user_phone}` }
+      ]
+    }); // Ordina per data decrescente per ottenere il più recente
+
+    if (lead) {
+      console.log('Lead trovato:', lead.numeroTelefono);
+      if (punteggio_qualifica && punteggio_qualifica !== "" && call_summary && call_summary !== "") {
+        lead.luogo = centro_scelto;
+        lead.summary = call_summary;
+        lead.punteggio = punteggio_qualifica;
+        lead.esito = "Lead qualificata";
+        if (success && success == "SEGRETERIA") {
+          lead.status = "segreteria";
+        } else {
+          lead.status = status;
+        }
+        lead.appVoiceBot = true;
+        await lead.save();
+        user.dailyLead += 1;
+        user.save();
+
+        /*await trigger({
+          nome: lead.nome,
+          email: lead.email,
+
+          numeroTelefono: lead.numeroTelefono,
+          città: lead.città,
+          trattamento: "Impianti",
+          esito: "Fissato",
+          appDate: Data_e_Orario,
+          luogo: Centro_Scelto,
+        }, {
+          nome: "Lorenzo",
+          telefono: "3514871035",
+        }, "1736760347221")*/
+      } else {
+        console.log('Lead non ha appuntamento o centro scelto', user_phone);
+      }
+    } else {
+      console.log('Nessun lead trovato con i criteri specificati.');
+    }
+
+    res.status(200).json({ message: 'Dati ricevuti con successo' });
+  } catch (error) {
+    console.error('Errore nel ricevere i dati da ElevenLabs:', error);
+    res.status(500).json({ message: 'Errore nel ricevere i dati' });
+  }
+});
+
 router.post('/webhook-elevenlabs-sql', async (req, res) => {
   try {
     console.log(req.body);

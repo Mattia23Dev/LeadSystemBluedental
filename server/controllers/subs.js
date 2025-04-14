@@ -101,10 +101,10 @@ axios.post(url, data, { headers })
 }
 
 async function makeOutboundCall(number, city, name, type) {
-  const url = 'https://twilio-11labs-call-agent-production.up.railway.app/outbound-call';
+  const url = 'https://primary-production-403a.up.railway.app/webhook/bludental-attivazione';
   //const url = 'https://cd9f-185-199-103-50.ngrok-free.app/outbound-call';
   number = number.replace(/\s+/g, '');
-
+  const lead = await Lead.findOne({ numeroTelefono: number });
   // Controlla e aggiusta il prefisso
   if (!number.startsWith('+39')) {
     if (number.startsWith('39') && number.length === 12) {
@@ -115,10 +115,11 @@ async function makeOutboundCall(number, city, name, type) {
   }
 
   const data = {
-    number: number,
-    citta: city,
-    nome: name,
+    user_phone: number,
+    user_city: city,
+    user_name: name,
     type: type || null,
+    user_id: lead?._id,
   };
 
   try {
@@ -131,8 +132,8 @@ async function makeOutboundCall(number, city, name, type) {
 
 let lastFunctionExecuted = "calculateAndAssignLeadsEveryDay";
 
-//makeOutboundCall('+393409610597', 'Roma', 'Alessandro Grandoni', 'bludental');
-//makeOutboundCall('+393313869850', 'Roma', 'Mattia Noris');
+//makeOutboundCall('+393409610597', 'Bari', 'Alessandro', 'bludental');
+//makeOutboundCall('+393513257290', 'Anzio', 'Mattia', 'bludental');
 
 //Da contattare
 /*trigger({

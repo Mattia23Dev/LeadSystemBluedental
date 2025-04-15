@@ -870,13 +870,11 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
             //await sendEmailLeadArrivati(user._id);
             console.log(currentHour)
-            /*if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDayMetaWeb' && currentHour >= 7 && currentHour <= 19) {
               console.log("Eseguo la chiamata di Meta web per il lead " + newLead.email);
               await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
               newLead.chiamato = true;
               await newLead.save();
-              lastFunctionExecuted = 'calculateAndAssignLeadsEveryDayMetaWeb';
-            }*/
+              //lastFunctionExecuted = 'calculateAndAssignLeadsEveryDayMetaWeb';
 
             console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);            
           } else {

@@ -10,6 +10,7 @@ const LastLeadUser = require('../models/lastLeadUser');
 const axios = require('axios')
 const fs = require('fs');
 const csv = require('csv-parser');
+const moment = require('moment');
 
 let lastUserReceivedLead = null;
 function filterOldLeads(leads) {
@@ -857,8 +858,8 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
         try {
           if (leadsVerify.length === 0 || (leadsVerify.length > 0 && filterOldLeads(leadsVerify).length == 0)){
             const currentHour = new Date().getHours();
-            newLead.outHour = currentHour < 7 || currentHour > 19;
-            await newLead.save();
+            //newLead.outHour = currentHour < 7 || currentHour > 19;
+            //await newLead.save();
             //await trigger(newLead, user)
             lastUserReceivedLead = user?._id;
             await user.save();
@@ -1606,9 +1607,13 @@ const recallErroreChiamata = async () => {
 const gestisciChiamatePendenti = async () => {
   try {
     // Trova tutte le lead con outHour: true
+    const ventiquattroOreFa = new Date();
+    ventiquattroOreFa.setHours(ventiquattroOreFa.getHours() - 15);
+
     const leadsPendenti = await Lead.find({ 
       outHour: true,
-      utente: "65d3110eccfb1c0ce51f7492"
+      utente: "65d3110eccfb1c0ce51f7492",
+      dataTimestamp: { $gte: ventiquattroOreFa }
     });
 
     console.log(`Trovate ${leadsPendenti.length} chiamate pendenti da processare`);
@@ -1625,7 +1630,7 @@ const gestisciChiamatePendenti = async () => {
         console.log(`Chiamata eseguita con successo per ${lead.nome} (${lead.numeroTelefono})`);
         
         // Attende 2 secondi tra una chiamata e l'altra per evitare sovraccarichi
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
       } catch (error) {
         console.error(`Errore durante la chiamata per ${lead.nome}:`, error);
         // Continua con la prossima lead anche se questa fallisce
@@ -1643,3 +1648,63 @@ const gestisciChiamatePendenti = async () => {
   console.log('Avvio gestione chiamate pendenti...');
   gestisciChiamatePendenti();
 });*/
+//gestisciChiamatePendenti();
+
+const reminderAppuntamenti = async () => {
+  try {
+    const now = moment();
+    const oneHourFromNow = moment().add(1, 'hour');
+
+    const leads = await Lead.find({
+      esito: "Appuntamento",
+      utente: "664c5b2f3055d6de1fcaa22b",
+      appDate: { $exists: true, $ne: null },
+      $or: [
+        { notificaApp: false },
+        { notificaApp: { $exists: false } }
+      ]
+    });
+
+    console.log(`Trovate ${leads.length} appuntamenti totali`);
+
+    for (const lead of leads) {
+      // Parsing della data nel formato "DD-MM-YY HH:mm"
+      const appDate = moment(lead.appDate, "YY-MM-DD HH:mm");
+      console.log(appDate)
+      // Verifica se l'appuntamento è tra ora e un'ora da ora
+      if (appDate.isBetween(now, oneHourFromNow, 'minute', '[]')) {
+        console.log(`\nAppuntamento imminente per ${lead.nome}:`);
+        console.log('Data appuntamento:', appDate.format('DD-MM-YY HH:mm'));
+        console.log('Telefono:', lead.numeroTelefono);
+
+        try {
+          const response = await axios.post('https://whatsbludental-6b55f91452bb.herokuapp.com/webhook-lead-bludental-notification', {
+            orientatrice: "Sistema",
+            leads: {
+              nome: lead.nome,
+              cognome: lead.cognome || "",
+              numeroTelefono: lead.numeroTelefono,
+              appDate: appDate.format('DD-MM-YY HH:mm'),
+              luogo: lead.luogo,
+              email: lead.email
+            }
+          });
+          lead.notificaApp = true;
+          await lead.save();
+          console.log('Notifica inviata con successo', response.data);
+        } catch (error) {
+          console.error('Errore nell\'invio della notifica:', error.message);
+        }
+      }
+    }
+    console.log('Tutti gli appuntamenti sono stati processati');
+  } catch (error) {
+    console.error('Errore nel controllo degli appuntamenti:', error);
+  }
+}
+
+cron.schedule('*/30 * * * *', () => {
+  console.log('Avvio gestione reminder appuntamenti...');
+  reminderAppuntamenti();
+});
+//reminderAppuntamenti();

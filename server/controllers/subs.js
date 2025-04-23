@@ -243,11 +243,11 @@ const calculateAndAssignLeadsEveryDay = async () => {
             userData.email = field.values[0];
           } else if (field.name === "phone_number") {
             userData.phone_number = field.values[0];
-          } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_"){
+          } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_" || field.name === "quanti_denti_desideri_sostituire?"){
             userData.trattamento = field.values[0].replace(/_/g, " ");
           } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
             userData.città = field.values[0].replace(/_/g, " ");
-          } else if (field.name == "quando_preferiresti_essere_contattata?_"){
+          } else if (field.name == "quando_preferiresti_essere_contattata?_" || field.name == "in_che_tempistiche?"){
             userData.quando = field.values[0];
           }
         }
@@ -557,11 +557,11 @@ const calculateAndAssignLeadsEveryDayEstetica = async () => {
             userData.email = field.values[0];
           } else if (field.name === "phone_number") {
             userData.phone_number = field.values[0];
-          } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_"){
+          } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_" || field.name === "quanti_denti_desideri_sostituire?"){
             userData.trattamento = field.values[0].replace(/_/g, " ");
           } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
             userData.città = field.values[0].replace(/_/g, " ");
-          } else if (field.name == "quando_preferiresti_essere_contattata?_"){
+          } else if (field.name == "quando_preferiresti_essere_contattata?_" || field.name == "in_che_tempistiche?"){
             userData.quando = field.values[0];
           }
         }
@@ -687,11 +687,11 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
             userData.email = field.values[0];
           } else if (field.name === "phone_number") {
             userData.phone_number = field.values[0];
-          } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_"){
+          } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_" || field.name === "quanti_denti_desideri_sostituire?"){
             userData.trattamento = field.values[0].replace(/_/g, " ");
           } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
             userData.città = field.values[0].replace(/_/g, " ");
-          } else if (field.name == "quando_preferiresti_essere_contattata?_"){
+          } else if (field.name == "quando_preferiresti_essere_contattata?_" || field.name == "in_che_tempistiche?"){
             userData.quando = field.values[0];
           }
         }
@@ -819,11 +819,11 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
             userData.email = field.values[0];
           } else if (field.name === "phone_number") {
             userData.phone_number = field.values[0];
-          } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_"){
+          } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_" || field.name === "quanti_denti_desideri_sostituire?"){
             userData.trattamento = field.values[0].replace(/_/g, " ");
           } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
             userData.città = field.values[0].replace(/_/g, " ");
-          } else if (field.name == "quando_preferiresti_essere_contattata?_"){
+          } else if (field.name == "quando_preferiresti_essere_contattata?_" || field.name == "in_che_tempistiche?"){
             userData.quando = field.values[0];
           }
         }
@@ -1670,7 +1670,7 @@ const reminderAppuntamenti = async () => {
     for (const lead of leads) {
       // Parsing della data nel formato "DD-MM-YY HH:mm"
       const appDate = moment(lead.appDate, "YY-MM-DD HH:mm");
-      console.log(appDate)
+      console.log(lead.appDate)
       // Verifica se l'appuntamento è tra ora e un'ora da ora
       if (appDate.isBetween(now, oneHourFromNow, 'minute', '[]')) {
         console.log(`\nAppuntamento imminente per ${lead.nome}:`);

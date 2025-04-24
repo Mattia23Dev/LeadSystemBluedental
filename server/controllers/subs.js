@@ -692,7 +692,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
           } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
             userData.città = field.values[0].replace(/_/g, " ");
           } else if (field.name == "quando_preferiresti_essere_contattata?_" || field.name == "in_che_tempistiche?"){
-            userData.quando = field.values[0];
+            userData.quando = field.values[0].replace(/_/g, " ");
           }
         }
 
@@ -703,6 +703,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
           numeroTelefono: userData.phone_number,
           campagna: 'Social',
           città: userData.città ? userData.città : '',
+          quando: userData.quando ? userData.quando : '',
           trattamento: userData.trattamento ? userData.trattamento : 'Implantologia a carico immediato',
           esito: "Da contattare",
           orientatori: null,

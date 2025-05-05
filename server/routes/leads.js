@@ -331,8 +331,8 @@ router.post('/webhook-elevenlabs', async (req, res) => {
 router.post('/webhook-n8n-bludental', async (req, res) => {
   try {
     console.log(req.body);
-    const { punteggio_qualifica, call_summary, centro_scelto, user_phone, status, success } = req.body;
-    console.log('Dati ricevuti da ElevenLabs:', { punteggio_qualifica, call_summary, centro_scelto, user_phone, status, success });
+    const { punteggio_qualifica, centro_scelto, user_phone, status, success } = req.body;
+    console.log('Dati ricevuti da ElevenLabs:', { punteggio_qualifica, centro_scelto, user_phone, status, success });
 
     const user = await User.findById("65d3110eccfb1c0ce51f7492");
 
@@ -346,9 +346,9 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
 
     if (lead) {
       console.log('Lead trovato:', lead.numeroTelefono);
-      if (punteggio_qualifica && punteggio_qualifica !== "" && call_summary && call_summary !== "") {
+      if (punteggio_qualifica && punteggio_qualifica !== "") {
         lead.luogo = centro_scelto;
-        lead.summary = call_summary;
+        lead.summary = "";
         lead.punteggio = punteggio_qualifica;
         lead.esito = "Lead qualificata";
         if (success && success == "SEGRETERIA") {

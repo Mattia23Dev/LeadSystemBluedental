@@ -89,9 +89,25 @@ axios.post(url, data, { headers })
 }
 
 function isValidPhoneNumber(phoneNumber) {
-    const phoneRegex = /^(?:\+?39)?(?:\d{10})$/;
-    return phoneRegex.test(phoneNumber);
-  }
+    if (!phoneNumber) return false;
+    
+    // Rimuove eventuali spazi
+    const cleanPhone = phoneNumber.replace(/\s/g, '');
+    
+    // Verifica i diversi formati possibili:
+    // 1. +39 seguito da 10 cifre
+    // 2. + seguito da 10 cifre
+    // 3. 39 seguito da 10 cifre
+    // 4. 10 cifre semplici
+    const patterns = [
+        /^\+39\d{10}$/,  // +39 seguito da 10 cifre
+        /^\+\d{10}$/,    // + seguito da 10 cifre
+        /^39\d{10}$/,    // 39 seguito da 10 cifre
+        /^\d{10}$/       // 10 cifre semplici
+    ];
+    
+    return patterns.some(pattern => pattern.test(cleanPhone));
+}
 
   function day10ago(dataV) {
     const datanuova = new Date(dataV);
@@ -727,7 +743,13 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
       canale = "Nessuno"
     }
 
-    let phoneVariants = generatePhoneVariants(phone);
+    let phoneFormatted = phone;
+
+    if (phone.startsWith('+') && phone.length === 11) {
+      phoneFormatted = phone.slice(1);
+    }
+
+    let phoneVariants = generatePhoneVariants(phoneFormatted);
   
     let conditions = [
       { numeroTelefono: { $in: phoneVariants } },
@@ -744,7 +766,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
       lead.nome = full_name;
       lead.cognome = last_name;
       lead.email = email;
-      lead.numeroTelefono = phone;
+      lead.numeroTelefono = phoneFormatted;
       lead.last_interaction = formattedDate;
       lead.conversation_summary = conversation_summary;
       lead.appointment_date = specificFieldApp.value;
@@ -760,7 +782,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
           dataTimestamp: new Date(),
           nome: full_name,
           email: email || '',
-          numeroTelefono: phone || '',
+          numeroTelefono: phoneFormatted || '',
           campagna: 'AI chatbot',
           esito: specificFieldApp.value && specificFieldApp.value !== "" ? "Appuntamento" : 'Da contattare',
           città: città || "",
@@ -788,7 +810,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
           const existingLead = mostRecentLead[0];
 
           if (!existingLead || (existingLead && day10ago(existingLead.data))) {
-            if (!isValidPhoneNumber(phone)){
+            if (!isValidPhoneNumber(phoneFormatted)){
               console.log("Numero non valido")
               return
             }
@@ -799,7 +821,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
             await user.save();
           } else {
             console.log(`Già assegnato il lead ${lead.nome} all'utente Dentista`)
-            if (!isValidPhoneNumber(phone)){
+            if (!isValidPhoneNumber(phoneFormatted)){
               console.log('Numero non valido')
               return
             }
@@ -817,7 +839,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
             if (esito && esito === "Lead persa"){
               existingLead.esito = "Non interessato";
             }
-            existingLead.numeroTelefono = phone;
+            existingLead.numeroTelefono = phoneFormatted;
             existingLead.nome = full_name;
             await existingLead.save()
             console.log('Lead aggiornato')
@@ -835,7 +857,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
         nome: full_name,
         cognome: last_name,
         email: email,
-        numeroTelefono: phone,
+        numeroTelefono: phoneFormatted,
         last_interaction: formattedDate,
         conversation_summary: conversation_summary,
         appointment_date: specificFieldApp.value,
@@ -853,7 +875,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
           dataTimestamp: new Date(),
           nome: full_name,
           email: email || '',
-          numeroTelefono: phone || '',
+          numeroTelefono: phoneFormatted || '',
           campagna: 'AI chatbot',
           esito: specificFieldApp.value && specificFieldApp.value !== "" ? "Appuntamento" : 'Da contattare',
           città: città || '',
@@ -881,7 +903,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
           const existingLead = mostRecentLead[0];
 
           if (!existingLead || (existingLead && day10ago(existingLead.data))) {
-            if (!isValidPhoneNumber(phone)){
+            if (!isValidPhoneNumber(phoneFormatted)){
               console.log("Numero non valido")
               return
             }
@@ -892,7 +914,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
             await user.save();
           } else {
             console.log(`Già assegnato il lead ${lead.nome} all'utente Dentista`)
-            if (!isValidPhoneNumber(phone)){
+            if (!isValidPhoneNumber(phoneFormatted)){
               return
             }
             if(email !== ""){
@@ -903,7 +925,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
             if (specificFieldApp.value && specificFieldApp.value !== "" && existingLead.esito !== "Fissato"){
               existingLead.esito = "Appuntamento";
             }
-            existingLead.numeroTelefono = phone;
+            existingLead.numeroTelefono = phoneFormatted;
             existingLead.nome = full_name;
             await existingLead.save()
           }

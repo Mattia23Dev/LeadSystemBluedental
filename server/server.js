@@ -9,18 +9,16 @@ const Lead = require('./models/lead');
 const bodyParser = require("body-parser")
 const axios = require('axios')
 const XLSX = require('xlsx');
+const { fetchLeads } = require('./helpers/nexus');
 
 const esportaLeadIeri = async () => {
   try {
     // Imposta l'intervallo di tempo per ieri dalle 9:00 alle 22:00
-    const ieri = new Date();
-    ieri.setDate(ieri.getDate() - 1);
+    const ieri = new Date('2024-03-29T09:00:00');
     
-    const inizioIntervallo = new Date(ieri);
-    inizioIntervallo.setHours(9, 0, 0, 0);
+    const inizioIntervallo = new Date('2024-03-29T09:00:00');
     
-    const fineIntervallo = new Date(ieri);
-    fineIntervallo.setHours(22, 0, 0, 0);
+    const fineIntervallo = new Date('2024-04-02T20:00:00');
 
     // Trova le lead che corrispondono ai criteri
     const leads = await Lead.find({
@@ -30,39 +28,19 @@ const esportaLeadIeri = async () => {
         $lte: fineIntervallo
       },
       utmCampaign: { $regex: /Meta Web/i }
-    });
+    }).lean();
 
-    // Prepara i dati per il file Excel
-    const datiPerExcel = leads.map(lead => ({
-      Nome: lead.nome,
-      Email: lead.email,
-      Telefono: lead.numeroTelefono,
-      Città: lead.città,
-      Trattamento: lead.trattamento,
-      Esito: lead.esito,
-      Data: lead.dataTimestamp ? new Date(lead.dataTimestamp).toLocaleString('it-IT') : '',
-      Campagna: lead.campagna,
-      'UTM Campaign': lead.utmCampaign,
-      'UTM Content': lead.utmContent,
-      'UTM Adset': lead.utmAdset
-    }));
-
-    // Crea un nuovo workbook
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(datiPerExcel);
-
-    // Aggiungi il worksheet al workbook
-    XLSX.utils.book_append_sheet(wb, ws, "Lead di Ieri");
-
-    // Genera il nome del file con la data di ieri
-    const dataFile = ieri.toISOString().split('T')[0];
-    const nomeFile = `lead_${dataFile}.xlsx`;
-
-    // Salva il file
-    XLSX.writeFile(wb, nomeFile);
-
-    console.log(`Esportazione completata: ${leads.length} lead esportate in ${nomeFile}`);
+    console.log('Intervallo di ricerca:');
+    console.log('Inizio:', inizioIntervallo.toISOString());
+    console.log('Fine:', fineIntervallo.toISOString());
+    console.log(`Trovate ${leads.length} lead`);
     
+    // Verifica alcune lead per debug
+    if (leads.length > 0) {
+      console.log('Esempio di lead trovata:');
+      console.log('Data:', leads[0].dataTimestamp);
+      console.log('UTM Campaign:', leads[0].utmCampaign);
+    }
   } catch (error) {
     console.error('Errore durante l\'esportazione delle lead:', error);
   }
@@ -109,6 +87,9 @@ const deleteAllLeads = async () => {
     console.error('Si è verificato un errore durante l\'eliminazione delle lead:', error);
   }
 };
+
+//esportaLeadIeri()
+
 
 app.get('/email-marketing', async (req,res) => {
   const { leadEmail, leadName} = req.query;
@@ -403,5 +384,56 @@ const checkLeadDoppie = async () => {
 //checkLeadDoppie()
 //esportaLeadIeri();
 //deleteAllLeads();
+
+const getUltimeLead = async () => {
+  try {
+    const leads = await Lead.find({
+      //utmCampaign: { $regex: /Meta Web/i },
+    })
+      .sort({ dataTimestamp: -1 }) // Ordina per data decrescente
+      .limit(50) // Limita a 50 risultati
+      .lean();
+
+    console.log(`Trovate ${leads.length} lead`);
+    
+    // Prepara i dati per l'export Excel
+    const excelData = leads.map(lead => ({
+      'Data': lead.dataTimestamp ? new Date(lead.dataTimestamp).toLocaleString() : '',
+      'Nome': lead.nome || '',
+      'Email': lead.email || '',
+      'Telefono': lead.numeroTelefono || '',
+      //'UTM Campaign': lead.utmCampaign || '',
+      "Città": lead.città || '',
+      "Trattamento": lead.trattamento || '',
+      'Esito': lead.esito || '',
+      'Note': lead.note || ''
+    }));
+
+    // Crea un nuovo workbook
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    
+    // Aggiungi il worksheet al workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Leads");
+    
+    // Genera il nome del file con la data corrente
+    const today = new Date();
+    const fileName = `leads_export_${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}.xlsx`;
+    
+    // Salva il file
+    XLSX.writeFile(workbook, fileName);
+    
+    console.log(`File Excel creato con successo: ${fileName}`);
+    
+    return leads;
+  } catch (error) {
+    console.error('Errore durante il recupero delle lead:', error);
+    throw error;
+  }
+};
+
+// Per testare la funzione, puoi decommentare questa riga:
+//getUltimeLead();
+fetchLeads();
 const port = process.env.PORT || 8000;
 app.listen(port, () => console.log(`Server is running on port ${port}`));

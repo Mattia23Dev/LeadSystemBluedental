@@ -114,6 +114,11 @@ const LeadSchema = new Schema({
       ],
     },
     status: String,
+    notificaApp: {
+      type: Boolean,
+      default: false,
+    },
+    idNexus: String,
   });
 
   LeadSchema.pre('save', function(next) {

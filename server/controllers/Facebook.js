@@ -148,7 +148,8 @@ const Lead = require('../models/lead');
       .catch((error) => {
         console.error('Errore nella richiesta:', error);
       });
-  };
+  }; 
+
 // NUOVO ID DELL'ACCOUNT PUBBLICITARIO 3.0 DENTISTA VICINO A ME     act_511963014361529
   exports.getDentistaLead = () => {
     const url = 'https://graph.facebook.com/v19.0/act_511963014361529/campaigns';

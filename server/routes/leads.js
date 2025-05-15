@@ -11,6 +11,7 @@ const { getAllLeadForCounter, LeadForMarketing } = require('../controllers/super
 const { getDataCap } = require('../controllers/comparadentista');
 const Orientatore = require('../models/orientatori');
 const Lead = require('../models/lead');
+const { saveLead } = require('../helpers/nexus');
 
 router.post("/get-leads-fb", getLeadsFb);
 router.post("/get-leads-manual", getLeadsManual);
@@ -361,20 +362,18 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
         user.dailyLead += 1;
         user.save();
 
-        /*await trigger({
-          nome: lead.nome,
-          email: lead.email,
+        if (lead.idNexus) {
 
-          numeroTelefono: lead.numeroTelefono,
-          città: lead.città,
-          trattamento: "Impianti",
-          esito: "Fissato",
-          appDate: Data_e_Orario,
-          luogo: Centro_Scelto,
-        }, {
-          nome: "Lorenzo",
-          telefono: "3514871035",
-        }, "1736760347221")*/
+          const leadPayload = {
+            id: lead.idNexus,
+            punteggio: punteggio_qualifica,
+            //riassunto_chiamata: lead.summary || "",
+            //data_appuntamento: lead.appFissato,
+            numero_tentativi: lead.recallAgent.recallType
+          };
+
+          await saveLead(leadPayload);
+        }
       } else {
         console.log('Lead non ha appuntamento o centro scelto', user_phone);
       }

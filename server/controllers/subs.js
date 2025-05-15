@@ -11,6 +11,7 @@ const axios = require('axios')
 const fs = require('fs');
 const csv = require('csv-parser');
 const moment = require('moment');
+const { saveLead } = require('../helpers/nexus');
 
 let lastUserReceivedLead = null;
 function filterOldLeads(leads) {
@@ -289,9 +290,6 @@ const calculateAndAssignLeadsEveryDay = async () => {
             leadWithoutUser.assigned = true;
             await leadWithoutUser.save();
 
-            //await sendNotification(user._id);
-
-            //await sendEmailLeadArrivati(user._id);
             const currentHour = new Date().getHours();
             /*if (lastFunctionExecuted !== 'calculateAndAssignLeadsEveryDay' && bludentalUser.dailyLead < bludentalUser.dailyCap && currentHour >= 9 && currentHour <= 20) {
               console.log("Eseguo la chiamata di Ambra e Gold");
@@ -299,6 +297,40 @@ const calculateAndAssignLeadsEveryDay = async () => {
               lastFunctionExecuted = 'calculateAndAssignLeadsEveryDay';
             }
 */
+            const leadPayload = {
+              nome: newLead.nome,
+              ragione_sociale: newLead.nome,
+              email: newLead.email,
+              punteggio: null,
+              riassunto_chiamata: null,
+              //data_entrata: null,
+              id_lead_leadsystem: newLead._id,
+              note: null,
+              data_appuntamento: null,
+              citta: newLead.città,
+              trattamento: newLead.trattamento,
+              lead_status: "Da contattare", //FISSO
+              dettaglio_status_negativo: null,
+              numero_tentativi: null,
+              macro_fonte: "Online", //FISSO
+              micro_fonte: leadWithoutUser.name.toLowerCase().includes("gold") ? "GOLD" : 
+               leadWithoutUser.name.toLowerCase().includes("ambra") ? "AMBRA" :
+               "Nessuno",
+              campagna: leadWithoutUser.name ? leadWithoutUser.name : "",
+              adset: leadWithoutUser.adsets ? leadWithoutUser.adsets : "",
+              ad: leadWithoutUser.annunci ? leadWithoutUser.annunci : "",
+              sorgente: "Funnel", //FISSO
+              _list_phone_numbers: [
+                {
+                  tipo: "cell",
+                  numero: newLead.numeroTelefono
+                }
+              ]
+            };
+
+            const leadNexus = await saveLead(leadPayload);
+            newLead.idNexus = leadNexus.id;
+            await newLead.save();
             console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);            
           } else {
             //await trigger(newLead, user)
@@ -878,6 +910,38 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
               await newLead.save();
               //lastFunctionExecuted = 'calculateAndAssignLeadsEveryDayMetaWeb';
 
+              const leadPayload = {
+                nome: newLead.nome,
+                ragione_sociale: newLead.nome,
+                email: newLead.email,
+                punteggio: null,
+                riassunto_chiamata: null,
+                //data_entrata: null,
+                id_lead_leadsystem: newLead._id,
+                note: null,
+                data_appuntamento: null,
+                citta: newLead.città,
+                trattamento: newLead.trattamento,
+                lead_status: "Da contattare", //FISSO
+                dettaglio_status_negativo: null,
+                numero_tentativi: null,
+                macro_fonte: "Online", //FISSO
+                micro_fonte: "META WEB",
+                campagna: leadWithoutUser.name ? leadWithoutUser.name : "",
+                adset: leadWithoutUser.adsets ? leadWithoutUser.adsets : "",
+                ad: leadWithoutUser.annunci ? leadWithoutUser.annunci : "",
+                sorgente: "Funnel", //FISSO
+                _list_phone_numbers: [
+                  {
+                    tipo: "cell",
+                    numero: newLead.numeroTelefono
+                  }
+                ]
+              };
+  
+              const leadNexus = await saveLead(leadPayload);
+              newLead.idNexus = leadNexus.id;
+              await newLead.save();
             console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);            
           } else {
             //await trigger(newLead, user)
@@ -1709,3 +1773,26 @@ cron.schedule('*/30 * * * *', () => {
   reminderAppuntamenti();
 });
 //reminderAppuntamenti();
+
+// Otteniamo la data di oggi
+const today = new Date();
+
+// Funzione per formattare la data in "gg-mm-yyyy"
+function formatDate(date) {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
+// Funzione per ottenere il giorno della settimana
+function getDayOfWeek(date) {
+  const daysOfWeek = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+  return daysOfWeek[date.getDay()];
+}
+
+// Creiamo la stringa finale
+const formattedDate = `${getDayOfWeek(today)}, ${today.getDate()} ${today.toLocaleString('it-IT', { month: 'long' })}, ${formatDate(today)}`;
+
+// Mostriamo il risultato
+//console.log(formattedDate);

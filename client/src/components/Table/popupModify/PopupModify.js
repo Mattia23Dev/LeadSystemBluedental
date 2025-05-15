@@ -745,6 +745,10 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                                 </div>}
                                     </div>
                                     {userFixId === "664c5b2f3055d6de1fcaa22b" && <>
+                                    <div className={esito === "Da richiamare" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Da richiamare')}>
+                                        <span><span>o</span></span>
+                                        Da richiamare
+                                    </div>
                                     <div className={esito === "Presentato" ? "selected-option-motivo esito-option" : "esito-option"} onClick={() => setEsito('Presentato')}>
                                         <span><span>o</span></span>
                                         Presentato
@@ -907,6 +911,13 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                     <span className="trattamento-fullname">{lead.trattamento.replace(/_/g, ' ')}</span>
                                 </div>
                             </div>
+                            {leadF?.quando && leadF?.quando !== "" && userFixId == "664c5b2f3055d6de1fcaa22b" && 
+                            <div className='mi-div'>
+                                <div className='trat-cont-input'>
+                                    <p>Quando</p>
+                                    <input disabled placeholder={leadF?.quando} value={leadF?.quando} />
+                                </div>
+                            </div>}
                         </div>
                         <hr className='linea-che-serve' />
                         <div className='popup-bottom maggiori-informazioni'>

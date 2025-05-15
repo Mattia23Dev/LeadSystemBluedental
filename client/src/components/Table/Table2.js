@@ -1694,7 +1694,18 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               refreshate={false}
               toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
             <div className="entries">
-              {toggles.dacontattare && filteredData && filteredData.filter(x => x.status == "Da contattare").reverse().map((row, k) =>
+              {toggles.dacontattare && filteredData && filteredData
+                .filter(x => x.status == "Da contattare")
+                .sort((a, b) => {
+                  // Prima ordina per punteggio (decrescente)
+                  if (a.punteggio !== b.punteggio) {
+                    return b.punteggio - a.punteggio;
+                  }
+                  // Se il punteggio è uguale, mantieni l'ordine originale
+                  return 0;
+                })
+                .reverse()
+                .map((row, k) =>
                 <LeadEntry
                   id={JSON.stringify(row)}
                   index={k}
@@ -1723,7 +1734,18 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               refreshate={false}
               toggles={toggles} SETtoggles={SETtoggles} filteredData={filteredData} />
             <div className="entries">
-              {toggles.appuntamento && filteredData && filteredData.filter(x => x.status == "Appuntamento").reverse().map((row, k) =>
+            {toggles.appuntamento && filteredData && filteredData
+                .filter(x => x.status == "Appuntamento")
+                .sort((a, b) => {
+                  // Prima ordina per punteggio (decrescente)
+                  if (a.punteggio !== b.punteggio) {
+                    return b.punteggio - a.punteggio;
+                  }
+                  // Se il punteggio è uguale, mantieni l'ordine originale
+                  return 0;
+                })
+                .reverse()
+                .map((row, k) =>
                 <LeadEntry
                   id={JSON.stringify(row)}
                   index={k}

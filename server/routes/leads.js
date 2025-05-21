@@ -375,7 +375,7 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
           await saveLead(leadPayload);
         }
       } else {
-        console.log('Lead non ha appuntamento o centro scelto', user_phone);
+        console.log('Lead non ha punteggio qualificata', user_phone);
       }
     } else {
       console.log('Nessun lead trovato con i criteri specificati.');

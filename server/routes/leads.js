@@ -376,6 +376,7 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
         }
       } else {
         console.log('Lead non ha punteggio qualificata', user_phone);
+        lead.appVoiceBot = true;        
       }
     } else {
       console.log('Nessun lead trovato con i criteri specificati.');

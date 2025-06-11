@@ -830,9 +830,9 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                             </div> 
                             
                         </div>
-                        {leadF?.punteggio && leadF?.punteggio !== null && 
+                        {leadF?.appVoiceBot && 
                         <div className='punteggio-container'>
-                            <p>Punteggio: {leadF?.punteggio}/5</p>
+                            <p>Punteggio: {leadF?.punteggio && leadF?.punteggio !== "" ? leadF?.punteggio + "/2" : "N/A"}</p>
                             <p>Riassunto: {leadF?.summary}</p>
                         </div>}
                         <hr className='linea-che-serve' />

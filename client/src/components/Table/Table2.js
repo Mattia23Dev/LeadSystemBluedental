@@ -125,7 +125,6 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
     const campFilt = localStorage.getItem("campagnaFilter")
     if (ori && ori !== null && ori !== undefined) {
       setSelectedOrientatore(ori);
-      console.log('HO cambiat ori')
     };
 
     if (recall && recall !== undefined && recall == "true"){
@@ -283,16 +282,13 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       const filteredDataIn = filteredByRecall.filter(r => {
         const fullName = `${r.name.trim()}`.toLowerCase();
 
-        console.log('Search Words:', searchWords);
-        console.log('Full Name:', fullName);
-
         return searchWords.every(word => fullName.indexOf(word) !== -1) || r.telephone.toLowerCase().includes(searchval.toLowerCase());
       })
 
       const startDate = localStorage.getItem("startDate");
       const endDate = localStorage.getItem("endDate");
       if (startDate !== null && endDate !== null && startDate !== undefined && endDate !== undefined){
-        const filteredByDate = filterDataByDate(filteredDataIn, startDate, endDate); 
+        const filteredByDate = filterDataByDate(filteredDataIn, startDate, endDate);
         setFilteredData(filteredByDate);
         setFiltroDiRiserva(filteredByDate)
        } else {
@@ -343,7 +339,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         _id: state.user._id
       });
 
-
+      console.log(response.data.length)
       const filteredTableLead = response.data.map((lead) => {
         const telephone = lead.numeroTelefono ? lead.numeroTelefono.toString() : '';
         const cleanedTelephone =
@@ -434,9 +430,6 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       const filteredDataIn = filteredByRecall.filter(r => {
         const fullName = `${r.name.trim()}`.toLowerCase();
 
-        console.log('Search Words:', searchWords);
-        console.log('Full Name:', fullName);
-
         return searchWords.every(word => fullName.indexOf(word) !== -1) || r.telephone.toLowerCase().includes(searchval.toLowerCase());
       })
 
@@ -481,7 +474,6 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
             nearestFutureDate: nearestFutureDate
           };        
         } else if (lead.recallDate && lead.recallHours && lead.appDate?.trim() === ""){
-          console.log("trovato")
           const combinedDateTime = moment(`${lead.recallDate.substring(0, 10)} ${lead.recallHours}`, 'YYYY-MM-DD HH:mm');
           return {
             ...lead,
@@ -501,13 +493,12 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         }
       })
       .filter(lead => {
-        return lead.combinedDateTime.isSameOrAfter(moment());
+        return lead.combinedDateTime && lead.combinedDateTime.isSameOrAfter(moment());
       })
       .sort((leadA, leadB) => {
         return leadA.combinedDateTime - leadB.combinedDateTime;
       });
     
-      console.log(filteredLead)
     let nextAppointmentLead = null;
     if (filteredLead.length > 0) {
       nextAppointmentLead = filteredLead[0];
@@ -602,7 +593,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
 
   const filterDataByDate = (data, startDate, endDate) => {
     const filteredData = data.filter((row) => {
-      const rowDate = Date.parse(row.date);
+      const rowDate = new Date(row.dataTimestamp);
       const selectedDateStart = new Date(startDate);
       const selectedDateEnd = new Date(endDate);
       selectedDateEnd.setDate(selectedDateEnd.getDate() + 1);
@@ -1177,9 +1168,6 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
         filtroDiRiserva.filter(r => {
           const fullName = `${r.name.trim()}`.toLowerCase();
 
-          console.log('Search Words:', searchWords);
-          console.log('Full Name:', fullName);
-
           return searchWords.every(word => fullName.indexOf(word) !== -1) || r.telephone.toLowerCase().includes(searchval.toLowerCase());
         })
       );
@@ -1222,7 +1210,6 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
 
     const droppedItem = JSON.parse(event.dataTransfer.getData('text/plain'));
     const draggedLeadId = droppedItem.id;
-    console.log(droppedItem)
     if (type === draggedLeadId.status) {
       return null
     } else if (type === "Fissato" || type === "Non valido" || type === "Non interessato" || type === "Lead persa") {
@@ -1254,7 +1241,6 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
         fetchLeads(orientatoriOptions);
       }
       setRefreshate(true)
-      console.log(response.data.message);
     } catch (error) {
       console.error(error);
     }

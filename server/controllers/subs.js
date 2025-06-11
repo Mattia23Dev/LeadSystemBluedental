@@ -301,6 +301,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
               nome: newLead.nome,
               ragione_sociale: newLead.nome,
               email: newLead.email,
+              telefono: newLead.numeroTelefono,
               punteggio: null,
               riassunto_chiamata: null,
               //data_entrata: null,
@@ -320,12 +321,12 @@ const calculateAndAssignLeadsEveryDay = async () => {
               adset: leadWithoutUser.adsets ? leadWithoutUser.adsets : "",
               ad: leadWithoutUser.annunci ? leadWithoutUser.annunci : "",
               sorgente: "Funnel", //FISSO
-              _list_phone_numbers: [
+              /*_list_phone_numbers: [
                 {
                   tipo: "cell",
                   numero: newLead.numeroTelefono
                 }
-              ]
+              ],*/
             };
 
             const leadNexus = await saveLead(leadPayload);
@@ -914,6 +915,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
                 nome: newLead.nome,
                 ragione_sociale: newLead.nome,
                 email: newLead.email,
+                telefono: newLead.numeroTelefono,
                 punteggio: null,
                 riassunto_chiamata: null,
                 //data_entrata: null,
@@ -931,12 +933,12 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
                 adset: leadWithoutUser.adsets ? leadWithoutUser.adsets : "",
                 ad: leadWithoutUser.annunci ? leadWithoutUser.annunci : "",
                 sorgente: "Funnel", //FISSO
-                _list_phone_numbers: [
+                /*_list_phone_numbers: [
                   {
                     tipo: "cell",
                     numero: newLead.numeroTelefono
                   }
-                ]
+                ]*/
               };
   
               const leadNexus = await saveLead(leadPayload);

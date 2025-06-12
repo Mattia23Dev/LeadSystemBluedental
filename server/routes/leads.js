@@ -2,6 +2,7 @@ const express = require('express');
 const {dailyCap} = require('../controllers/subs');
 const User = require('../models/user');
 const axios = require('axios');
+const moment = require('moment');
 
 const router = express.Router();
 
@@ -12,6 +13,7 @@ const { getDataCap } = require('../controllers/comparadentista');
 const Orientatore = require('../models/orientatori');
 const Lead = require('../models/lead');
 const { saveLead } = require('../helpers/nexus');
+const LastLeadUser = require('../models/lastLeadUser');
 
 router.post("/get-leads-fb", getLeadsFb);
 router.post("/get-leads-manual", getLeadsManual);
@@ -479,6 +481,169 @@ async function makeOutboundCall(number, city, name, type, transcript) {
     console.error('Errore durante la chiamata:', error);
   }
 }
+
+function generatePhoneVariants(phoneNumber) {
+  let variants = [];
+
+  // Rimuove eventuali spazi o trattini
+  phoneNumber = phoneNumber.replace(/\s+/g, '').replace(/-/g, '');
+
+  const isItalianNumber = (number) => {
+    if (number.startsWith('+39')) {
+      return true;
+    } else if (number.startsWith('39') && number.length == 12) {
+      return true;
+    }
+    return false;
+  };
+
+  if (isItalianNumber(phoneNumber)) {
+    // Numero normale
+    variants.push(phoneNumber.slice(phoneNumber.startsWith('+39') ? 3 : 2));
+    
+    // Aggiunge variante con 39 davanti
+    variants.push(phoneNumber.startsWith('+39') ? '39' + phoneNumber.slice(3) : phoneNumber);
+    
+    // Aggiunge variante con +39 davanti
+    variants.push(phoneNumber.startsWith('+39') ? phoneNumber : '+39' + phoneNumber);
+  } else {
+    variants.push(phoneNumber);
+
+    // Aggiunge variante con 39 davanti
+    variants.push('39' + phoneNumber);
+
+    // Aggiunge variante con +39 davanti
+    variants.push('+39' + phoneNumber);
+  }
+
+  // Filtra eventuali duplicati
+  variants = [...new Set(variants)];
+
+  return variants;
+}
+function isValidPhoneNumber(phoneNumber) {
+  if (!phoneNumber) return false;
+  
+  // Rimuove eventuali spazi
+  const cleanPhone = phoneNumber.replace(/\s/g, '');
+  
+  // Verifica i diversi formati possibili:
+  // 1. +39 seguito da 10 cifre
+  // 2. + seguito da 10 cifre
+  // 3. 39 seguito da 10 cifre
+  // 4. 10 cifre semplici
+  const patterns = [
+      /^\+39\d{10}$/,  // +39 seguito da 10 cifre
+      /^\+\d{10}$/,    // + seguito da 10 cifre
+      /^39\d{10}$/,    // 39 seguito da 10 cifre
+      /^\d{10}$/       // 10 cifre semplici
+  ];
+  
+  return patterns.some(pattern => pattern.test(cleanPhone));
+}
+
+function day10ago(dataV) {
+  const datanuova = new Date(dataV);
+  const data = moment(datanuova, 'ddd MMM DD YYYY HH:mm:ss');
+  const dieciGiorniFa = moment().subtract(10, 'days');
+  return data.isBefore(dieciGiorniFa);
+}
+router.post('/webhook-tiktok', async (req, res) => {
+    console.log(req.body);
+    try {
+      const {
+        id,
+        nome,
+        cognome,
+        email,
+        telefono,
+        citta,
+      } = req.body;
+  
+      let città = citta;
+  
+      let lastUserReceivedLead = null;
+      const lastUserLeadData = await LastLeadUser.findOne({});
+      if (lastUserLeadData) {
+        lastUserReceivedLead = lastUserLeadData.userId;
+      }
+  
+      const excludedOrientatoreIds = ['660fc6b59408391f561edc1a'];
+      let users = await Orientatore.find({ _id: { $nin: excludedOrientatoreIds }, utente: "65d3110eccfb1c0ce51f7492"});
+  
+      const lastUserId = lastUserReceivedLead;
+  
+      const lastIndex = users.findIndex(user => user?._id.toString() === lastUserId);
+  
+      let nextUserIndex = lastIndex + 1;
+      if (lastIndex === -1 || nextUserIndex >= users.length) {
+          nextUserIndex = 0;
+      }
+  
+      const nextUser = users[nextUserIndex];
+  
+      const randomIndex = Math.floor(Math.random() * users.length);
+      const randomUser = users[randomIndex];
+  
+      let phoneVariants = generatePhoneVariants(telefono);
+    
+      let conditions = [
+        { numeroTelefono: { $in: phoneVariants } },
+        { email: email }
+      ];
+  
+        const userId ='65d3110eccfb1c0ce51f7492'; //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
+          let user = await User.findById(userId);
+          const newLead = new Lead({
+            data: new Date(),
+            dataTimestamp: new Date(),
+            nome: nome + " " + cognome,
+            email: email || '',
+            numeroTelefono: telefono || '',
+            campagna: 'IRON',
+            esito: 'Da contattare',
+            città: città || '',
+            trattamento: "Implantologia per singolo dente",
+            orientatori: nextUser ? nextUser._id : randomUser._id,
+            utente: "65d3110eccfb1c0ce51f7492", //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
+            note: "",
+            fatturato: "",
+            utmContent: "TikTok",
+            utmAdset: "TikTok",
+            utmCampaign: 'IRON',
+            tentativiChiamata: '0',
+            giàSpostato: false,
+            summary: "",
+            last_interaction: new Date().toISOString(),
+          });
+          try {
+  
+            const mostRecentLead = await Lead.find(
+              { $or: conditions },
+            );
+            mostRecentLead.sort((a, b) => new Date(b.data) - new Date(a.data));
+            const existingLead = mostRecentLead[0];
+  
+            if (!existingLead || (existingLead && day10ago(existingLead.data))) {
+              if (!isValidPhoneNumber(telefono)){
+                console.log("Numero non valido")
+                return
+              }
+              await newLead.save();
+              console.log(`Assegnato il lead ${newLead.nome} all'utente Dentista`);
+              await user.save();
+            }
+  
+          } catch (error) {
+            console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
+      }
+  
+      res.status(200).json({ message: 'Lead salvato con successo' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error, message: 'Errore' });
+    }
+});
 
 //makeOutboundCall("+393473815084", "arezzo", "Giuseppe Gio Botindari", "bludental", "Agente: Si Pronto?, ehm parlo con Giuseppe Gio Botindari? Utente: Da che telefono chiamate però? Non si sente niente. Agente: Mi scusi, signor Botindari, sembra che ci siano problemi di linea. Sto chiamando da Bludental, e la stavo contattando riguardo alla sua richiesta di informazioni sui trattamenti odontoiatrici. Mi sente meglio adesso? Utente: Sì, quello l'ho capito, ditemi. Agente: Perfetto! Visto che la linea è un po' disturbata, cercherò di essere breve. Ehm... allora, per quanto riguarda i denti fissi completi che vorrebbe mettere, ha in mente un budget massimo di spesa? Utente: Non ho idea. Agente: Capisco. Ehm... Vediamo... Da quanto tempo sta valutando di fare questo tipo di intervento? Utente: Non ho idea dei costi. Agente: Certo, capisco perfettamente. Non sono in grado di fornirle una stima precisa dei costi in questa sede, ma posso metterla in contatto con il centro Bludental più vicino a lei. Lì potranno valutare la sua situazione specifica e fornirle tutte le informazioni necessarie. Ehm... Vediamo... Le farebbe piacere fissare una visita gratuita? Utente: Che sarebbe? Agente: Lei si trova ad Arezzo, giusto? Utente: Addio patria! Agente: Ehm... Vediamo... Conferma che si trova ad Arezzo? In questo caso, il centro Bludental più vicino si trova proprio lì, in Via Leone Leoni, numero quattro. Utente: Non t'ho più sentito. Agente: Mi scusi, signor Botindari, la linea è un po' instabile. Conferma che si trova ad Arezzo? In questo modo posso metterla in contatto con il centro Bludental più vicino per una visita gratuita.\\n Utente: Da chi ami? Dall'India? Agente: Mi scusi, non capisco bene la domanda. Potrebbe riformularla? Vorrebbe sapere se il centro Bludental è in India? Oppure... Ehm... vediamo... forse intendeva... Utente: Oh God, no Emilia! Agente: Mi scusi, non riesco a capire cosa intende. Ha problemi di linea? Utente: Ma che Emilia? Agente: Mi scusi, signor Botindari, non capisco a cosa si riferisce. Forse c'è un problema di linea e non riesco a sentire bene. Posso richiamarla tra qualche minuto? Utente: Ho detto da dove chiami, dall'India?! Agente: No, signor Botindari, non chiamo dall'India. Chiamo dall'Italia, sono Andrea, assistente virtuale di Bludental. Stavo cercando di capire se lei si trova ancora ad Arezzo per metterla in contatto con il centro più vicino. Conferma? Utente: Sì, ma mi riferisco alla linea. Agente: Ah, capisco! Purtroppo non ho informazioni precise sulla provenienza della linea telefonica. Però, se mi conferma la sua posizione, posso metterla in contatto con il centro Bludental più vicino, e magari loro possono fornirle maggiori dettagli sui trattamenti. Si trova ancora ad Arezzo?\\n Utente: Benissimo! Arezzo, ho detto Arezzo. Agente: Perfetto! Allora, ad Arezzo abbiamo un centro in Via Leone Leoni, quattro. Le è comodo come zona?\\n Utente: Sì benissimo se mi mandate un messaggio con l'indirizzo o un numero di contatto li contatto io. Agente: Certo, posso farle contattare direttamente dalla collega del centro di Arezzo per fissare un appuntamento. Posso usare questo numero di telefono per metterla in contatto con loro?\\n Utente: Benissimo! Agente: Perfetto! Allora, ricapitolando, lei è interessato a un appuntamento nel centro di Arezzo, corretto?\\n Utente: ... Agente: Signor Botindari, è ancora in linea?")
 

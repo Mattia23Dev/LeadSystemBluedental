@@ -558,6 +558,7 @@ router.post('/webhook-tiktok', async (req, res) => {
         email,
         telefono,
         citta,
+        trattamento,
       } = req.body;
   
       let città = citta;
@@ -603,7 +604,7 @@ router.post('/webhook-tiktok', async (req, res) => {
             campagna: 'IRON',
             esito: 'Da contattare',
             città: città || '',
-            trattamento: "Implantologia per singolo dente",
+            trattamento: trattamento || 'Implantologia per singolo dente',
             orientatori: nextUser ? nextUser._id : randomUser._id,
             utente: "65d3110eccfb1c0ce51f7492", //'664c5b2f3055d6de1fcaa22b'; CALL CENTER
             note: "",

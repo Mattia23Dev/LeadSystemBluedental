@@ -447,11 +447,10 @@ router.post('/webhook-elevenlabs-sql', async (req, res) => {
   }
 });
 
-async function makeOutboundCall(number, city, name, type, transcript) {
-  const url = 'https://twilio-11labs-call-agent-production.up.railway.app/outbound-call';
-  //const url = 'https://cd9f-185-199-103-50.ngrok-free.app/outbound-call';
+async function makeOutboundCall(number, city, name, type) {
+  const url = 'https://primary-production-403a.up.railway.app/webhook/bludental-attivazione';
   number = number.replace(/\s+/g, '');
-
+  const lead = await Lead.findOne({ numeroTelefono: number });
   // Controlla e aggiusta il prefisso
   if (!number.startsWith('+39')) {
     if (number.startsWith('39') && number.length === 12) {
@@ -461,17 +460,12 @@ async function makeOutboundCall(number, city, name, type, transcript) {
     }
   }
 
-  // Troncamento del transcript se supera i 3500 caratteri
-  if (transcript && transcript.length > 2500) {
-    transcript = transcript.substring(0, 2500);
-  }
-
   const data = {
-    number: number,
-    citta: city,
-    nome: name,
+    user_phone: number,
+    user_city: city,
+    user_name: name,
     type: type || null,
-    transcript: transcript || null,
+    user_id: lead?._id,
   };
 
   try {
@@ -632,6 +626,7 @@ router.post('/webhook-tiktok', async (req, res) => {
               }
               await newLead.save();
               console.log(`Assegnato il lead ${newLead.nome} all'utente Dentista`);
+              await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
               await user.save();
             }
   

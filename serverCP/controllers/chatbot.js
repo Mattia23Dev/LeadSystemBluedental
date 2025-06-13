@@ -504,7 +504,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
           nome: full_name,
           email: email || '',
           numeroTelefono: phone || '',
-          campagna: 'SOMA',
+          campagna: 'AI chatbot',
           esito: 'Da contattare',
           città: città || "",
           trattamento: "Implantologia per singolo dente",
@@ -514,7 +514,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
           fatturato: "",
           utmContent: canale || "",
           utmAdset: canale || "",
-          utmCampaign: 'SOMA',
+          utmCampaign: 'AI chatbot',
           tentativiChiamata: '0',
           giàSpostato: false,
           idLeadChatic: id,
@@ -585,7 +585,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
         conversation_summary: conversation_summary,
         appointment_date: specificFieldApp.value,
         città: città,
-        tag: "SOMA",
+        tag: "AI chatbot",
       });
 
       await lead.save();
@@ -599,7 +599,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
           nome: full_name,
           email: email || '',
           numeroTelefono: phone || '',
-          campagna: 'SOMA',
+          campagna: 'AI chatbot',
           esito: 'Da contattare',
           città: città || '',
           trattamento: "Implantologia per singolo dente",
@@ -609,7 +609,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
           fatturato: "",
           utmContent: canale || "",
           utmAdset: canale || "",
-          utmCampaign: 'SOMA',
+          utmCampaign: 'AI chatbot',
           tentativiChiamata: '0',
           giàSpostato: false,
           idLeadChatic: id,
@@ -753,7 +753,7 @@ exports.saveSomaLead = async (req, res) => {
       conditions.push({ email: email });
     }*/
 
- if (lead) {
+ /*if (lead) {
       lead.channel = canale;
       lead.fullName = full_name;
       lead.nome = full_name;
@@ -812,17 +812,6 @@ exports.saveSomaLead = async (req, res) => {
             await newLead.save();
             console.log(`Assegnato il lead ${lead.nome} all'utente Dentista`);
             await user.save();
-            /*await trigger({
-              nome: newLead.nome,
-              email: newLead.email,
-              numeroTelefono: newLead.numeroTelefono,
-              città: newLead.città,
-              trattamento: newLead.trattamento,
-              esito: "Da contattare",
-            }, {
-              nome: "Lorenzo",
-              telefono: "3514871035",
-            }, flows.daContattare)*/
           } else {
             console.log(`Già assegnato il lead ${lead.nome} all'utente Dentista`)
             if (!isValidPhoneNumber(phone)){
@@ -905,17 +894,6 @@ exports.saveSomaLead = async (req, res) => {
             lead.assigned = true;
             await lead.save();
             await newLead.save();
-            /*await trigger({
-              nome: newLead.nome,
-              email: newLead.email,
-              numeroTelefono: newLead.numeroTelefono,
-              città: newLead.città,
-              trattamento: newLead.trattamento,
-              esito: "Da contattare",
-            }, {
-              nome: "Lorenzo",
-              telefono: "3514871035",
-            }, flows.daContattare)*/
             console.log(`Assegnato il lead ${lead.nome} all'utente Dentista`);
             await user.save();
           } else {
@@ -936,7 +914,7 @@ exports.saveSomaLead = async (req, res) => {
         } catch (error) {
           console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
         }
-    }
+    }*/
 
     res.status(200).json({ message: 'Successo' });
   } catch (error) {

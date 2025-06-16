@@ -1149,7 +1149,7 @@ cron.schedule('10,46,20 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *'
   getDentistaLead();
   console.log('Prendo i lead di Bluedental 1.0');
 });
-
+//getDentistaLead();
 cron.schedule('20,56,30 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getDentistaLead2();
   console.log('Prendo i lead di Bluedental 2.0');
@@ -1798,3 +1798,40 @@ const formattedDate = `${getDayOfWeek(today)}, ${today.getDate()} ${today.toLoca
 
 // Mostriamo il risultato
 //console.log(formattedDate);
+
+const leadPayload = {
+  nome: 'giacomo test',
+  ragione_sociale: 'giacomo test',
+  email: 'giacomo@test.it',
+  telefono: '3455581449',
+  punteggio: null,
+  riassunto_chiamata: null,
+  //data_entrata: null,
+  id_lead_leadsystem: '666666666666666666666666',
+  note: null,
+  data_appuntamento: null,
+  citta: 'Roma',
+  trattamento: 'Implantologia per singolo dente',
+  lead_status: 'Da contattare',
+  dettaglio_status_negativo: null,
+  numero_tentativi: null,
+  macro_fonte: 'Online',
+  micro_fonte: 'Gold',
+  campagna: 'Gold',
+  adset: 'Gold',
+  ad: 'Gold',
+  sorgente: 'Funnel',
+};
+const nexuscall = async () => {
+  const leadNexus = await saveLead(leadPayload);
+  console.log(leadNexus);
+}
+nexuscall();
+
+const leadPayloadUpdate = {
+  //id: leadNexus.id,
+  punteggio: 2,
+  numero_tentativi: 1
+};
+
+//await saveLead(leadPayloadUpdate);

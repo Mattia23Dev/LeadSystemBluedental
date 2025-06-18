@@ -697,9 +697,6 @@ exports.saveSomaLead = async (req, res) => {
     if (specificField && specificField.type === '0') {
       conversation_summary = specificField.value;
     }
-    if (appointment_date && appointment_date !== "") {
-      specificFieldApp.value = appointment_date;
-    }
     const specificFieldCitta = custom_fields.find(field => field.id === '379546');
     if (specificFieldCitta && specificFieldCitta.value) {
       città = specificFieldCitta.value;
@@ -753,7 +750,7 @@ exports.saveSomaLead = async (req, res) => {
       conditions.push({ email: email });
     }*/
 
- /*if (lead) {
+ if (lead) {
       lead.channel = canale;
       lead.fullName = full_name;
       lead.nome = full_name;
@@ -914,7 +911,7 @@ exports.saveSomaLead = async (req, res) => {
         } catch (error) {
           console.log(`Errore nella validazione o salvataggio del lead: ${error.message}`);
         }
-    }*/
+    }
 
     res.status(200).json({ message: 'Successo' });
   } catch (error) {

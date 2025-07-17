@@ -354,7 +354,7 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
         lead.summary = "";
         lead.punteggio = punteggio_qualifica;
         lead.esito = "Lead qualificata";
-        if (success && success == "SEGRETERIA") {
+        if (success && success == "SEGRETERIA" || success && success == "NEUTRO") {
           lead.status = "segreteria";
         } else {
           lead.status = status;

@@ -51,11 +51,11 @@ export default function Table2({ onResults, searchval, setLeadsPdf, setNextSched
     "Cantù", "Capena", "Carpi", "Cassino", "Cesena", "Ciampino", "Cinisello Balsamo", "Civitavecchia", "Cologno Monzese", 
     "Como", "Cremona", "Desenzano del Garda", "Ferrara", "Firenze", "Forlì", "Frosinone", "Genova", "Latina", "Lodi", 
     "Lucca", "Mantova", "Melzo", "Mestre", "Milano", "Modena", "Monza", "Ostia", "Padova", "Perugia", "Parma", "Piacenza", 
-    "Pioltello", "Pomezia", "Pordenone", "Prato", "Ravenna", "Reggio Emilia", "Rho", "Rimini", "Roma", "Rovigo", "San Giuliano Milanese", "Sassari", "Seregno", 
+    "Pioltello", "Pomezia", "Pordenone", "Prato", "Ravenna", "Reggio Emilia", "Rho", "Rimini", "Roma", "Roma Casilina", "Roma Tuscolana", "Roma Tiburtina", "Rovigo", "San Giuliano Milanese", "Sassari", "Seregno", 
     "Terni", "Torino", "Treviso", "Varese", "Verona", "Vicenza", "Vigevano"
   ];
   const campagne = [
-    "Gold", "Ambra", "Meta Web - Altri centri", "Meta Web", "Messenger", "Estetica", "Messenger Bludental"
+    "Gold", "Ambra", "Meta Web - Altri centri", "Meta Web", "Messenger", "Estetica", "Messenger Bludental", "SOMA", "IRON"
   ]
   const [motivo, setMotivo] = useState();
   const ori = localStorage.getItem("Ori");
@@ -593,9 +593,10 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
 
   const filterDataByDate = (data, startDate, endDate) => {
     const filteredData = data.filter((row) => {
-      const rowDate = new Date(row.dataTimestamp);
+      const rowDate = new Date(row.date);
       const selectedDateStart = new Date(startDate);
       const selectedDateEnd = new Date(endDate);
+      //console.log(rowDate, selectedDateStart, selectedDateEnd);
       selectedDateEnd.setDate(selectedDateEnd.getDate() + 1);
       return rowDate >= selectedDateStart && rowDate <= selectedDateEnd;
     });

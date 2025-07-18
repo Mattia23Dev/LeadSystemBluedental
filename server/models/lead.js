@@ -119,6 +119,7 @@ const LeadSchema = new Schema({
       default: false,
     },
     idNexus: String,
+    consent_marketing: String,
   });
 
   LeadSchema.pre('save', function(next) {

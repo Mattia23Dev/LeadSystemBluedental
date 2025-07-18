@@ -235,6 +235,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
           trattamento: "",
           città: '',
           quando: "",
+          consent_marketing: "",
         };
 
         for (const field of leadWithoutUser.fieldData) {
@@ -250,6 +251,8 @@ const calculateAndAssignLeadsEveryDay = async () => {
             userData.città = field.values[0].replace(/_/g, " ");
           } else if (field.name == "quando_preferiresti_essere_contattata?_" || field.name == "in_che_tempistiche?"){
             userData.quando = field.values[0];
+          } else if (field.name == "acconsenti_al_trattamento_dei_tuoi_dati_personali_per_essere_contattato?"){
+            userData.consent_marketing = field.values[0];
           }
         }
 
@@ -271,6 +274,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
           utmCampaign: leadWithoutUser.name ? leadWithoutUser.name : '',
           tentativiChiamata: '0',
           giàSpostato: false,
+          consent_marketing: userData.consent_marketing,
         });
 
         const leadsVerify = await Lead.find({

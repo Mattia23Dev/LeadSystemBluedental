@@ -78,6 +78,10 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
             } else return 'Meta Web';
         } else if (nomeCampagna.includes('Messenger') || nomeCampagna.includes("messenger")) {
           return 'Messenger';
+        } else if (nomeCampagna?.toLowerCase().includes('soma')) {
+          return 'Soma';
+        } else if (nomeCampagna?.toLowerCase().includes('iron')) {
+          return 'Iron';
         } else {
           return "Meta Web";
         }

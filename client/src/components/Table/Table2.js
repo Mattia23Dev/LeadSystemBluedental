@@ -52,7 +52,7 @@ export default function Table2({ onResults, searchval, setLeadsPdf, setNextSched
     "Como", "Cremona", "Desenzano del Garda", "Ferrara", "Firenze", "Forlì", "Frosinone", "Genova", "Latina", "Lodi", 
     "Lucca", "Mantova", "Melzo", "Mestre", "Milano", "Modena", "Monza", "Ostia", "Padova", "Perugia", "Parma", "Piacenza", 
     "Pioltello", "Pomezia", "Pordenone", "Prato", "Ravenna", "Reggio Emilia", "Rho", "Rimini", "Roma", "Roma Casilina", "Roma Tuscolana", "Roma Tiburtina", "Rovigo", "San Giuliano Milanese", "Sassari", "Seregno", 
-    "Terni", "Torino", "Treviso", "Varese", "Verona", "Vicenza", "Vigevano"
+    "Terni", "Torino", "Treviso", "Varese", "Verona", "Vicenza", "Vigevano", "Bassano del Grappa", "Alessandria", "Massa", "Livorno", "Trento", "Udine",
   ];
   const campagne = [
     "Gold", "Ambra", "Meta Web - Altri centri", "Meta Web", "Messenger", "Estetica", "Messenger Bludental", "SOMA", "IRON"

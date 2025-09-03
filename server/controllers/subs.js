@@ -1830,7 +1830,7 @@ const nexuscall = async () => {
   const leadNexus = await saveLead(leadPayload);
   console.log(leadNexus);
 }
-nexuscall();
+//nexuscall();
 
 const leadPayloadUpdate = {
   //id: leadNexus.id,

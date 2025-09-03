@@ -165,17 +165,13 @@ const Lead = require('../models/lead');
         const logs = [];
         if (Array.isArray(dataFromFacebook)) {
           for (const element of dataFromFacebook) {
-            const excludedCampaignIds = [idCampagna, idCampagna2];
-            //PER ESCLUDERE LE CAMPAGNE
-            /*if (excludedCampaignIds.includes(element.id)) {
-              console.log('Ho escluso:', element.id);
-              continue;
-            }*/
 
             const { account_id, ads, effective_status, id, name, objective, adsets, status } = element;
-
+            console.log(name);
             if (ads && ads.data && ads.data.length > 0) {
               for (const ad of ads.data) {
+                console.log(ad.name);
+                console.log(adsets.data[0].name);
                 if (ad.leads && ad.leads.data && ad.leads.data.length > 0) {
                   for (const lead of ad.leads.data) {
                     if (lead && lead.field_data && Array.isArray(lead.field_data)) {

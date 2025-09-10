@@ -241,17 +241,17 @@ const calculateAndAssignLeadsEveryDay = async () => {
 
         for (const field of leadWithoutUser.fieldData) {
           if (field.name === "full_name") {
-            userData.first_name = field.values[0];
+            userData.first_name = field.values[0] || '';
           } else if (field.name === "email" || field.name === "e-mail") {
-            userData.email = field.values[0];
+            userData.email = field.values[0] || '';
           } else if (field.name === "phone_number") {
-            userData.phone_number = field.values[0];
+            userData.phone_number = field.values[0] || '';
           } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_" || field.name === "quanti_denti_desideri_sostituire?"){
-            userData.trattamento = field.values[0].replace(/_/g, " ");
+            userData.trattamento = field.values[0]?.replace(/_/g, " ") || '';
           } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
-            userData.città = field.values[0].replace(/_/g, " ");
+            userData.città = field.values[0]?.replace(/_/g, " ") || '';
           } else if (field.name == "quando_preferiresti_essere_contattata?_" || field.name == "in_che_tempistiche?"){
-            userData.quando = field.values[0];
+            userData.quando = field.values[0] || '';
           } else if (field.name == "acconsenti_al_trattamento_dei_tuoi_dati_personali_per_essere_contattato?"){
             userData.consent_marketing = field.values[0];
           }
@@ -676,17 +676,17 @@ const calculateAndAssignLeadsEveryDayEstetica = async () => {
 
         for (const field of leadWithoutUser.fieldData) {
           if (field.name === "full_name") {
-            userData.first_name = field.values[0];
+            userData.first_name = field.values[0] || '';
           } else if (field.name === "email" || field.name === "e-mail") {
-            userData.email = field.values[0];
+            userData.email = field.values[0] || '';
           } else if (field.name === "phone_number") {
-            userData.phone_number = field.values[0];
+            userData.phone_number = field.values[0] || '';
           } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_" || field.name === "quanti_denti_desideri_sostituire?"){
-            userData.trattamento = field.values[0].replace(/_/g, " ");
+            userData.trattamento = field.values[0]?.replace(/_/g, " ") || '';
           } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
-            userData.città = field.values[0].replace(/_/g, " ");
+            userData.città = field.values[0]?.replace(/_/g, " ") || '';
           } else if (field.name == "quando_preferiresti_essere_contattata?_" || field.name == "in_che_tempistiche?"){
-            userData.quando = field.values[0];
+            userData.quando = field.values[0] || '';
           }
         }
 
@@ -806,17 +806,17 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
         for (const field of lead.fieldData) {
           if (field.name === "full_name") {
-            userData.first_name = field.values[0];
+            userData.first_name = field.values[0] || '';
           } else if (field.name === "email" || field.name === "e-mail") {
-            userData.email = field.values[0];
+            userData.email = field.values[0] || '';
           } else if (field.name === "phone_number") {
-            userData.phone_number = field.values[0];
+            userData.phone_number = field.values[0] || '';
           } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_" || field.name === "quanti_denti_desideri_sostituire?"){
-            userData.trattamento = field.values[0].replace(/_/g, " ");
+            userData.trattamento = field.values[0]?.replace(/_/g, " ") || '';
           } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
-            userData.città = field.values[0].replace(/_/g, " ");
+            userData.città = field.values[0]?.replace(/_/g, " ") || '';
           } else if (field.name == "quando_preferiresti_essere_contattata?_" || field.name == "in_che_tempistiche?"){
-            userData.quando = field.values[0].replace(/_/g, " ");
+            userData.quando = field.values[0]?.replace(/_/g, " ") || '';
           }
         }
 
@@ -939,17 +939,17 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
         for (const field of leadWithoutUser.fieldData) {
           if (field.name === "full_name") {
-            userData.first_name = field.values[0];
+            userData.first_name = field.values[0] || '';
           } else if (field.name === "email" || field.name === "e-mail") {
-            userData.email = field.values[0];
+            userData.email = field.values[0] || '';
           } else if (field.name === "phone_number") {
-            userData.phone_number = field.values[0];
+            userData.phone_number = field.values[0] || '';
           } else if (field.name === "seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni" || field.name === "tipo_di_trattamento_" || field.name === "quanti_denti_desideri_sostituire?"){
-            userData.trattamento = field.values[0].replace(/_/g, " ");
+            userData.trattamento = field.values[0]?.replace(/_/g, " ") || '';
           } else if ( field.name == "seleziona_il_centro_più_vicino_a_te" ){
-            userData.città = field.values[0].replace(/_/g, " ");
+            userData.città = field.values[0]?.replace(/_/g, " ") || '';
           } else if (field.name == "quando_preferiresti_essere_contattata?_" || field.name == "in_che_tempistiche?"){
-            userData.quando = field.values[0];
+            userData.quando = field.values[0] || '';
           }
         }
 
@@ -1689,7 +1689,7 @@ const recallSegreteria = async () => {
 async function makeOutboundCallErrore(number, city, name, type) {
   const url = 'https://twilio-11labs-call-agent-production.up.railway.app/outbound-call';
   //const url = 'https://cd9f-185-199-103-50.ngrok-free.app/outbound-call';
-  number = number.replace(/\s+/g, '');
+  number = number?.replace(/\s+/g, '');
 
   // Controlla e aggiusta il prefisso
   if (!number.startsWith('+39')) {

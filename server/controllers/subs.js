@@ -11,6 +11,7 @@ const axios = require('axios')
 const fs = require('fs');
 const csv = require('csv-parser');
 const moment = require('moment');
+const path = require('path');
 const { saveLead } = require('../helpers/nexus');
 
 let lastUserReceivedLead = null;
@@ -392,7 +393,7 @@ async function setCapDailyToTen() {
 }
 
 async function checkAndInsertLeadsFromCSV() {
-  const filePath = './AMBRA.csv';
+  const csvDir = path.join(__dirname, '../csv-2');
 
   try {
     let users = await Orientatore.find({
@@ -406,54 +407,140 @@ async function checkAndInsertLeadsFromCSV() {
     }
 
     let userIndex = 0; // Iniziamo dal primo orientatore
+    let totalEmailsProcessed = 0;
+    let newLeadsCreated = 0;
+    let existingLeadsFound = 0;
 
-    // Leggi i dati dal file CSV
-    fs.createReadStream(filePath)
-      .pipe(csv())
-      .on('data', (row) => {
-        const email = row.email ? row.email.trim() : '';
-        const numeroTelefono = row.phone_number ? row.phone_number.replace(/^p:/, '').trim() : '';
-
-        if (email) {
-          const leadData = {
-            data: new Date(),
-            nome: row.full_name,
-            email: email,
-            numeroTelefono: numeroTelefono,
-            campagna: 'Social',
-            città: row.seleziona_il_centro_più_vicino_a_te ? row.seleziona_il_centro_più_vicino_a_te.replace(/_/g, " ") : '',
-            trattamento: row.seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni ? row.seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni.replace(/_/g, " ") : 'Implantologia a carico immediato',
-            esito: "Da contattare",
-            orientatori: users[userIndex % users.length]._id, // Assegna la lead all'orientatore corrente
-            utente: "65d3110eccfb1c0ce51f7492",
-            note: "",
-            fatturato: "",
-            utmContent: row.ad_name ? row.ad_name : '',
-            utmAdset: row.adset_name ? row.adset_name : '',
-            utmCampaign: row.campaign_name ? row.campaign_name : '',
-            tentativiChiamata: '0',
-            giàSpostato: false,
-          };
-
-          Lead.findOne({ email: email })
-            .then(existingLead => {
-              if (existingLead) {
-                console.log(`Esiste: email: ${email}`);
+    console.log('Orientatori disponibili:', users.length);
+    
+    // Leggi tutti i file CSV dalla cartella
+    const files = fs.readdirSync(csvDir).filter(file => file.endsWith('.csv'));
+    console.log('File CSV trovati:', files.length);
+    
+    for (const fileName of files) {
+      const filePath = path.join(csvDir, fileName);
+      console.log(`\n--- Processando file: ${fileName} ---`);
+      
+      await new Promise((resolve, reject) => {
+        // Determina l'encoding in base al nome del file
+        const isTabFile = fileName.includes('VIDEO') || fileName.includes('rate');
+        const encoding = isTabFile ? 'utf16le' : 'utf8';
+        
+        console.log(`Usando encoding: ${encoding} per file: ${fileName}`);
+        
+        // Leggi i dati dal file CSV
+        const rows = [];
+        fs.createReadStream(filePath, { encoding: encoding })
+          .pipe(csv())
+          .on('data', (row) => {
+            rows.push(row);
+          })
+          .on('end', async () => {
+            // Processa tutte le righe in sequenza
+            for (const row of rows) {
+              // Determina se è un file con virgole (csv-parser funziona) o con tab (split manuale)
+              const isCommaSeparated = Object.keys(row).length > 1;
+              
+              let rowData = {};
+              
+              if (isCommaSeparated) {
+                // File con virgole: csv-parser ha già separato le colonne
+                rowData = row;
               } else {
-                console.log(`Non esiste: email: ${email}, creando la lead...`);
-                Lead.create(leadData)
-                  .then(() => console.log(`Lead creata per email: ${email}`))
-                  .catch(err => console.error(`Errore durante la creazione della lead: ${err}`));
+                // File con tab: split manuale
+                const headerKey = Object.keys(row)[0];
+                const dataString = row[headerKey];
+                
+                if (!dataString || dataString.trim() === '') continue;
+                
+                // Split per tab e estrai i valori
+                const values = dataString.split('\t');
+                const headers = headerKey.split('\t');
+                
+                // Crea un oggetto mappando header -> valore
+                headers.forEach((header, index) => {
+                  rowData[header] = values[index] || '';
+                });
               }
-            })
-            .catch(err => console.error(`Errore durante la ricerca della lead: ${err}`));
+              
+              // Estrai i dati usando i nomi delle colonne invece delle posizioni
+              const email = rowData.email ? rowData.email.trim() : '';
+              const numeroTelefono = rowData.phone_number ? rowData.phone_number.replace(/^p:/, '').trim() : '';
+              const fullName = rowData.full_name ? rowData.full_name.replace(/"/g, '').trim() : '';
+              const trattamento = rowData.seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni ? 
+                rowData.seleziona_il_trattamento_su_cui_vorresti_ricevere_maggiori_informazioni.replace(/"/g, '').trim() : '';
+              const centro = rowData.seleziona_il_centro_più_vicino_a_te ? 
+                rowData.seleziona_il_centro_più_vicino_a_te.replace(/"/g, '').trim() : '';
+              const adName = rowData.ad_name ? rowData.ad_name.replace(/"/g, '').trim() : '';
+              const adsetName = rowData.adset_name ? rowData.adset_name.replace(/"/g, '').trim() : '';
+              const campaignName = rowData.campaign_name ? rowData.campaign_name.replace(/"/g, '').trim() : '';
+              
+              // Debug: mostra i dati estratti solo se email valida
+              if (email) {
+                console.log(`Riga processata - Email: ${email}, Nome: ${fullName}, Telefono: ${numeroTelefono}`);
+              }
 
-          userIndex++; // Aggiorna l'indice per il prossimo orientatore
-        }
-      })
-      .on('end', () => {
-        console.log('Verifica e creazione completate.');
+              if (email) {
+                totalEmailsProcessed++;
+                
+                const leadData = {
+                  data: new Date(),
+                  nome: fullName,
+                  email: email,
+                  numeroTelefono: numeroTelefono,
+                  campagna: 'Social',
+                  città: centro ? centro.replace(/_/g, " ") : '',
+                  trattamento: trattamento ? trattamento.replace(/_/g, " ") : 'Implantologia a carico immediato',
+                  esito: "Da contattare",
+                  orientatori: users[userIndex % users.length]._id, // Assegna la lead all'orientatore corrente
+                  utente: "65d3110eccfb1c0ce51f7492",
+                  note: "",
+                  fatturato: "",
+                  utmContent: adName,
+                  utmAdset: adsetName,
+                  utmCampaign: campaignName,
+                  tentativiChiamata: '0',
+                  giàSpostato: false,
+                };
+
+                // Controlla se la lead esiste già (sincrono)
+                try {
+                  const existingLead = await Lead.findOne({ email: email });
+                  if (existingLead) {
+                    existingLeadsFound++;
+                    console.log(`Esiste: email: ${email}`);
+                  } else {
+                    newLeadsCreated++;
+                    console.log(`Non esiste: email: ${email}, creando la lead...`);
+                    //console.log(leadData)
+                    //await Lead.create(leadData);
+                    console.log(`Lead creata per email: ${email}`);
+                  }
+                } catch (err) {
+                  console.error(`Errore per email ${email}: ${err}`);
+                }
+
+                userIndex++; // Aggiorna l'indice per il prossimo orientatore
+              } else {
+                console.log('Email non valida o mancante');
+              }
+            }
+            
+            console.log(`File ${fileName} completato.`);
+            resolve();
+          })
+      .on('error', (error) => {
+        console.error(`Errore nel file ${fileName}:`, error);
+        reject(error);
       });
+      });
+    }
+    
+    console.log('\n=== RIEPILOGO PROCESSAMENTO CSV ===');
+    console.log(`Email totali processate: ${totalEmailsProcessed}`);
+    console.log(`Lead esistenti trovate: ${existingLeadsFound}`);
+    console.log(`Nuove lead da creare: ${newLeadsCreated}`);
+    console.log('Tutti i file CSV sono stati processati.');
   } catch (error) {
     console.error('Errore durante la verifica e creazione delle lead:', error);
   }
@@ -1149,12 +1236,14 @@ cron.schedule('30 4 * * *', () => {
   console.log('Eseguito il reset del daily Lead');
 });
 
-cron.schedule('10,46,20 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+/*cron.schedule('10,46,20 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getDentistaLead();
   console.log('Prendo i lead di Bluedental 1.0');
-});
-//getDentistaLead();
-cron.schedule('20,56,30 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+});*/
+
+//getBludentalLead();
+
+/*cron.schedule('20,56,30 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getDentistaLead2();
   console.log('Prendo i lead di Bluedental 2.0');
 });
@@ -1167,7 +1256,7 @@ cron.schedule('5,36,15 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *',
 cron.schedule('8,49,18 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getBludentalLead();
   console.log('Prendo i lead di Bluedental');
-});
+});*/
 
 /*cron.schedule('10,52,33 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   getThlLead1();

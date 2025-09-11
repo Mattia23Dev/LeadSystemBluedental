@@ -448,7 +448,7 @@ router.post('/webhook-elevenlabs-sql', async (req, res) => {
 });
 
 async function makeOutboundCall(number, city, name, type) {
-  const url = 'https://primary-production-403a.up.railway.app/webhook/bludental-attivazione';
+  const url = 'https://deepagent-n8n-u45409.vm.elestio.app/webhook/bludental-attivazione';
   number = number.replace(/\s+/g, '');
   const lead = await Lead.findOne({ numeroTelefono: number });
   // Controlla e aggiusta il prefisso

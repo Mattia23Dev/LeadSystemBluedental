@@ -345,7 +345,7 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
         { numeroTelefono: user_phone },
         { numeroTelefono: `+39${user_phone}` }
       ]
-    }); // Ordina per data decrescente per ottenere il più recente
+    }).sort({ dataTimestamp: -1 }); // Ordina per data decrescente per ottenere il più recente
 
     if (lead) {
       console.log('Lead trovato:', lead.numeroTelefono);

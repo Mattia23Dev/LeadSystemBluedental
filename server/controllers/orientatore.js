@@ -202,6 +202,9 @@ exports.createOrientatore = async (req, res) => {
           città: req.body.città,
           manualLead: true,
           utmCampaign: req.body.campagna,
+          ...(req.body.punteggio !== undefined && { punteggio: req.body.punteggio }),
+          ...(req.body.appVoiceBot !== undefined && { appVoiceBot: req.body.appVoiceBot }),
+          ...(req.body.chiamato !== undefined && { chiamato: req.body.chiamato }),
         };
     
         const lead = new Lead(leadData);
@@ -222,7 +225,10 @@ exports.createOrientatore = async (req, res) => {
         trattamento: req.body.trattamento,
         città: req.body.città,
         manualLead: true,
-        utmCampaign: req.body.campagna
+        utmCampaign: req.body.campagna,
+        ...(req.body.punteggio !== undefined && { punteggio: req.body.punteggio }),
+        ...(req.body.appVoiceBot !== undefined && { appVoiceBot: req.body.appVoiceBot }),
+        ...(req.body.chiamato !== undefined && { chiamato: req.body.chiamato }),
       };
   
       const lead = new Lead(leadData);

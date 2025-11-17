@@ -109,13 +109,35 @@ const Lead = require('../models/lead');
       if (!lead) {
         return res.status(404).json({ error: 'Lead non trovato' });
       }
-  
+
       res.json(lead);
     } catch (err) {
       console.error(err);
       if (err.kind === 'ObjectId') {
         return res.status(400).json({ error: 'ID lead non valido' });
       }
+      return res.status(500).json({ error: 'Errore nel recupero del lead' });
+    }
+  };
+
+  exports.getLeadByEmail = async (req, res) => {
+    try {
+      const email = req.query.email;
+
+      if (!email) {
+        return res.status(400).json({ error: 'Email richiesta come query parameter' });
+      }
+
+      const lead = await Lead.findOne({ email: email })
+        .populate('orientatori');
+
+      if (!lead) {
+        return res.status(404).json({ error: 'Lead non trovato con questa email' });
+      }
+
+      res.json(lead);
+    } catch (err) {
+      console.error(err);
       return res.status(500).json({ error: 'Errore nel recupero del lead' });
     }
   };

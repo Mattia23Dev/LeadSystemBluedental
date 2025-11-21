@@ -350,6 +350,12 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
 
     if (lead) {
       console.log('Lead trovato:', lead.numeroTelefono);
+      console.log('Punteggio qualifica:', lead.esito);
+      
+      if (lead.esito == "Venduto" || lead.esito == "Lead persa" || lead.esito == "Non interessato") {
+        console.log('Lead in stato non spostabile');
+        return res.status(200).json({ message: 'Lead in stato non spostabile', esito: lead.esito });
+      } else {
       if (punteggio_qualifica && punteggio_qualifica !== "") {
         lead.luogo = centro_scelto;
         lead.summary = "";
@@ -381,6 +387,7 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
         console.log('Lead non ha punteggio qualificata', user_phone);
         lead.appVoiceBot = true;        
       }
+     }
     } else {
       console.log('Nessun lead trovato con i criteri specificati.');
     }

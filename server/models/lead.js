@@ -120,6 +120,7 @@ const LeadSchema = new Schema({
     },
     idNexus: String,
     consent_marketing: String,
+    recallIds: [],
   });
 
   LeadSchema.pre('save', function(next) {

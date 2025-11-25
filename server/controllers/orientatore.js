@@ -303,6 +303,33 @@ exports.createOrientatore = async (req, res) => {
     }
   };
 
+  // Funzione per annullare un run su Trigger.dev
+  const cancelTriggerRun = async (runId) => {
+    try {
+      const triggerApiKey = process.env.TRIGGER_DEV_API_KEY || process.env.TRIGGER_API_KEY;
+      if (!triggerApiKey) {
+        console.error('TRIGGER_DEV_API_KEY non configurata');
+        return false;
+      }
+
+      const response = await axios.post(
+        `https://api.trigger.dev/v1/runs/${runId}/cancel`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${triggerApiKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      console.log(`Run ${runId} annullato con successo`);
+      return true;
+    } catch (error) {
+      console.error(`Errore nell'annullamento del run ${runId}:`, error.response?.data || error.message);
+      return false;
+    }
+  };
+
   const trigger = (lead, orientatore, flowId) => {
     const url = 'https://chat.leadsystem.app/api/users';
   
@@ -444,6 +471,16 @@ exports.createOrientatore = async (req, res) => {
 
       const mantenereAppFissato = lead.utente.toString() === "664c5b2f3055d6de1fcaa22b" && req.body.esito !== "Fissato" && lead.esito === "Fissato";
   
+      // Verifica se l'esito sta cambiando a uno dei valori che richiedono la cancellazione dei recallIds
+      const esitiDaCancellare = ["Venduto", "Lead persa", "Non interessato"];
+      const esitoPrecedente = lead.esito;
+      const nuovoEsito = req.body.esito;
+      const deveCancellareRecallIds = nuovoEsito && 
+                                       nuovoEsito !== esitoPrecedente && 
+                                       esitiDaCancellare.includes(nuovoEsito) &&
+                                       lead.recallIds && 
+                                       lead.recallIds.length > 0;
+
       Object.assign(lead, req.body);
 
       if (mantenereAppFissato) {
@@ -451,6 +488,21 @@ exports.createOrientatore = async (req, res) => {
       }
       
       lead.lastModify = new Date().toISOString();
+
+      // Annulla tutti i recallIds se l'esito è cambiato a uno dei valori specificati
+      if (deveCancellareRecallIds) {
+        console.log(`Annullamento di ${lead.recallIds.length} recallIds per esito: ${nuovoEsito} per lead: ${lead.email} - ${lead.numeroTelefono}`);
+        const recallIdsToCancel = [...lead.recallIds]; // Copia l'array per evitare modifiche durante l'iterazione
+        
+        for (const recallId of recallIdsToCancel) {
+          if (recallId && recallId !== "") {
+            await cancelTriggerRun(recallId);
+          }
+        }
+        
+        // Svuota l'array recallIds dopo averli cancellati
+        lead.recallIds = [];
+      }
       if (lead.utente.toString === "65d3110eccfb1c0ce51f7492"){
       if (lead.esito === "Non risponde"){
         if (lead.giàSpostato === false && parseInt(req.body.tentativiChiamata) > 1 ){

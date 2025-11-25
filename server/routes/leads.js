@@ -335,8 +335,8 @@ router.post('/webhook-elevenlabs', async (req, res) => {
 router.post('/webhook-n8n-bludental', async (req, res) => {
   try {
     console.log(req.body);
-    const { punteggio_qualifica, centro_scelto, user_phone, status, success } = req.body;
-    console.log('Dati ricevuti da ElevenLabs:', { punteggio_qualifica, centro_scelto, user_phone, status, success });
+    const { punteggio_qualifica, centro_scelto, user_phone, status, success, next_run_id } = req.body;
+    console.log('Dati ricevuti da ElevenLabs:', { punteggio_qualifica, centro_scelto, user_phone, status, success, next_run_id });
 
     const user = await User.findById("65d3110eccfb1c0ce51f7492");
 
@@ -352,8 +352,23 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
       console.log('Lead trovato:', lead.numeroTelefono);
       console.log('Punteggio qualifica:', lead.esito);
       
+      // Aggiungi next_run_id all'array recallIds se presente
+      if (next_run_id && next_run_id !== "") {
+        if (!lead.recallIds) {
+          lead.recallIds = [];
+        }
+        lead.recallIds.push(next_run_id);
+        console.log('Aggiunto next_run_id all\'array recallIds:', next_run_id);
+      } else {
+        console.log('No next_run_id presente');
+      }
+      
       if (lead.esito == "Venduto" || lead.esito == "Lead persa" || lead.esito == "Non interessato") {
         console.log('Lead in stato non spostabile');
+        // Salva comunque il next_run_id anche se lo stato non è spostabile
+        if (next_run_id && next_run_id !== "") {
+          await lead.save();
+        }
         return res.status(200).json({ message: 'Lead in stato non spostabile', esito: lead.esito });
       } else {
       if (punteggio_qualifica && punteggio_qualifica !== "") {
@@ -385,7 +400,8 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
         }
       } else {
         console.log('Lead non ha punteggio qualificata', user_phone);
-        lead.appVoiceBot = true;        
+        lead.appVoiceBot = true;
+        await lead.save();
       }
      }
     } else {

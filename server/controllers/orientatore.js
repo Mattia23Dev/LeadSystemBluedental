@@ -313,8 +313,8 @@ exports.createOrientatore = async (req, res) => {
       }
 
       const response = await axios.post(
-        `https://api.trigger.dev/v1/runs/${runId}/cancel`,
-        {},
+        `https://api.trigger.dev/api/v2/runs/${runId}/cancel`,
+        undefined,
         {
           headers: {
             'Authorization': `Bearer ${triggerApiKey}`,

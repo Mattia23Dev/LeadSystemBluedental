@@ -52,7 +52,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
       "Terni", "Perugia", "Arezzo", "Firenze", "Lucca", "Prato", "Piacenza", "Ferrara", "Cesena", "Forlì", "Reggio Emilia",
       "Modena", "Parma", "Bologna", "Rovigo", "Treviso", "Padova", "Verona", "Vicenza", "Mestre", "Torino Chironi",
       "Settimo Torinese", "Biella", "Torino Botticelli", "Bari", "Genova", "Cagliari", "Sassari", "Pordenone", "Rimini",
-      "Ravenna", "Rho", "Anzio"
+      "Ravenna", "Rho", "Anzio", "Bassano del Grappa", "Alessandria", "Massa", "Livorno", "Trento", "Udine"
     ];
     const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         "Numero Errato", "Non interessato", "Fuori Zona", "Doppio contatto", "⁠Nessuna risposta (6)", "Già paziente"
@@ -817,7 +817,7 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
                         </div>
                         {leadF.appVoiceBot &&
                         <div className='punteggio-container'>
-                            <p>Punteggio: {leadF?.punteggio && leadF?.punteggio !== "" ? leadF?.punteggio + "/2" : "N/A"}</p>
+                            <p>Punteggio: {leadF?.punteggio != null ? String(leadF?.punteggio) + "/2" : "N/A"}</p>
                             <p>Riassunto: {leadF?.summary}</p>
                         </div>}
                         <hr className='linea-che-serve' />

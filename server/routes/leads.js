@@ -371,7 +371,7 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
         }
         return res.status(200).json({ message: 'Lead in stato non spostabile', esito: lead.esito });
       } else {
-      if (punteggio_qualifica && punteggio_qualifica !== "") {
+      if (punteggio_qualifica != null && punteggio_qualifica !== "") {
         lead.luogo = centro_scelto;
         lead.summary = "";
         lead.punteggio = punteggio_qualifica;

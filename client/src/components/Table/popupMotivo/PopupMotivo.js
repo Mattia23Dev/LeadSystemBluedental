@@ -38,7 +38,7 @@ const PopupMotivo = ({type, onClose, spostaLead, leadId}) => {
     "Terni", "Perugia", "Arezzo", "Firenze", "Lucca", "Prato", "Piacenza", "Ferrara", "Cesena", "Forlì", "Reggio Emilia",
     "Modena", "Parma", "Bologna", "Rovigo", "Treviso", "Padova", "Verona", "Vicenza", "Mestre", "Torino Chironi",
     "Settimo Torinese", "Biella", "Torino Botticelli", "Bari", "Genova", "Cagliari", "Sassari", "Pordenone", "Rimini",
-    "Ravenna", "Rho", "Anzio"
+    "Ravenna", "Rho", "Anzio", "Bassano del Grappa", "Alessandria", "Massa", "Livorno", "Trento", "Udine"
   ];
 
   const handleTreatmentChange = (event) => {

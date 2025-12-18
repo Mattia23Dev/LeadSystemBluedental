@@ -173,7 +173,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
     "Terni", "Perugia", "Arezzo", "Firenze", "Lucca", "Prato", "Piacenza", "Ferrara", "Cesena", "Forlì", "Reggio Emilia",
     "Modena", "Parma", "Bologna", "Rovigo", "Treviso", "Padova", "Verona", "Vicenza", "Mestre", "Torino Chironi",
     "Settimo Torinese", "Biella", "Torino Botticelli", "Bari", "Genova", "Cagliari", "Sassari", "Pordenone", "Rimini",
-    "Ravenna", "Rho", "Anzio"
+    "Ravenna", "Rho", "Anzio", "Bassano del Grappa", "Alessandria", "Massa", "Livorno", "Trento", "Udine"
   ];
 
   const [selectedStatusEsito, setSelectedStatusEsito] = useState({
@@ -245,7 +245,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           luogo: lead.luogo ? lead.luogo : "",
           tipo: lead.tipo ? lead.tipo : "",
           appVoiceBot: lead.appVoiceBot ? lead.appVoiceBot : false,
-          punteggio: lead.punteggio ? lead.punteggio : null,
+          punteggio: (lead.punteggio !== null && lead.punteggio !== undefined) ? String(lead.punteggio) : null,
         };
       });
 
@@ -376,7 +376,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           luogo: lead.luogo ? lead.luogo : "",
           tipo: lead.tipo ? lead.tipo : "",
           appVoiceBot: lead.appVoiceBot ? lead.appVoiceBot : false,
-          punteggio: lead.punteggio ? lead.punteggio : null,
+          punteggio: (lead.punteggio !== null && lead.punteggio !== undefined) ? String(lead.punteggio) : null,
         };
       });
 
@@ -546,7 +546,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         luogo: row.luogo ? row.luogo : "",
         tipo: row.tipo ? row.tipo : "",
         appVoiceBot: row.appVoiceBot ? row.appVoiceBot : false,
-        punteggio: row.punteggio ? row.punteggio : null,
+        punteggio: (row.punteggio !== null && row.punteggio !== undefined) ? String(row.punteggio) : null,
       };
     });
     setFilteredData(filteredDataIn);
@@ -752,7 +752,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
           luogo: lead.luogo ? lead.luogo : "",
           tipo: lead.tipo ? lead.tipo : "",
           appVoiceBot: lead.appVoiceBot ? lead.appVoiceBot : false,
-          punteggio: lead.punteggio ? lead.punteggio : null,
+          punteggio: (lead.punteggio !== null && lead.punteggio !== undefined) ? String(lead.punteggio) : null,
         };
       });
 
@@ -857,7 +857,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
           luogo: lead.luogo ? lead.luogo : "",
           tipo: lead.tipo ? lead.tipo : "",
           appVoiceBot: lead.appVoiceBot ? lead.appVoiceBot : false,
-          punteggio: lead.punteggio ? lead.punteggio : null,
+          punteggio: (lead.punteggio !== null && lead.punteggio !== undefined) ? String(lead.punteggio) : null,
         };
       });
 
@@ -970,7 +970,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
               luogo: updatedLead.luogo ? updatedLead.luogo : "",
               tipo: updatedLead.tipo ? updatedLead.tipo : "",
               appVoiceBot: updatedLead.appVoiceBot ? updatedLead.appVoiceBot : false,
-              punteggio: updatedLead.punteggio ? updatedLead.punteggio : null,
+              punteggio: (updatedLead.punteggio !== null && updatedLead.punteggio !== undefined) ? String(updatedLead.punteggio) : null,
             };
             return { ...lead, ...adaptedLead };
           } else {
@@ -1002,7 +1002,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
             luogo: updatedLead.luogo ? updatedLead.luogo : "",
             tipo: updatedLead.tipo ? updatedLead.tipo : "",
             appVoiceBot: updatedLead.appVoiceBot ? updatedLead.appVoiceBot : false,
-            punteggio: updatedLead.punteggio ? updatedLead.punteggio : null,
+            punteggio: (updatedLead.punteggio !== null && updatedLead.punteggio !== undefined) ? updatedLead.punteggio : null,
           };
           return { ...lead, ...adaptedLead };
         } else {
@@ -1378,7 +1378,7 @@ function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
             <p style={{ color: "gray", fontSize: '13px' }} htmlFor="citySelect">Città di provenienza:</p>
             <select id="citySelect" onChange={handleCityChange} value={selectedCity}>
               <option value="">Seleziona</option>
-              {cities.map(city => (
+              {cities?.sort().map(city => (
                 <option key={city} value={city}>{city}</option>
               ))}
             </select>

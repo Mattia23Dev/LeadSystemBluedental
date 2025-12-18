@@ -51,7 +51,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
       "Terni", "Perugia", "Arezzo", "Firenze", "Lucca", "Prato", "Piacenza", "Ferrara", "Cesena", "Forlì", "Reggio Emilia",
       "Modena", "Parma", "Bologna", "Rovigo", "Treviso", "Padova", "Verona", "Vicenza", "Mestre", "Torino Chironi",
       "Settimo Torinese", "Biella", "Torino Botticelli", "Bari", "Genova", "Cagliari", "Sassari", "Pordenone", "Rimini",
-      "Ravenna", "Rho", "Anzio"
+      "Ravenna", "Rho", "Anzio", "Bassano del Grappa", "Alessandria", "Massa", "Livorno", "Trento", "Udine"
     ];
     const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
         "Numero Errato", "Non interessato", "Fuori Zona", "Doppio contatto", "⁠Nessuna risposta (6)", "Già paziente"
@@ -220,13 +220,14 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
     }
 
     const [leadF, setLeadF] = useState()
-
     useEffect(() => {
         const fetchLead = async () => {
           try {
             const response = await axios.get(`/leads/${lead.id}`);
             console.log(response.data)
-            setLeadF(response.data);
+            const punteggio = response?.data?.punteggio === 0 ? "0" : response?.data?.punteggio;
+            setLeadF({...response.data, punteggio: punteggio});
+            console.log(leadF)
             setEmail(response.data.email || '');
             setCampagna(response.data.campagna || '');
             setNumeroTelefono(response.data.numeroTelefono || '');
@@ -836,7 +837,7 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                         </div>
                         {leadF?.appVoiceBot && 
                         <div className='punteggio-container'>
-                            <p>Punteggio: {leadF?.punteggio && leadF?.punteggio !== "" ? leadF?.punteggio + "/2" : "N/A"}</p>
+                            <p>Punteggio: {leadF?.punteggio != null ? String(leadF?.punteggio) + "/2" : leadF?.punteggio == 0 ? "0/2" : "N/A"}</p>
                             <p>Riassunto: {leadF?.summary}</p>
                         </div>}
                         <hr className='linea-che-serve' />

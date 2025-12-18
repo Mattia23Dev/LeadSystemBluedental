@@ -118,7 +118,7 @@ export default function LeadEntry({ secref, id, index, data, handleModifyPopup, 
         </div>
         {data.appVoiceBot && 
         <div className='punteggio'>
-            {data.punteggio && data.punteggio !== "" ? data.punteggio + "/2" : "N/A"}
+            {data.punteggio != null ? String(data.punteggio) + "/2" : "N/A"}
         </div>}
       </div>
     )

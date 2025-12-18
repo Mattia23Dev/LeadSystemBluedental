@@ -1167,7 +1167,7 @@ const writeDataPrequalificati = async (auth) => {
   const leads = await Lead.find({
     utente: "65d3110eccfb1c0ce51f7492", 
     appVoiceBot: true, 
-    punteggio: { $in: [0, 1, 2] },
+    punteggio: { $in: [0, 1, 2], $ne: null, $exists: true },
   });
 
   leads.forEach((lead) => {

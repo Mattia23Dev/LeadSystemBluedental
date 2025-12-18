@@ -12,6 +12,7 @@ const moment = require("moment");
 const LeadFacebook = require('../models/leadFacebook');
 const { ElevenLabsClient } = require("elevenlabs");
 const client = new ElevenLabsClient({ apiKey: "sk_6ea6b886a8c412f6dfd06ec6b9e6e9d1fb6b96ca42817040" });
+const OpenAI = require('openai');
 
 exports.getDataCap = async (req, res) => { 
     console.log(req.body);
@@ -1163,7 +1164,11 @@ const writeDataPrequalificati = async (auth) => {
   const ieri = new Date('2023-02-20');
   ieri.setHours(0, 0, 0, 0);
 
-  const leads = await Lead.find({utente: "65d3110eccfb1c0ce51f7492", appVoiceBot: true});
+  const leads = await Lead.find({
+    utente: "65d3110eccfb1c0ce51f7492", 
+    appVoiceBot: true, 
+    punteggio: { $in: [0, 1, 2] },
+  });
 
   leads.forEach((lead) => {
     const leadData = [
@@ -1175,7 +1180,7 @@ const writeDataPrequalificati = async (auth) => {
       lead.esito === "Non interessato" ? "Lead persa" : lead.esito.toString(),
       lead.dataPrimaModifica ? formatDate(lead.dataPrimaModifica) : 'Nessuna Data',
       lead.dataCambiamentoEsito ? formatDate(lead.dataCambiamentoEsito) : 'Nessuna Data', 
-      lead.punteggio ? lead.punteggio : '',
+      lead.punteggio != null ? lead.punteggio : '',
       lead.summary ? lead.summary : '',
     ];
   
@@ -1206,7 +1211,7 @@ const writeDataPrequalificati = async (auth) => {
   );
 };
 
-async function fetchConversations(agentId) {
+/*async function fetchConversations(agentId) {
   try {
     let results = [];
     let nextCursor = null;
@@ -1227,7 +1232,7 @@ async function fetchConversations(agentId) {
       // 2️⃣ Itera su ogni conversazione per ottenere i dettagli
       for (const conv of conversations) {
         const convDetails = await client.conversationalAi.getConversation(conv.conversation_id);
-        //console.log(convDetails)
+        console.log(convDetails.conversation_initiation_client_data.conversation_config_override)
         // 3️⃣ Estrarre i dati richiesti
         const dataChiamata = new Date(convDetails.metadata.start_time_unix_secs * 1000).toISOString();
         const idConversazione = convDetails.conversation_id;
@@ -1247,6 +1252,195 @@ async function fetchConversations(agentId) {
   } catch (error) {
     console.error("Errore nel recupero delle conversazioni:", error);
     return [];
+  }
+}*/
+
+async function fetchConversations(agentId) {
+  try {
+    let results = [];
+    let nextCursor = null;
+    let hasMore = true;
+    let callCounter = 0; // Contatore per tenere traccia del numero di chiamate analizzate
+    
+    while (hasMore && results.length < 600) {
+      // 1️⃣ Recupera tutte le conversazioni con paginazione
+      const response = await client.conversationalAi.getConversations({
+        agent_id: agentId,
+        page_size: 100,
+        cursor: nextCursor,
+      });
+      
+      const conversations = response.conversations;
+      hasMore = response.has_more;
+      nextCursor = response.next_cursor;
+      
+      // 2️⃣ Itera su ogni conversazione per ottenere i dettagli
+      for (const conv of conversations) {
+        try {
+          callCounter++; // Incrementa il contatore
+          console.log(`Analisi chiamata #${callCounter} - ID: ${conv.conversation_id}`);
+          
+          const convDetails = await client.conversationalAi.getConversation(conv.conversation_id);
+          
+          // Estrai informazioni dal prompt (numero, nome, città)
+          let userPhone = "";
+          let userName = "";
+          let userCity = "";
+          let callSid = "";
+          
+          if (convDetails.conversation_initiation_client_data?.conversation_config_override?.agent?.prompt?.prompt) {
+            const promptText = convDetails.conversation_initiation_client_data.conversation_config_override.agent.prompt.prompt;
+            
+            // Estrai numero di telefono, nome, città e callSid usando regex
+            const phoneMatch = promptText.match(/numero: ([+\d]+)/);
+            const nameMatch = promptText.match(/nome: ([^,]+)/);
+            const cityMatch = promptText.match(/città: ([^,]+)/);
+            const callSidMatch = promptText.match(/callSid: ([^\.]+)/);
+            
+            userPhone = phoneMatch ? phoneMatch[1] : "";
+            userName = nameMatch ? nameMatch[1].trim() : "";
+            userCity = cityMatch ? cityMatch[1].trim() : "";
+            callSid = callSidMatch ? callSidMatch[1].trim() : "";
+            
+            console.log(`Chiamata #${callCounter} - Telefono: ${userPhone}, Nome: ${userName}, Città: ${userCity}`);
+          }
+          
+          // 3️⃣ Preparare la trascrizione
+          const transcript = convDetails.transcript.map(entry => `${entry.role}: ${entry.message}`).join(" | ");
+          
+          // 4️⃣ Verifica se è una segreteria
+          const isVoicemail = transcript.toLowerCase().includes("segnale acustico") || 
+                              transcript.toLowerCase().includes("segreteria")
+          
+          // 5️⃣ Calcola timestamp
+          const startTime = new Date(convDetails.metadata.start_time_unix_secs * 1000);
+          const endTime = new Date((convDetails.metadata.start_time_unix_secs + convDetails.metadata.call_duration_secs) * 1000);
+          const now = new Date();
+          
+          // 6️⃣ Analisi con OpenAI
+          const openaiAnalysis = await analyzeConversationWithOpenAI(transcript);
+          // 7️⃣ Prepara l'oggetto per il database
+          const callHistoryData = {
+            id: "", // Lasciato vuoto, sarà generato dal DB
+            phone_number_id: "ce258d73-03c5-490d-9f30-4ffae8948895", // Lasciato vuoto come richiesto
+            agent_id: "2409a8b6-1419-43e8-82ab-70562c9b1e75", // Lasciato vuoto come richiesto
+            user_id: "fd3b96c4-9208-4878-be7b-391e49ca0f25", // Lasciato vuoto come richiesto
+            workflow_id: "0508e8de-9d55-4136-853e-c1163c8558fd", // Lasciato vuoto come richiesto
+            call_sid: callSid, // Estratto dal prompt
+            elevenlabs_id: convDetails.conversation_id,
+            call_number: 1,
+            session_id: "",
+            call_duration: convDetails.metadata.call_duration_secs,
+            call_direction: "outbound",
+            call_type: "phone",
+            call_result: isVoicemail ? "segreteria" : "completed",
+            call_notes: "",
+            call_transcription: transcript,
+            call_summary: openaiAnalysis.summary,
+            call_feedback: openaiAnalysis.feedback,
+            call_tags: [],
+            status: isVoicemail ? "segreteria" : "completed",
+            failure_reason: "",
+            success: openaiAnalysis.success,
+            call_created_at: startTime.toISOString(),
+            start_time: startTime.toISOString(),
+            end_time: endTime.toISOString(),
+            last_recall_attempt: null,
+            recording_url: "",
+            device_used: "phone",
+            sentiment_score: openaiAnalysis.sentimentScore,
+            sentiment_label: openaiAnalysis.sentimentLabel,
+            additional_data: {
+              user_phone: userPhone,
+              user_name: userName,
+              user_city: userCity
+            },
+            updates: {},
+            created_at: now.toISOString(),
+            updated_at: now.toISOString(),
+            call_user_number: userPhone
+          };
+          // Aggiungi alla lista di risultati
+          results.push(callHistoryData);
+          
+        } catch (error) {
+          console.error(`Errore nell'elaborazione della conversazione ${conv.conversation_id}:`, error);
+          // Continua con la prossima conversazione
+        }
+      }
+    }
+    
+    return results;
+    
+  } catch (error) {
+    console.error("Errore nel recupero delle conversazioni:", error);
+    return [];
+  }
+}
+
+/**
+ * Funzione per analizzare la conversazione con OpenAI
+ * @param {string} transcript - La trascrizione della conversazione
+ * @returns {Object} - L'analisi della conversazione
+ */
+const OPENAI_API_KEY="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"
+async function analyzeConversationWithOpenAI(transcript) {
+  try {
+    const openai = new OpenAI({
+      apiKey: OPENAI_API_KEY,
+    });
+    
+    const prompt = `
+    Analizza questa trascrizione di una conversazione telefonica tra un assistente IA "Andrea" di Dentista Italia e un potenziale cliente.
+    
+    TRASCRIZIONE:
+    ${transcript}
+    
+    L'obiettivo dell'assistente è qualificare le lead per determinare il loro interesse, raccogliere informazioni sul trattamento richiesto, comprendere l'urgenza della richiesta e identificare il budget del paziente e infine richiedere se vuole essere ricontattato da un consulente del centro scelto, il success dell'agente è se il cliente vuole essere ricontattato e dice di si.
+    Se la conversazione é avvenuta fino alla fine ma il cliente non vuole essere ricontattato, success diventa no, ma feedback diventa positive ! (IMPORTANTE)
+    Se la conversazione termina perchè il cliente è già stato da bludental va bene (è previsto così nel prompt, gli abbiamo chiaramente detto che se è già stato in un qualsiasi centro bludental, deve ringraziare ed attaccare, quindi buona gestione), se la conversazione termina perchè il cliente non vuole proseguire, success diventa no, feedback diventa negative "Cliente non vuole proseguire".
+    Se la conversazione vedi il segnale acustico, oppure la segreteria, va bene, non è colpa dell'ai, ma il cliente non ha risposto al telefono, quindi success diventa segreteria, feedback diventa neutral, sentiment score e label lasciali vuoti, e summary deve essere "Cliente non risponde".
+    
+    Fornisci le seguenti informazioni:
+    1. success (yes/no/segretery): Ha ottenuto informazioni ed è riuscito a qualificare la lead?
+    2. summary: Un breve riassunto della conversazione in 5-6 frasi (se c'è segnale acustico o segreteria, scrivi "Cliente non risponde").
+    3. feedback (positive/negative/neutral): L'IA ha gestito bene o male la conversazione?
+    4. sentimentScore: Un punteggio da 0 a 10 di quanto bene l'IA ha gestito la chiamata (se c'è segnale acustico o segreteria, scrivi '').
+    5. sentimentLabel: Se positivo, elenca i punti di forza; se negativo, elenca le aree di miglioramento in un paio di frasi (se c'è segnale acustico o segreteria, scrivi '').
+    
+    Formatta la risposta come JSON valido con i campi: success, summary, feedback, sentimentScore, sentimentLabel.
+    `;
+    
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4-turbo",
+      messages: [
+        { "role": "system", "content": "Sei un esperto di analisi delle conversazioni telefoniche." },
+        { "role": "user", "content": prompt }
+      ],
+      response_format: { type: "json_object" }
+    });
+    
+    // Parse della risposta JSON
+    const response = JSON.parse(completion.choices[0].message.content);
+    console.log(response)
+    return {
+      success: response.success || "no",
+      summary: response.summary || "Nessun riassunto disponibile",
+      feedback: response.feedback || "negativo",
+      sentimentScore: parseInt(response.sentimentScore) || 0,
+      sentimentLabel: response.sentimentLabel || "Nessuna analisi disponibile"
+    };
+    
+  } catch (error) {
+    console.error("Errore nell'analisi con OpenAI:", error);
+    // Valori predefiniti in caso di errore
+    return {
+      success: "no",
+      summary: "Errore nell'analisi della trascrizione",
+      feedback: "negativo",
+      sentimentScore: 0,
+      sentimentLabel: "Errore nell'analisi del sentiment"
+    };
   }
 }
 
@@ -1268,6 +1462,33 @@ async function fetchConversationsAudio(agentId) {
   }
 }
 //fetchConversationsAudio("RcS9MXWhEgrqWV8VnlAE");
+
+async function saveConversationsToJson(agentId) {
+  try {
+    // Recupera massimo 300 conversazioni
+    const conversations = await fetchConversations(agentId);
+    
+    // Crea il nome del file con data e ora
+    const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\..+/, '');
+    const fileName = `conversations_${agentId}_${timestamp}.json`;
+    const filePath = path.join(__dirname, 'exports', fileName);
+    
+    // Assicurati che la directory esista
+    await fs.mkdir(path.join(__dirname, 'exports'), { recursive: true });
+    
+    // Scrivi i dati nel file JSON
+    await fs.writeFile(filePath, JSON.stringify(conversations, null, 2));
+    
+    console.log(`Salvate ${conversations.length} conversazioni nel file: ${filePath}`);
+    return filePath;
+    
+  } catch (error) {
+    console.error("Errore durante il salvataggio delle conversazioni:", error);
+    throw error;
+  }
+}
+
+//saveConversationsToJson("rD5JoYkfxa771fTLxwdc");
 
 const writeDataElevenLabsPrequalifica = async (auth) => {
   const sheets = google.sheets({ version: 'v4', auth });
@@ -1317,7 +1538,7 @@ cron.schedule('30 3 * * *', async () => {
   await runExport(writeDataElevenLabsPrequalifica);
 })
 
-//runExport(writeDataPrequalificati);
+runExport(writeDataPrequalificati);
 
 
 const writeDataGFUQualificati = async (auth) => {

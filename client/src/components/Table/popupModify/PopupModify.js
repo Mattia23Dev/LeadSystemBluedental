@@ -835,9 +835,9 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                             </div> 
                             
                         </div>
-                        {leadF?.appVoiceBot && 
+                        {leadF?.appVoiceBot && leadF?.punteggio != null && 
                         <div className='punteggio-container'>
-                            <p>Punteggio: {leadF?.punteggio != null ? String(leadF?.punteggio) + "/2" : leadF?.punteggio == 0 ? "0/2" : "N/A"}</p>
+                            <p>Punteggio: {String(leadF?.punteggio) + "/2"}</p>
                             <p>Riassunto: {leadF?.summary}</p>
                         </div>}
                         <hr className='linea-che-serve' />

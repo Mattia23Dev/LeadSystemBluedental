@@ -55,8 +55,17 @@ export default function Table2({ onResults, searchval, setLeadsPdf, setNextSched
     "Terni", "Torino", "Treviso", "Varese", "Verona", "Vicenza", "Vigevano", "Bassano del Grappa", "Alessandria", "Massa", "Livorno", "Trento", "Udine",
   ];
   const campagne = [
-    "Gold", "Ambra", "Meta Web - Altri centri", "Meta Web", "Messenger", "Estetica", "Messenger Bludental", "SOMA", "IRON"
-  ]
+    "Gold",
+    "Ambra",
+    "Meta Web - Altri centri",
+    "Meta Web",
+    "Messenger",
+    "Estetica",
+    "Messenger Bludental",
+    "Allineatori",
+    "SOMA",
+    "IRON",
+  ];
   const [motivo, setMotivo] = useState();
   const ori = localStorage.getItem("Ori");
   const popupRef = useRef(null);
@@ -623,31 +632,38 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
   };
 
   function mapCampagnaPerLeadsystem(nomeCampagna, filtro) {
-    if (selectedCampagna === "Estetica"){
-      return nomeCampagna.toLowerCase().includes("estetica")
+    const lower = nomeCampagna.toLowerCase();
+    if (selectedCampagna === "Estetica") {
+      return lower.includes("estetica");
     } else if (selectedCampagna === "Messenger") {
-      return nomeCampagna.toLowerCase().includes("messenger") || nomeCampagna.toLowerCase().includes("chatbot");
+      return lower.includes("messenger") || lower.includes("chatbot");
     } else if (selectedCampagna === "Messenger Bludental") {
-      return nomeCampagna.toLowerCase().includes("chat");
+      return lower.includes("chat");
     } else if (selectedCampagna === "Meta Web") {
-      return nomeCampagna.toLowerCase().includes("meta web");
+      return lower.includes("meta web");
+    } else if (selectedCampagna === "Allineatori") {
+      return lower.includes("allineatori");
     } else {
-      return nomeCampagna.includes(filtro);
+      return lower.includes(filtro.toLowerCase());
     }
-}
-function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
-  if (filtro === "Estetica"){
-    return nomeCampagna.toLowerCase().includes("estetica")
-  } else if (filtro === "Messenger") {
-    return nomeCampagna.toLowerCase().includes("messenger") || nomeCampagna.toLowerCase().includes("chatbot");
-  } else if (filtro === "Messenger Bludental") {
-    return nomeCampagna.toLowerCase().includes("chat");
-  } else if (selectedCampagna === "Meta Web") {
-    return nomeCampagna.toLowerCase().includes("meta web");
-  } else {
-    return nomeCampagna.toLowerCase().includes(filtro.toLowerCase());
   }
-}
+
+  function mapCampagnaPerLeadsystemFetch(nomeCampagna, filtro) {
+    const lower = nomeCampagna.toLowerCase();
+    if (filtro === "Estetica") {
+      return lower.includes("estetica");
+    } else if (filtro === "Messenger") {
+      return lower.includes("messenger") || lower.includes("chatbot");
+    } else if (filtro === "Messenger Bludental") {
+      return lower.includes("chat");
+    } else if (filtro === "Meta Web") {
+      return lower.includes("meta web");
+    } else if (filtro === "Allineatori") {
+      return lower.includes("allineatori");
+    } else {
+      return lower.includes(filtro.toLowerCase());
+    }
+  }
   const [recallFilter, setRecallFilter] = useState(false);
   useEffect(() => {
     // Filtra per recall

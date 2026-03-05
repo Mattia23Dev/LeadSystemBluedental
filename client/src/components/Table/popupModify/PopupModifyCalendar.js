@@ -60,23 +60,25 @@ const PopupModifyCalendar = ({ lead, onClose, setPopupModify, onUpdateLead, dele
 
     const userFixId = state.user.role && state.user.role === "orientatore" ? state.user.utente : state.user._id;
     function mapCampagnaPerLeadsystem(nomeCampagna) {
-        if (nomeCampagna.includes('Gold')){
+        if (nomeCampagna?.includes('Gold')){
             return 'Gold';
-        } else if (nomeCampagna.toLowerCase().includes("estetica")){
+        } else if (nomeCampagna?.toLowerCase().includes("estetica")){
             return 'Estetica';
-        } else if (nomeCampagna.toLowerCase().includes("chatbot")){
+        } else if (nomeCampagna?.toLowerCase().includes("chatbot")){
             return 'Conversazionale';
-        } else if (nomeCampagna.toLowerCase().includes("chat")){
+        } else if (nomeCampagna?.toLowerCase().includes("chat")){
             return 'Messenger bludental';
-        } else if (nomeCampagna.includes('Ambra')){
+        } else if (nomeCampagna?.includes('Ambra')){
             return 'Ambra';
-        } else if (nomeCampagna.includes('Altri centri')) {
+        } else if (nomeCampagna?.toLowerCase().includes("allineatori")){
+            return 'allineatori';
+        } else if (nomeCampagna?.includes('Altri centri')) {
           return 'Meta Web - Altri centri';
-        } else if (nomeCampagna.includes('Meta Web')) {
+        } else if (nomeCampagna?.includes('Meta Web')) {
             if (nomeCampagna === "Meta Web G"){
                 return 'Meta Web G'
             } else return 'Meta Web';
-        } else if (nomeCampagna.includes('Messenger') || nomeCampagna.includes("messenger")) {
+        } else if (nomeCampagna?.includes('Messenger') || nomeCampagna?.includes("messenger")) {
           return 'Messenger';
         } else if (nomeCampagna?.toLowerCase().includes('soma')) {
           return 'Soma';

@@ -320,7 +320,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
               numero_tentativi: null,
               macro_fonte: "Online", //FISSO
               micro_fonte: leadWithoutUser.name.toLowerCase().includes("gold") ? "GOLD" : 
-               leadWithoutUser.name.toLowerCase().includes("ambra") ? "AMBRA" :
+               leadWithoutUser.name.toLowerCase().includes("ambra") ? "AMBRA WEB" :
                leadWithoutUser.name.toLowerCase().includes("allineatori") ? "ALLINEATORI" :
                "Nessuno",
               campagna: leadWithoutUser.name ? leadWithoutUser.name : "",

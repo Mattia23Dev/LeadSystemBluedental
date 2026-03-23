@@ -3,10 +3,10 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const cron = require('node-cron');
 const Lead = require('../models/lead');
-const { getLeadById } = require('../helpers/nexus');
+const { getLeadById, listLeads } = require('../helpers/nexus');
 
 let running = false;
-const DRY_RUN = true;
+const DRY_RUN = false;
 const SYNC_UTENTE = '65d3110eccfb1c0ce51f7492'; // es: '65d3110eccfb1c0ce51f7492'
 const BATCH_SIZE = 200;
 const MAX_LEADS = null;
@@ -37,12 +37,15 @@ async function syncOnce() {
     await mongoose.connect(uri);
     console.log('[Nexus sync] Connected to Mongo');
 
+    // Limit sync to leads already linked with Nexus.
     const query = {
       idNexus: { $exists: true, $ne: '' }
     };
     if (utente) query.utente = utente;
 
-    let lastId = null;
+    let lastSeenTimestamp = null;
+    let lastSeenId = null;
+    let lastResolvedNexusId = null;
     let processed = 0;
     let updated = 0;
     let skipped = 0;
@@ -50,10 +53,15 @@ async function syncOnce() {
 
     while (true) {
       const batchQuery = { ...query };
-      if (lastId) batchQuery._id = { $gt: lastId };
+      if (lastSeenTimestamp && lastSeenId) {
+        batchQuery.$or = [
+          { dataTimestamp: { $lt: lastSeenTimestamp } },
+          { dataTimestamp: lastSeenTimestamp, _id: { $lt: lastSeenId } }
+        ];
+      }
 
       const leads = await Lead.find(batchQuery)
-        .sort({ _id: 1 })
+        .sort({ dataTimestamp: -1, _id: -1 })
         .limit(batchSize)
         .lean();
 
@@ -68,7 +76,8 @@ async function syncOnce() {
         }
 
         processed++;
-        lastId = localLead._id;
+        lastSeenTimestamp = localLead.dataTimestamp || null;
+        lastSeenId = localLead._id;
 
         if (processed % 50 === 0) {
           console.log('[Nexus sync] progress', {
@@ -77,36 +86,89 @@ async function syncOnce() {
             skipped,
             notFoundInNexus,
             lastMongoId: String(localLead._id),
-            lastIdNexus: localLead.idNexus
+            lastIdNexus: lastResolvedNexusId
           });
         }
 
-        const nexusLead = await getLeadById(localLead.idNexus);
-        if (!nexusLead || typeof nexusLead !== 'object') {
+        // Resolve Nexus lead id using id_lead_leadsystem = local Mongo _id (string)
+        const leadSystemId = String(localLead._id);
+        const listRes = await listLeads({
+          select: 't.id',
+          conditions: `t.id_lead_leadsystem = '${leadSystemId}'`,
+          group: '',
+          having: '',
+          order: 't.data_modifica DESC',
+          limit: '1',
+          offset: '',
+          page: '',
+          pageSize: ''
+        });
+
+        const nexusId = Array.isArray(listRes) && listRes[0]?.id
+          ? listRes[0].id
+          : listRes?.[0]?.id;
+
+        if (!nexusId) {
           notFoundInNexus++;
+          lastResolvedNexusId = null;
+
           const notFoundUpdate = {
             nexus_lead: false,
             nexus_sync: {
               ...(localLead.nexus_sync || {}),
               lastSyncAt: new Date(),
-              lastError: 'NEXUS_LEAD_NOT_FOUND',
+              lastError: 'NEXUS_LEAD_NOT_FOUND_BY_LEADSYSTEM',
               lastNotFoundAt: new Date(),
             }
           };
 
           if (dryRun) {
-            console.log('[Nexus sync][DRY_RUN] nexus lead not found', {
-              mongoLeadId: String(localLead._id),
-              idNexus: localLead.idNexus
+            console.log('[Nexus sync][DRY_RUN] nexus lead not found by leadsystem', {
+              mongoLeadId: leadSystemId
             });
           } else {
             await Lead.updateOne({ _id: localLead._id }, { $set: notFoundUpdate });
-            console.log('[Nexus sync] marked nexus not found', {
-              mongoLeadId: String(localLead._id),
-              idNexus: localLead.idNexus
+            console.log('[Nexus sync] marked nexus not found by leadsystem', {
+              mongoLeadId: leadSystemId
             });
           }
-          continue; // API might return false / null when id not found
+          continue;
+        }
+
+        lastResolvedNexusId = nexusId;
+
+        // Optional: store resolved idNexus (helps future debugging; no required for correctness now)
+        if (!dryRun && (!localLead.idNexus || localLead.idNexus !== nexusId)) {
+          await Lead.updateOne({ _id: localLead._id }, { $set: { idNexus: nexusId } });
+        }
+
+        const nexusLead = await getLeadById(nexusId);
+        if (!nexusLead || typeof nexusLead !== 'object') {
+          notFoundInNexus++;
+
+          const notFoundUpdate = {
+            nexus_lead: false,
+            nexus_sync: {
+              ...(localLead.nexus_sync || {}),
+              lastSyncAt: new Date(),
+              lastError: 'NEXUS_LEAD_GET_FAILED',
+              lastNotFoundAt: new Date(),
+            }
+          };
+
+          if (dryRun) {
+            console.log('[Nexus sync][DRY_RUN] nexus lead GET not found/object invalid', {
+              mongoLeadId: leadSystemId,
+              idNexus: nexusId
+            });
+          } else {
+            await Lead.updateOne({ _id: localLead._id }, { $set: notFoundUpdate });
+            console.log('[Nexus sync] marked nexus GET invalid', {
+              mongoLeadId: leadSystemId,
+              idNexus: nexusId
+            });
+          }
+          continue;
         }
 
         const prevNexusLead = localLead.nexus_lead && typeof localLead.nexus_lead === 'object'
@@ -151,7 +213,7 @@ async function syncOnce() {
           updated++;
           console.log('[Nexus sync][DRY_RUN] would overwrite nexus_lead', {
             mongoLeadId: String(localLead._id),
-            idNexus: localLead.idNexus,
+            idNexus: lastResolvedNexusId,
             statusChanged,
             previous: { lead_status: prevLeadStatus, esito: prevEsito },
             next: { lead_status: nextLeadStatus, esito: nextEsito },
@@ -161,7 +223,7 @@ async function syncOnce() {
           updated++;
           console.log('[Nexus sync] updated nexus_lead', {
             mongoLeadId: String(localLead._id),
-            idNexus: localLead.idNexus,
+            idNexus: lastResolvedNexusId,
             statusChanged
           });
         }

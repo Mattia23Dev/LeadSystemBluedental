@@ -255,6 +255,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           tipo: lead.tipo ? lead.tipo : "",
           appVoiceBot: lead.appVoiceBot ? lead.appVoiceBot : false,
           punteggio: (lead.punteggio !== null && lead.punteggio !== undefined) ? String(lead.punteggio) : null,
+          nexusLastLeadStatus: lead.nexus_sync?.lastLeadStatus ? lead.nexus_sync.lastLeadStatus : null,
         };
       });
 
@@ -386,6 +387,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           tipo: lead.tipo ? lead.tipo : "",
           appVoiceBot: lead.appVoiceBot ? lead.appVoiceBot : false,
           punteggio: (lead.punteggio !== null && lead.punteggio !== undefined) ? String(lead.punteggio) : null,
+          nexusLastLeadStatus: lead.nexus_sync?.lastLeadStatus ? lead.nexus_sync.lastLeadStatus : null,
         };
       });
 
@@ -769,6 +771,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           tipo: lead.tipo ? lead.tipo : "",
           appVoiceBot: lead.appVoiceBot ? lead.appVoiceBot : false,
           punteggio: (lead.punteggio !== null && lead.punteggio !== undefined) ? String(lead.punteggio) : null,
+          nexusLastLeadStatus: lead.nexus_sync?.lastLeadStatus ? lead.nexus_sync.lastLeadStatus : null,
         };
       });
 
@@ -874,6 +877,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
           tipo: lead.tipo ? lead.tipo : "",
           appVoiceBot: lead.appVoiceBot ? lead.appVoiceBot : false,
           punteggio: (lead.punteggio !== null && lead.punteggio !== undefined) ? String(lead.punteggio) : null,
+          nexusLastLeadStatus: lead.nexus_sync?.lastLeadStatus ? lead.nexus_sync.lastLeadStatus : null,
         };
       });
 

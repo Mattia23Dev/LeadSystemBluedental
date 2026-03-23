@@ -96,6 +96,7 @@ export default function LeadEntry({ secref, id, index, data, handleModifyPopup, 
           <hr style={{width: '70%'}}/>
           <div className='date-recall'>
             <p>Chiamate effettuate <span>{data.tentativiChiamata ? data.tentativiChiamata: '0'}</span></p>
+            <p>Stato Nexus <span>{data.nexusLastLeadStatus ? data.nexusLastLeadStatus : '-'}</span></p>
           </div>
           <div className='options'>
             <div className="sposta" onClick={() => handleModifyPopupEsito(data)}>Sposta</div>

@@ -815,6 +815,9 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
                                         <span onClick={() => setChooseMotivo(true)}>{esito == "Non interessato" ? "Lead persa" : esito} <FaPencilAlt size={12} style={{marginLeft: '3px', cursor: 'pointer'}} /></span>
                                         {esito === "Fissato" && fatturato !== "0" && <span>{fatturato}€</span>}
                                     </p>
+                                    <p style={{margin: '0 0 10px 0'}}>Stato Nexus:
+                                      <span> {leadF?.nexus_sync?.lastLeadStatus ? leadF.nexus_sync.lastLeadStatus : (lead.nexusLastLeadStatus ? lead.nexusLastLeadStatus : "-")}</span>
+                                    </p>
                                     {motivo && motivo !== "" ? <p className='motivo-top'>Motivo: <span>{motivo}</span></p> : null}
                                     {lead.esito === "Fissato" && lead.trattPrenotato ? <p className='motivo-top'>Trattamento <span>{lead.trattPrenotato}</span></p> : null}
                                 </div>

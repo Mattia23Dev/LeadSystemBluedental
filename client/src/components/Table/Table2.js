@@ -263,7 +263,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       const campFilt = localStorage.getItem("campagnaFilter")
       const filteredByCity = filteredTableLead.filter((lead) => {
         if (cityFilt && cityFilt !== null && cityFilt !== undefined) {
-          return lead.città === cityFilt;
+          return lead.città && lead.città.toLowerCase() === cityFilt.toLowerCase();
         } else {
           return true;
         }
@@ -410,7 +410,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
 
       const filteredByCity = filteredByOrientatore.filter((lead) => {
         if (cityFilt && cityFilt !== null && cityFilt !== undefined) {
-          return lead.città === cityFilt;
+          return lead.città && lead.città.toLowerCase() === cityFilt.toLowerCase();
         } else {
           return true;
         }
@@ -792,7 +792,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
 
       const filteredByCity = filteredByOrientatore.filter((lead) => {
         if (cityFilt && cityFilt !== null && cityFilt !== undefined) {
-          return lead.città === cityFilt;
+          return lead.città && lead.città.toLowerCase() === cityFilt.toLowerCase();
         } else {
           return true;
         }
@@ -882,7 +882,7 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       const campFilt = localStorage.getItem("campagnaFilter")
       const filteredByCity = filteredTableLead.filter((lead) => {
         if (cityFilt && cityFilt !== null && cityFilt !== undefined) {
-          return lead.città === cityFilt;
+          return lead.città && lead.città.toLowerCase() === cityFilt.toLowerCase();
         } else {
           return true;
         }

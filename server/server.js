@@ -45,6 +45,156 @@ const esportaLeadIeri = async () => {
     console.error('Errore durante l\'esportazione delle lead:', error);
   }
 };
+
+const searchGoldLeads = async () => {
+  try {
+    // Set the date range for March 2024
+    const startDate = new Date('2025-07-10T00:00:00');
+    const endDate = new Date('2025-07-16T23:59:59');
+
+    // Find leads matching the criteria
+    const leadsAmbra = await Lead.find({
+      dataTimestamp: {
+        $gte: startDate,
+        $lte: endDate
+      },
+      //utente: "65d3110eccfb1c0ce51f7492",
+      //esito: "Da richiamare"
+      utmCampaign: { 
+        $regex: /ambra/i  // Case-insensitive search for 'gold'
+      }
+    }).lean();
+
+    const leadChiamate = await Lead.find({
+      dataTimestamp: {
+        $gte: startDate,
+        $lte: endDate
+      },
+      chiamato: true,
+    }).lean();
+
+    const leadsGold = await Lead.find({
+      dataTimestamp: {
+        $gte: startDate,
+        $lte: endDate
+      },
+      //utente: "65d3110eccfb1c0ce51f7492",
+      //esito: "Da richiamare"
+      utmCampaign: { 
+        $regex: /gold/i  // Case-insensitive search for 'gold'
+      }
+    }).lean();
+
+    const leadsMetaWeb = await Lead.find({
+      dataTimestamp: {
+        $gte: startDate,
+        $lte: endDate
+      },
+      //utente: "65d3110eccfb1c0ce51f7492",
+      //esito: "Da richiamare"
+      utmCampaign: { 
+        $regex: /meta web/i  // Case-insensitive search for 'gold'
+      }
+    }).lean();
+
+    const leadsGFU = await Lead.find({
+      dataTimestamp: {
+        $gte: startDate,
+        $lte: endDate
+      },
+      //utente: "65d3110eccfb1c0ce51f7492",
+      //esito: "Da richiamare"
+      utmCampaign: { 
+        $regex: /gfu/i  // Case-insensitive search for 'gold'
+      }
+    }).lean();
+
+    const leadsTotal = await Lead.find({
+      dataTimestamp: {
+        $gte: startDate,
+        $lte: endDate
+      },
+      //utente: "65d3110eccfb1c0ce51f7492",
+      //esito: "Da richiamare"
+      /*utmCampaign: { 
+        $regex: /meta web/i  // Case-insensitive search for 'gold'
+      }*/
+    }).lean();
+
+    const leadsAIChatbot = await Lead.find({
+      dataTimestamp: {
+        $gte: startDate,
+        $lte: endDate
+      },
+      //utente: "65d3110eccfb1c0ce51f7492",
+      //esito: "Da richiamare"
+      utmCampaign: { 
+        $regex: /ai chatbot/i  // Case-insensitive search for 'gold'
+      }
+    }).lean();
+
+    console.log('Search results:');
+    console.log('Start date:', startDate.toISOString());
+    console.log('End date:', endDate.toISOString());
+
+    console.log(leadsAmbra.length);
+    console.log(leadsGold.length);
+    console.log(leadsMetaWeb.length);
+    console.log(leadChiamate.length);
+    console.log(leadsGFU.length);
+    console.log(leadsTotal.length);
+    console.log(leadsAIChatbot.length);
+    // Log some example leads for verification
+    /*if (leads.length > 0) {
+      console.log('Example leads found:');
+      leads.slice(0, 3).forEach((lead, index) => {
+        console.log(`\nLead ${index + 1}:`);
+        console.log('Date:', lead.dataTimestamp);
+        console.log('UTM Campaign:', lead.utmCampaign);
+        console.log('Name:', lead.nome);
+      });
+    }*/
+
+    return {
+      leadsAmbra: leadsAmbra,
+      leadsGold: leadsGold,
+      leadsMetaWeb: leadsMetaWeb,
+      leadsGFU: leadsGFU,
+      leadsTotal: leadsTotal,
+      leadsAIChatbot: leadsAIChatbot
+    };
+  } catch (error) {
+    console.error('Error searching for gold leads:', error);
+    throw error;
+  }
+};
+
+const getUniqueCampaigns = async () => {
+  try {
+    // Get unique campaign values
+    const uniqueCampagne = await Lead.distinct('campagna');
+    const uniqueUtmCampaigns = await Lead.distinct('utmCampaign');
+
+    // Filter out null, undefined, and empty string values
+    const cleanCampagne = uniqueCampagne.filter(campaign => campaign && campaign.trim() !== '');
+    const cleanUtmCampaigns = uniqueUtmCampaigns.filter(campaign => campaign && campaign.trim() !== '');
+
+    console.log('\nUnique Campagna values:');
+    console.log(cleanCampagne);
+    
+    console.log('\nUnique UTM Campaign values:');
+    console.log(cleanUtmCampaigns);
+
+    return {
+      campagne: cleanCampagne,
+      utmCampaigns: cleanUtmCampaigns
+    };
+  } catch (error) {
+    console.error('Error getting unique campaigns:', error);
+    throw error;
+  }
+};
+
 const app = express();
 
 mongoose.set('strictQuery', false); 
@@ -56,8 +206,9 @@ mongoose
   app.use(express.static(path.join(__dirname, 'client', 'public')));
   app.use(bodyParser.urlencoded({ extended: true }));
 
- const publicVapidKey = "BA4JFmsO2AigZr9o4BH8lqQerqz2NKytP2nsxOcHIKbl5g98kbOzLECvxXYrQyMTfV_W7sHTUG6_GuWtTzwLlCw";
- const privateVapidKey = "f33Ot0HGNfYCJRR69tW_LwRsbDQtS0Jk9Ya57l0XWQQ";
+// Configurazione body-parser con gestione errori
+const publicVapidKey = "BA4JFmsO2AigZr9o4BH8lqQerqz2NKytP2nsxOcHIKbl5g98kbOzLECvxXYrQyMTfV_W7sHTUG6_GuWtTzwLlCw";
+const privateVapidKey = "f33Ot0HGNfYCJRR69tW_LwRsbDQtS0Jk9Ya57l0XWQQ";
 
 app.use(express.json({ limit: "10mb" }));
 app.use(
@@ -434,6 +585,146 @@ const getUltimeLead = async () => {
 
 // Per testare la funzione, puoi decommentare questa riga:
 //getUltimeLead();
-fetchLeads();
+//fetchLeads();
+
+async function makeOutboundCall(number, city, name, type, id) {
+  const url = 'https://primary-production-403a.up.railway.app/webhook/bludental-attivazione';
+  //const url = 'https://cd9f-185-199-103-50.ngrok-free.app/outbound-call';
+  number = number.replace(/\s+/g, '');
+  const lead = await Lead.findOne({ numeroTelefono: number });
+  // Controlla e aggiusta il prefisso
+  if (!number.startsWith('+39')) {
+    if (number.startsWith('39') && number.length === 12) {
+      number = '+' + number;
+    } else if (number.length === 10) {
+      number = '+39' + number;
+    }
+  }
+
+  const data = {
+    user_phone: number,
+    user_city: city,
+    user_name: name,
+    type: type || null,
+    user_id: id,
+  };
+
+  try {
+    const response = await axios.post(url, data);
+    console.log('Risposta dal server:', response.data);
+  } catch (error) {
+    console.error('Errore durante la chiamata:', error);
+  }
+}
+const chiamaLeadIeriOggi = async () => {
+  try {
+    // Calcola le date per l'intervallo richiesto
+    const oggi = new Date();
+    const ieri = new Date(oggi);
+    ieri.setDate(oggi.getDate() - 1);
+    
+    // Imposta ieri alle 09:00 italiane
+    const inizioIntervallo = new Date(ieri);
+    inizioIntervallo.setHours(9, 30, 0, 0);
+    
+    // Imposta oggi alle 08:00 italiane
+    const fineIntervallo = new Date(oggi);
+    fineIntervallo.setHours(8, 0, 0, 0);
+    
+    console.log('Cercando lead tra:');
+    console.log('Inizio:', inizioIntervallo.toISOString());
+    console.log('Fine:', fineIntervallo.toISOString());
+    
+    // Trova tutte le lead nell'intervallo specificato
+    const leads = await Lead.find({
+      dataTimestamp: {
+        $gte: inizioIntervallo,
+        $lte: fineIntervallo
+      }
+    }).lean();
+    
+    console.log(`Trovate ${leads.length} lead da chiamare`);
+    
+    // Per ogni lead, esegui la chiamata outbound
+    for (const lead of leads) {
+      console.log(`Chiamando lead: ${lead.nome} - ${lead.numeroTelefono}`);
+      
+      try {
+        await makeOutboundCall(
+          lead.numeroTelefono,
+          lead.città,
+          lead.nome,
+          lead.trattamento,
+          lead._id
+        );
+        
+        // Aggiungi un piccolo delay tra le chiamate per evitare sovraccarichi
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+      } catch (error) {
+        console.error(`Errore durante la chiamata per ${lead.nome}:`, error);
+      }
+    }
+    
+    console.log('Processo di chiamate completato');
+    
+  } catch (error) {
+    console.error('Errore durante il processo di chiamate:', error);
+  }
+};
+
+// Per eseguire la funzione, decommenta la riga seguente:
+//chiamaLeadIeriOggi();
+
+/*searchGoldLeads()
+  .then(leads => {
+    console.log('Total leads found:', leads.leadsTotal.length);
+    console.log('Total ambra leads found:', leads.leadsAmbra.length);
+    console.log('Total meta web leads found:', leads.leadsMetaWeb.length);
+    console.log('Total gold leads found:', leads.leadsGold.length);
+    console.log('Total gfu leads found:', leads.leadsGFU.length);
+    console.log('Total ai chatbot leads found:', leads.leadsAIChatbot.length);
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+*/
+
+const getLeadsByDate = async () => {
+  try {
+  const leads = await Lead.find({
+    dataTimestamp: {
+      $gte: new Date('2025-09-06T00:00:00'),
+      $lte: new Date('2025-09-09T23:59:59')
+    },
+    esito: { $nin: ["Fissato"] },
+    email: { $regex: /p:\+/, $options: 'i' }
+  });
+  console.log(leads.length)
+  for (const lead of leads) {
+    //lead.deleteOne();
+  }
+
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+//getLeadsByDate()
+
+// Execute the function
+/*getUniqueCampaigns()
+  .then(result => {
+    console.log('\nTotal unique campaigns found:');
+    console.log('Campagne:', result.campagne.length);
+    console.log('UTM Campaigns:', result.utmCampaigns.length);
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });*/
+
 const port = process.env.PORT || 8000;
+// Nexus nightly sync (cron) is configured in scripts/.
+// By default it runs in DRY_RUN mode until you set NEXUS_SYNC_DRY_RUN=false.
+const { syncOnce } = require('./scripts/nexus-nightly-sync');
+syncOnce().catch((e) => console.error('[Nexus sync] startup error:', e?.message || e));
 app.listen(port, () => console.log(`Server is running on port ${port}`));

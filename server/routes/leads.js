@@ -12,7 +12,7 @@ const { getAllLeadForCounter, LeadForMarketing } = require('../controllers/super
 const { getDataCap } = require('../controllers/comparadentista');
 const Orientatore = require('../models/orientatori');
 const Lead = require('../models/lead');
-const { saveLead } = require('../helpers/nexus');
+const { saveLead, getLeadById: getLeadFromNexus } = require('../helpers/nexus');
 const LastLeadUser = require('../models/lastLeadUser');
 
 router.post("/get-leads-fb", getLeadsFb);
@@ -22,6 +22,14 @@ router.post("/get-orientatore-lead-base", getOrientatoreLeads);
 router.post("/get-other-leads", getOtherLeads);
 router.post("/get-other-leads-ori", getOtherLeadsOri);
 router.get('/leads/by-email', getLeadByEmail);
+router.get('/leads/nexus/:idNexus', async (req, res) => {
+  try {
+    const data = await getLeadFromNexus(req.params.idNexus);
+    res.json(data);
+  } catch (err) {
+    res.status(err?.response?.status || 500).json({ error: err?.response?.data || err.message });
+  }
+});
 router.get('/leads/:id', getLeadById);
 router.post("/get-lead-whatsapp", getLeadsManualWhatsapp);
 router.post("/create-orientatore", createOrientatore);

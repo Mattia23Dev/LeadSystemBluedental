@@ -119,6 +119,25 @@ const LeadSchema = new Schema({
       default: false,
     },
     idNexus: String,
+    // Full raw payload returned by Nexus GET /lead/api/get?id=...
+    nexus_lead: Schema.Types.Mixed,
+    // Lightweight sync metadata to avoid heavy DB growth
+    nexus_sync: {
+      lastSyncAt: Date,
+      lastDataModifica: String,
+      lastLeadStatus: String,
+      lastEsito: String,
+      lastError: String,
+      lastNotFoundAt: Date,
+      statusHistory: [
+        {
+          at: Date,
+          lead_status: String,
+          esito: String,
+          data_modifica: String,
+        }
+      ]
+    },
     consent_marketing: String,
     recallIds: [],
   });

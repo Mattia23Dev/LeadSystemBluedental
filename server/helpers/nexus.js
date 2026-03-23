@@ -11,15 +11,34 @@ const nexus = axios.create({
   },
 });
 
-exports.fetchLeads = async () => {
-    try {
-      const response = await nexus.get('/lead/api/list');
-      console.log(response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching leads:', error);
-    }
+exports.listLeads = async (body) => {
+  try {
+    const response = await nexus.post('/lead/api/list', body);
+    return response.data;
+  } catch (error) {
+    console.error('Error listing leads from Nexus:', error?.response?.data || error.message);
+    throw error;
   }
+};
+
+exports.fetchLeads = async () => {
+  try {
+    // Default minimal list (debug)
+    return await exports.listLeads({
+      select: "t.id, t.numerazione",
+      conditions: "",
+      group: "",
+      having: "",
+      order: "",
+      limit: "5",
+      offset: "",
+      page: "",
+      pageSize: ""
+    });
+  } catch (error) {
+    console.error('Error fetching leads:', error);
+  }
+};
 
 exports.saveLead = async (leadData) => {
     try {
@@ -30,3 +49,14 @@ exports.saveLead = async (leadData) => {
       console.error('Error saving lead:', error);
     }
   }
+
+exports.getLeadById = async (idNexus) => {
+  try {
+    // API: GET /lead/api/get?id=...
+    const response = await nexus.get('/lead/api/get', { params: { id: idNexus } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching lead from Nexus:', error?.response?.data || error.message);
+    throw error;
+  }
+}

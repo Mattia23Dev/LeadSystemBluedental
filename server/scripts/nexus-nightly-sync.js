@@ -34,8 +34,17 @@ async function syncOnce() {
   const statusHistoryLimit = STATUS_HISTORY_LIMIT;
 
   try {
-    await mongoose.connect(uri);
-    console.log('[Nexus sync] Connected to Mongo');
+    const mongoAlreadyConnected = mongoose.connection.readyState === 1; // connected
+    let didConnectHere = false;
+
+    if (!mongoAlreadyConnected) {
+      await mongoose.connect(uri);
+      didConnectHere = true;
+    }
+    console.log('[Nexus sync] Mongo connection ready:', {
+      alreadyConnected: mongoAlreadyConnected,
+      didConnectHere
+    });
 
     // Limit sync to leads already linked with Nexus.
     const query = {
@@ -70,7 +79,9 @@ async function syncOnce() {
       for (const localLead of leads) {
         if (maxLeads !== null && processed >= maxLeads) {
           console.log(`[Nexus sync] Stop: reached maxLeads=${maxLeads}`);
-          await mongoose.disconnect();
+          if (typeof didConnectHere !== 'undefined' && didConnectHere) {
+            await mongoose.disconnect();
+          }
           running = false;
           return;
         }
@@ -230,12 +241,16 @@ async function syncOnce() {
       }
     }
 
-    await mongoose.disconnect();
+    if (typeof didConnectHere !== 'undefined' && didConnectHere) {
+      await mongoose.disconnect();
+    }
     console.log('[Nexus sync] Done', { processed, updated, skipped, notFoundInNexus });
   } catch (err) {
     console.error('[Nexus sync] FAILED:', err?.response?.data || err.message);
     try {
-      await mongoose.disconnect();
+      if (typeof didConnectHere !== 'undefined' && didConnectHere) {
+        await mongoose.disconnect();
+      }
     } catch (_) {}
   } finally {
     running = false;

@@ -22,6 +22,27 @@ function filterOldLeads(leads) {
   return leads.filter(lead => new Date(lead.data) > fourteenDaysAgo);
 }
 
+function normalizePhoneForNexus(phone) {
+  if (!phone) return '';
+  const original = String(phone).trim();
+
+  // Keep only digits, then strip international prefix by retaining local part.
+  const digitsOnly = original.replace(/\D/g, '');
+  if (!digitsOnly) return original;
+
+  // For our traffic, local mobile/phone numbers are 10 digits.
+  // Examples handled:
+  // +393331234567 -> 3331234567
+  // 393331234567  -> 3331234567
+  // 00393331234567 -> 3331234567
+  if (digitsOnly.length > 10) {
+    const normalized = digitsOnly.slice(-10);
+    return normalized || original;
+  }
+
+  return digitsOnly || original;
+}
+
 const flows = {
   daContattare: "1734106160819",
   fissato: "1734106194251",
@@ -306,7 +327,7 @@ const calculateAndAssignLeadsEveryDay = async () => {
               nome: newLead.nome,
               ragione_sociale: newLead.nome,
               email: newLead.email,
-              telefono: newLead.numeroTelefono,
+              telefono: normalizePhoneForNexus(newLead.numeroTelefono),
               punteggio: null,
               riassunto_chiamata: null,
               //data_entrata: null,
@@ -1007,7 +1028,7 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
                 nome: newLead.nome,
                 ragione_sociale: newLead.nome,
                 email: newLead.email,
-                telefono: newLead.numeroTelefono,
+                telefono: normalizePhoneForNexus(newLead.numeroTelefono),
                 punteggio: null,
                 riassunto_chiamata: null,
                 //data_entrata: null,

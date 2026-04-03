@@ -65,6 +65,7 @@ export default function Table2({ onResults, searchval, setLeadsPdf, setNextSched
     "Allineatori",
     "SOMA",
     "IRON",
+    "GRANDI RIABILITAZIONI",
   ];
   const [motivo, setMotivo] = useState();
   const ori = localStorage.getItem("Ori");
@@ -645,6 +646,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       return lower.includes("meta web");
     } else if (selectedCampagna === "Allineatori") {
       return lower.includes("allineatori");
+    } else if (selectedCampagna === "GRANDI RIABILITAZIONI") {
+      return lower.includes("grandi riabilitazioni");
     } else {
       return lower.includes(filtro.toLowerCase());
     }
@@ -662,6 +665,8 @@ const [motivoLeadPersaList, setMotivoLeadPersaList] = useState([
       return lower.includes("meta web");
     } else if (filtro === "Allineatori") {
       return lower.includes("allineatori");
+    } else if (filtro === "Grandi Riabilitazioni") {
+      return lower.includes("grandi riabilitazioni");
     } else {
       return lower.includes(filtro.toLowerCase());
     }

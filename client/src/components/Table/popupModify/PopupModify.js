@@ -83,6 +83,8 @@ const PopupModify = ({ lead, onClose, setPopupModify, onUpdateLead, setRefreshat
           return 'Soma';
         } else if (nomeCampagna?.toLowerCase().includes('iron')) {
           return 'Iron';
+        } else if (nomeCampagna?.toUpperCase().includes('GRANDI RIABILITAZIONI')) {
+          return 'Grandi Riabilitazioni';
         } else {
           return "Meta Web";
         }

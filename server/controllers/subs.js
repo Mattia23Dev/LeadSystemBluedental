@@ -342,7 +342,9 @@ const calculateAndAssignLeadsEveryDay = async () => {
               macro_fonte: "Online", //FISSO
               micro_fonte: leadWithoutUser.name.toLowerCase().includes("gold") ? "GOLD" : 
                leadWithoutUser.name.toLowerCase().includes("ambra") ? "AMBRA WEB" :
+               leadWithoutUser.name.toLowerCase().includes("meta web") ? "META WEB" :
                leadWithoutUser.name.toLowerCase().includes("allineatori") ? "ALLINEATORI" :
+               leadWithoutUser.name.toLowerCase().includes("grandi riabilitazioni") ? "GRANDI RIABILITAZIONI" :
                "Nessuno",
               campagna: leadWithoutUser.name ? leadWithoutUser.name : "",
               adset: leadWithoutUser.adsets ? leadWithoutUser.adsets : "",

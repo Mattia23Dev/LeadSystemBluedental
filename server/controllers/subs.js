@@ -1329,7 +1329,7 @@ cron.schedule('20,10,35,50 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * *
   calculateAndAssignLeadsEveryDayMetaWeb();
   console.log('Assegno i lead di bludental Meta web');
 });
-calculateAndAssignLeadsEveryDayMetaWeb();
+//calculateAndAssignLeadsEveryDayMetaWeb();
 /*cron.schedule('12 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   //getTagLeads();
   calculateAndAssignLeadsEveryDayWordpress();

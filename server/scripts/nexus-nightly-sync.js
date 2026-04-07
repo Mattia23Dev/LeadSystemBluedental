@@ -14,6 +14,17 @@ const STATUS_HISTORY_LIMIT = 20;
 const CRON_EXPR = '0 2 * * *';
 const CRON_ENABLED = true;
 
+function getTwoMonthsAgoRange() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  start.setMonth(start.getMonth() - 2);
+
+  const end = new Date(start);
+  end.setHours(23, 59, 59, 999);
+
+  return { start, end };
+}
+
 async function syncOnce() {
   if (running) {
     console.log('[Nexus sync] Skip: already running');
@@ -47,10 +58,16 @@ async function syncOnce() {
     });
 
     // Limit sync to leads already linked with Nexus.
+    const { start, end } = getTwoMonthsAgoRange();
     const query = {
-      idNexus: { $exists: true, $ne: '' }
+      idNexus: { $exists: true, $ne: '' },
+      dataTimestamp: { $gte: start, $lte: end }
     };
     if (utente) query.utente = utente;
+    console.log('[Nexus sync] date filter enabled', {
+      from: start.toISOString(),
+      to: end.toISOString()
+    });
 
     let lastSeenTimestamp = null;
     let lastSeenId = null;

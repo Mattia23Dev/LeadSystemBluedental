@@ -11,6 +11,7 @@ const SYNC_UTENTE = '65d3110eccfb1c0ce51f7492'; // es: '65d3110eccfb1c0ce51f7492
 const BATCH_SIZE = 200;
 const MAX_LEADS = null;
 const STATUS_HISTORY_LIMIT = 20;
+const PROGRESS_LOG_EVERY = 25;
 const CRON_EXPR = '0 2 * * *';
 const CRON_ENABLED = true;
 
@@ -53,10 +54,7 @@ async function syncOnce() {
       await mongoose.connect(uri);
       didConnectHere = true;
     }
-    console.log('[Nexus sync] Mongo connection ready:', {
-      alreadyConnected: mongoAlreadyConnected,
-      didConnectHere
-    });
+    console.log(`[Nexus sync] Mongo connection ready | alreadyConnected=${mongoAlreadyConnected} | didConnectHere=${didConnectHere}`);
 
     // Limit sync to leads already linked with Nexus.
     const { start, end } = getTwoMonthsAgoRange();
@@ -65,10 +63,7 @@ async function syncOnce() {
       dataTimestamp: { $gte: start, $lte: end }
     };
     if (utente) query.utente = utente;
-    console.log('[Nexus sync] date filter enabled', {
-      from: start.toISOString(),
-      to: end.toISOString()
-    });
+    console.log(`[Nexus sync] Start | dryRun=${dryRun} | from=${start.toISOString()} | to=${end.toISOString()} | batchSize=${batchSize}`);
 
     let lastSeenTimestamp = null;
     let lastSeenId = null;
@@ -108,15 +103,8 @@ async function syncOnce() {
         lastSeenTimestamp = localLead.dataTimestamp || null;
         lastSeenId = localLead._id;
 
-        if (processed % 50 === 0) {
-          console.log('[Nexus sync] progress', {
-            processed,
-            updated,
-            skipped,
-            notFoundInNexus,
-            lastMongoId: String(localLead._id),
-            lastIdNexus: lastResolvedNexusId
-          });
+        if (processed % PROGRESS_LOG_EVERY === 0) {
+          console.log(`[Nexus sync] Progress | processed=${processed} | updated=${updated} | skipped=${skipped} | notFound=${notFoundInNexus}`);
         }
 
         // Resolve Nexus lead id using id_lead_leadsystem = local Mongo _id (string)
@@ -152,14 +140,10 @@ async function syncOnce() {
           };
 
           if (dryRun) {
-            console.log('[Nexus sync][DRY_RUN] nexus lead not found by leadsystem', {
-              mongoLeadId: leadSystemId
-            });
+            console.log(`[Nexus sync][DRY_RUN] Not found by LeadSystem | mongoLeadId=${leadSystemId}`);
           } else {
             await Lead.updateOne({ _id: localLead._id }, { $set: notFoundUpdate });
-            console.log('[Nexus sync] marked nexus not found by leadsystem', {
-              mongoLeadId: leadSystemId
-            });
+            console.log(`[Nexus sync] Update | mongoLeadId=${leadSystemId} | idNexus=- | action=mark_not_found_by_leadsystem`);
           }
           continue;
         }
@@ -186,16 +170,10 @@ async function syncOnce() {
           };
 
           if (dryRun) {
-            console.log('[Nexus sync][DRY_RUN] nexus lead GET not found/object invalid', {
-              mongoLeadId: leadSystemId,
-              idNexus: nexusId
-            });
+            console.log(`[Nexus sync][DRY_RUN] Nexus GET invalid | mongoLeadId=${leadSystemId} | idNexus=${nexusId}`);
           } else {
             await Lead.updateOne({ _id: localLead._id }, { $set: notFoundUpdate });
-            console.log('[Nexus sync] marked nexus GET invalid', {
-              mongoLeadId: leadSystemId,
-              idNexus: nexusId
-            });
+            console.log(`[Nexus sync] Update | mongoLeadId=${leadSystemId} | idNexus=${nexusId} | action=mark_nexus_get_invalid`);
           }
           continue;
         }
@@ -240,21 +218,11 @@ async function syncOnce() {
 
         if (dryRun) {
           updated++;
-          console.log('[Nexus sync][DRY_RUN] would overwrite nexus_lead', {
-            mongoLeadId: String(localLead._id),
-            idNexus: lastResolvedNexusId,
-            statusChanged,
-            previous: { lead_status: prevLeadStatus, esito: prevEsito },
-            next: { lead_status: nextLeadStatus, esito: nextEsito },
-          });
+          console.log(`[Nexus sync][DRY_RUN] Update | mongoLeadId=${String(localLead._id)} | idNexus=${lastResolvedNexusId} | statusChanged=${statusChanged} | prevStatus=${prevLeadStatus ?? '-'} | nextStatus=${nextLeadStatus ?? '-'} | prevEsito=${prevEsito ?? '-'} | nextEsito=${nextEsito ?? '-'}`);
         } else {
           await Lead.updateOne({ _id: localLead._id }, { $set: updateDoc });
           updated++;
-          console.log('[Nexus sync] updated nexus_lead', {
-            mongoLeadId: String(localLead._id),
-            idNexus: lastResolvedNexusId,
-            statusChanged
-          });
+          console.log(`[Nexus sync] Update | mongoLeadId=${String(localLead._id)} | idNexus=${lastResolvedNexusId} | statusChanged=${statusChanged} | lead_status=${nextLeadStatus ?? '-'} | esito=${nextEsito ?? '-'}`);
         }
       }
     }
@@ -262,7 +230,7 @@ async function syncOnce() {
     if (typeof didConnectHere !== 'undefined' && didConnectHere) {
       await mongoose.disconnect();
     }
-    console.log('[Nexus sync] Done', { processed, updated, skipped, notFoundInNexus });
+    console.log(`[Nexus sync] Done | processed=${processed} | updated=${updated} | skipped=${skipped} | notFound=${notFoundInNexus}`);
   } catch (err) {
     console.error('[Nexus sync] FAILED:', err?.response?.data || err.message);
     try {

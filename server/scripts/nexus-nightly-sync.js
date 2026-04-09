@@ -19,7 +19,8 @@ function getTwoMonthsAgoRange() {
   start.setHours(0, 0, 0, 0);
   start.setMonth(start.getMonth() - 2);
 
-  const end = new Date(start);
+  // Sync window: from 2 months ago up to now (end of current day).
+  const end = new Date();
   end.setHours(23, 59, 59, 999);
 
   return { start, end };

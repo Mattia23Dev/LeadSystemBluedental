@@ -723,8 +723,4 @@ const getLeadsByDate = async () => {
   });*/
 
 const port = process.env.PORT || 8000;
-// Nexus nightly sync (cron) is configured in scripts/.
-// By default it runs in DRY_RUN mode until you set NEXUS_SYNC_DRY_RUN=false.
-const { syncOnce } = require('./scripts/nexus-nightly-sync');
-syncOnce().catch((e) => console.error('[Nexus sync] startup error:', e?.message || e));
 app.listen(port, () => console.log(`Server is running on port ${port}`));

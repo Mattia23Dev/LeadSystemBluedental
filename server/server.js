@@ -725,4 +725,6 @@ const getLeadsByDate = async () => {
 const port = process.env.PORT || 8000;
 // Register Nexus nightly cron (no startup execution here).
 require('./scripts/nexus-nightly-sync');
+// Register Deasoft nightly cron (token + esiti by id_lead).
+// require('./scripts/deasoft-nightly-sync');
 app.listen(port, () => console.log(`Server is running on port ${port}`));

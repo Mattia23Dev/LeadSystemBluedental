@@ -138,6 +138,13 @@ const LeadSchema = new Schema({
         }
       ]
     },
+    // Full raw payload returned by Deasoft endpoint (esiti by id_lead)
+    deasoft_lead: Schema.Types.Mixed,
+    deasoft_sync: {
+      lastSyncAt: Date,
+      lastError: String,
+      lastLeadSystemId: String,
+    },
     consent_marketing: String,
     recallIds: [],
   });

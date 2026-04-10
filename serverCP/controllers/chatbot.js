@@ -6,6 +6,7 @@ const axios = require('axios')
 const moment = require('moment');
 const Orientatore = require("../models/orientatori")
 const LastLeadUser = require("../models/lastLeadUser");
+const { saveLead } = require('../helpers/nexus');
 
 const flows = {
   daContattare: "1734106160819",
@@ -107,6 +108,51 @@ function isValidPhoneNumber(phoneNumber) {
     ];
     
     return patterns.some(pattern => pattern.test(cleanPhone));
+}
+
+function normalizePhoneForNexus(phone) {
+  if (!phone) return '';
+  const normalized = String(phone).replace(/\s+/g, '').replace(/-/g, '');
+  if (normalized.startsWith('+')) return normalized;
+  if (normalized.startsWith('39')) return `+${normalized}`;
+  return `+39${normalized}`;
+}
+
+async function syncMessengerLeadToNexus(lead) {
+  try {
+    if (!lead || !isValidPhoneNumber(lead.numeroTelefono || '')) return;
+
+    const leadPayload = {
+      nome: lead.nome,
+      ragione_sociale: lead.nome,
+      email: lead.email || '',
+      telefono: normalizePhoneForNexus(lead.numeroTelefono),
+      punteggio: null,
+      riassunto_chiamata: lead.summary || null,
+      id_lead_leadsystem: lead._id,
+      note: lead.note || null,
+      data_appuntamento: lead.appDate || null,
+      citta: lead.città || '',
+      trattamento: lead.trattamento || '',
+      lead_status: lead.esito || 'Da contattare',
+      dettaglio_status_negativo: null,
+      numero_tentativi: null,
+      macro_fonte: 'Online',
+      micro_fonte: 'META WEB',
+      campagna: 'Meta Web',
+      adset: lead.utmAdset || 'Meta Web',
+      ad: lead.utmContent || 'Meta Web',
+      sorgente: 'Funnel',
+    };
+
+    const leadNexus = await saveLead(leadPayload);
+    if (leadNexus && leadNexus.id) {
+      lead.idNexus = leadNexus.id;
+      await lead.save();
+    }
+  } catch (error) {
+    console.error('Errore sync Nexus Messenger:', error?.response?.data || error.message);
+  }
 }
 
   function day10ago(dataV) {
@@ -291,6 +337,7 @@ function isValidPhoneNumber(phoneNumber) {
             lead.assigned = true;
             await lead.save();
             await newLead.save();
+            await syncMessengerLeadToNexus(newLead);
             console.log(`Assegnato il lead ${lead.nome} all'utente Dentista`);
             await user.save();
           } else {
@@ -307,6 +354,7 @@ function isValidPhoneNumber(phoneNumber) {
             existingLead.numeroTelefono = phone;
             existingLead.nome = full_name;
             await existingLead.save()
+            await syncMessengerLeadToNexus(existingLead);
             console.log('Lead aggiornato')
           }
 
@@ -633,6 +681,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
             lead.assigned = true;
             await lead.save();
             await newLead.save();
+            await syncMessengerLeadToNexus(newLead);
             /*await trigger({
               nome: newLead.nome,
               email: newLead.email,
@@ -659,6 +708,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
             existingLead.numeroTelefono = phone;
             existingLead.nome = full_name;
             await existingLead.save()
+            await syncMessengerLeadToNexus(existingLead);
           }
 
         } catch (error) {
@@ -807,6 +857,7 @@ exports.saveSomaLead = async (req, res) => {
             lead.assigned = true;
             await lead.save();
             await newLead.save();
+            await syncMessengerLeadToNexus(newLead);
             console.log(`Assegnato il lead ${lead.nome} all'utente Dentista`);
             await user.save();
           } else {
@@ -1089,6 +1140,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
             existingLead.numeroTelefono = phoneFormatted;
             existingLead.nome = full_name;
             await existingLead.save()
+            await syncMessengerLeadToNexus(existingLead);
             console.log('Lead aggiornato')
           }
 
@@ -1157,6 +1209,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
             lead.assigned = true;
             await lead.save();
             await newLead.save();
+            await syncMessengerLeadToNexus(newLead);
             console.log(`Assegnato il lead ${lead.nome} all'utente Dentista`);
             await user.save();
           } else {
@@ -1175,6 +1228,7 @@ exports.saveLeadChatbotDentistaNewCallCenter = async (req, res) => {
             existingLead.numeroTelefono = phoneFormatted;
             existingLead.nome = full_name;
             await existingLead.save()
+            await syncMessengerLeadToNexus(existingLead);
           }
 
         } catch (error) {

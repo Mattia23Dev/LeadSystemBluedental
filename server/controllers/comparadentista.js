@@ -1074,14 +1074,9 @@ async function findLeadsByEmails(emails) {
 }
 
 
-cron.schedule('30 1 * * *', () => {
-  runExport(writeDataSocial);
-})
-//runExport(writeDataSocial);
-//runExport(writeDataCallCenter);
-cron.schedule('30 2 * * *', () => {
-  runExport(writeDataCallCenter);
-})
+// NOTE: rimossi cron notturni che scrivevano su Google Sheets (runExport)
+// cron.schedule('30 1 * * *', () => runExport(writeDataSocial));
+// cron.schedule('30 2 * * *', () => runExport(writeDataCallCenter));
 
 cron.schedule('30 11 * * *', () => {
   fetchLeadsUpdatesFromSheet();
@@ -1317,8 +1312,22 @@ async function fetchConversations(agentId) {
           const endTime = new Date((convDetails.metadata.start_time_unix_secs + convDetails.metadata.call_duration_secs) * 1000);
           const now = new Date();
           
-          // 6️⃣ Analisi con OpenAI
-          const openaiAnalysis = await analyzeConversationWithOpenAI(transcript);
+          // 6️⃣ Analisi locale (OpenAI disattivato)
+          const openaiAnalysis = isVoicemail
+            ? {
+                success: "segreteria",
+                summary: "Cliente non risponde",
+                feedback: "neutral",
+                sentimentScore: 0,
+                sentimentLabel: "",
+              }
+            : {
+                success: "no",
+                summary: "Analisi AI disattivata",
+                feedback: "neutral",
+                sentimentScore: 0,
+                sentimentLabel: "",
+              };
           // 7️⃣ Prepara l'oggetto per il database
           const callHistoryData = {
             id: "", // Lasciato vuoto, sarà generato dal DB
@@ -1533,12 +1542,14 @@ const writeDataElevenLabsPrequalifica = async (auth) => {
 
 //runExport(writeDataElevenLabsPrequalifica);
 //runExport(writeDataNonPrequalificati);
-cron.schedule('30 3 * * *', async () => {
-  await runExport(writeDataPrequalificati);
-  await runExport(writeDataElevenLabsPrequalifica);
-})
+// cron notturno rimosso (export Google Sheets + fetchConversations/ElevenLabs)
+// cron.schedule('30 3 * * *', async () => {
+//   await runExport(writeDataPrequalificati);
+//   await runExport(writeDataElevenLabsPrequalifica);
+// });
 
-runExport(writeDataPrequalificati);
+// rimosso export automatico all'avvio (scriveva su Google Sheets)
+// runExport(writeDataPrequalificati);
 
 
 const writeDataGFUQualificati = async (auth) => {
@@ -1640,7 +1651,8 @@ const writeDataElevenLabsGFUPrequalifica = async (auth) => {
 };
 
 //runExport(writeDataElevenLabsGFUPrequalifica);
-cron.schedule('30 4 * * *', async () => {
-  await runExport(writeDataGFUQualificati);
-  await runExport(writeDataElevenLabsGFUPrequalifica);
-})
+// cron notturno rimosso (export Google Sheets + fetchConversations/ElevenLabs)
+// cron.schedule('30 4 * * *', async () => {
+//   await runExport(writeDataGFUQualificati);
+//   await runExport(writeDataElevenLabsGFUPrequalifica);
+// });

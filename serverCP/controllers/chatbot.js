@@ -121,6 +121,8 @@ function normalizePhoneForNexus(phone) {
 async function syncMessengerLeadToNexus(lead) {
   try {
     if (!lead || !isValidPhoneNumber(lead.numeroTelefono || '')) return;
+    const isSomaLead = (lead.campagna || '').trim().toUpperCase() === 'SOMA'
+      || (lead.utmCampaign || '').trim().toUpperCase() === 'SOMA';
 
     const leadPayload = {
       nome: lead.nome,
@@ -139,9 +141,9 @@ async function syncMessengerLeadToNexus(lead) {
       numero_tentativi: null,
       macro_fonte: 'Online',
       micro_fonte: 'META WEB',
-      campagna: 'Meta Web',
-      adset: lead.utmAdset || 'Meta Web',
-      ad: lead.utmContent || 'Meta Web',
+      campagna: isSomaLead ? 'Gold' : 'Meta Web',
+      adset: isSomaLead ? 'Gold' : 'Meta Web',
+      ad: isSomaLead ? 'Gold' : 'Meta Web',
       sorgente: 'Funnel',
     };
 
@@ -613,6 +615,7 @@ exports.saveLeadChatbotDentistaNew = async (req, res) => {
             existingLead.numeroTelefono = phone;
             existingLead.nome = full_name;
             await existingLead.save()
+            await syncMessengerLeadToNexus(existingLead);
             console.log('Lead aggiornato')
           }
 
@@ -942,6 +945,7 @@ exports.saveSomaLead = async (req, res) => {
             lead.assigned = true;
             await lead.save();
             await newLead.save();
+            await syncMessengerLeadToNexus(newLead);
             console.log(`Assegnato il lead ${lead.nome} all'utente Dentista`);
             await user.save();
           } else {
@@ -957,6 +961,7 @@ exports.saveSomaLead = async (req, res) => {
             existingLead.numeroTelefono = phone;
             existingLead.nome = full_name;
             await existingLead.save()
+            await syncMessengerLeadToNexus(existingLead);
           }
 
         } catch (error) {

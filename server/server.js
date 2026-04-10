@@ -723,4 +723,6 @@ const getLeadsByDate = async () => {
   });*/
 
 const port = process.env.PORT || 8000;
+// Register Nexus nightly cron (no startup execution here).
+require('./scripts/nexus-nightly-sync');
 app.listen(port, () => console.log(`Server is running on port ${port}`));

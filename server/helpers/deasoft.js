@@ -42,7 +42,8 @@ exports.getDeasoftToken = async () => {
   return token;
 };
 
-exports.getDeasoftLeadOutcome = async (idLead, token) => {
+/** @param {string} idNexus — id lead Nexus (parametro id_lead verso Deasoft). */
+exports.getDeasoftLeadOutcome = async (idNexus, token) => {
   const leadUrl = 'https://funnel-1032112960130.europe-west1.run.app/?Type=Token';
 
   const authMode = 'bearer';
@@ -51,7 +52,7 @@ exports.getDeasoftLeadOutcome = async (idLead, token) => {
 
   const config = {
     params: {
-      [idLeadParamName]: idLead,
+      [idLeadParamName]: idNexus,
     },
     headers: {},
   };

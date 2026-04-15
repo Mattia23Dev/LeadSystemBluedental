@@ -399,7 +399,7 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
           const leadPayload = {
             id: lead.idNexus,
             punteggio: punteggio_qualifica,
-            micro_fonte: "PRE META",
+            micro_fonte: "PRE-META",
             //riassunto_chiamata: lead.summary || "",
             //data_appuntamento: lead.appFissato,
             numero_tentativi: lead.recallAgent.recallType

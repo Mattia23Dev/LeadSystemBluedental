@@ -143,8 +143,16 @@ const LeadSchema = new Schema({
     deasoft_sync: {
       lastSyncAt: Date,
       lastError: String,
-      /** Ultimo idNexus usato per GET esiti Deasoft (query id_lead). */
+      /** Ultimo id LeadSystem usato per GET esiti Deasoft (query id_leadsystem). */
       lastLeadSystemId: String,
+      syncHistory: [
+        {
+          at: Date,
+          ok: Boolean,
+          error: String,
+          payload: Schema.Types.Mixed,
+        }
+      ]
     },
     consent_marketing: String,
     recallIds: [],

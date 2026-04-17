@@ -6,17 +6,18 @@ const Lead = require('../models/lead');
 const { getDeasoftToken, getDeasoftLeadOutcome } = require('../helpers/deasoft');
 
 let running = false;
-const CRON_EXPR = process.env.DEASOFT_SYNC_CRON || '30 2 * * *';
+const CRON_EXPR = process.env.DEASOFT_SYNC_CRON || '0 5 * * *';
 const CRON_ENABLED = (process.env.DEASOFT_SYNC_ENABLED || 'true').toLowerCase() === 'true';
 const SYNC_UTENTE = process.env.DEASOFT_SYNC_UTENTE || '65d3110eccfb1c0ce51f7492';
-const BATCH_SIZE = Number(process.env.DEASOFT_SYNC_BATCH_SIZE || 100);
-const TARGET_NEXUS_ESITO = (process.env.DEASOFT_TARGET_NEXUS_ESITO || 'fissato').toLowerCase();
+const BATCH_SIZE = Number(process.env.DEASOFT_SYNC_BATCH_SIZE || 50);
+const TARGET_NEXUS_ESITO_KEYWORD = (process.env.DEASOFT_TARGET_NEXUS_ESITO_KEYWORD || 'fissato').trim();
+const DEASOFT_HISTORY_LIMIT = Number(process.env.DEASOFT_SYNC_HISTORY_LIMIT || 20);
 
 function getTwoMonthsAgoRange() {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
   start.setMonth(start.getMonth() - 2);
-
+  //start.setDate(start.getDate() - 5);
   const end = new Date();
   end.setHours(23, 59, 59, 999);
 
@@ -32,10 +33,10 @@ async function syncOnce() {
 
   const uri = process.env.DATABASE;
   if (!uri) throw new Error('Missing env DATABASE');
+  let didConnectHere = false;
 
   try {
     const mongoAlreadyConnected = mongoose.connection.readyState === 1;
-    let didConnectHere = false;
     if (!mongoAlreadyConnected) {
       await mongoose.connect(uri);
       didConnectHere = true;
@@ -43,50 +44,93 @@ async function syncOnce() {
 
     const token = await getDeasoftToken();
     const { start, end } = getTwoMonthsAgoRange();
+    const nexusEsitoKeywordRegex = new RegExp(TARGET_NEXUS_ESITO_KEYWORD, 'i');
 
     const query = {
       dataTimestamp: { $gte: start, $lte: end },
+      idNexus: { $exists: true, $nin: [null, ''] },
       $or: [
-        { 'nexus_sync.lastEsito': { $regex: `^${TARGET_NEXUS_ESITO}$`, $options: 'i' } },
-        { 'nexus_lead.esito': { $regex: `^${TARGET_NEXUS_ESITO}$`, $options: 'i' } },
+        { 'nexus_sync.lastEsito': { $regex: nexusEsitoKeywordRegex } },
+        { 'nexus_lead.esito': { $regex: nexusEsitoKeywordRegex } },
       ],
     };
     if (SYNC_UTENTE) query.utente = SYNC_UTENTE;
 
-    const leads = await Lead.find(query).sort({ dataTimestamp: -1 }).limit(BATCH_SIZE);
-    console.log(`[Deasoft sync] Start | leads=${leads.length}`);
+    const leads = await Lead.find(query).sort({ dataTimestamp: -1 })//.limit(BATCH_SIZE);
+    console.log(`[Deasoft sync] Start | leads=${leads.length}`, {
+      dateFrom: start.toISOString(),
+      dateTo: end.toISOString(),
+      targetNexusEsitoKeyword: TARGET_NEXUS_ESITO_KEYWORD,
+      historyLimit: DEASOFT_HISTORY_LIMIT,
+    });
 
     for (const lead of leads) {
+      const idNexus = String(lead.idNexus || '').trim();
+      if (!idNexus) {
+        console.warn(`[Deasoft sync] Skip lead ${lead._id}: missing idNexus`);
+        continue;
+      }
       try {
-        const leadSystemId = String(lead._id);
-        const deasoftLead = await getDeasoftLeadOutcome(leadSystemId, token);
+        const deasoftLead = await getDeasoftLeadOutcome(idNexus, token);
+        const history = Array.isArray(lead.deasoft_sync?.syncHistory)
+          ? [...lead.deasoft_sync.syncHistory]
+          : [];
+        history.push({
+          at: new Date(),
+          ok: true,
+          error: null,
+          payload: deasoftLead,
+        });
+        if (history.length > DEASOFT_HISTORY_LIMIT) {
+          history.splice(0, history.length - DEASOFT_HISTORY_LIMIT);
+        }
+
         lead.deasoft_lead = deasoftLead;
         lead.deasoft_sync = {
           ...(lead.deasoft_sync || {}),
           lastSyncAt: new Date(),
           lastError: null,
-          lastLeadSystemId: leadSystemId,
+          lastLeadSystemId: idNexus,
+          syncHistory: history,
         };
         await lead.save();
-        console.log(`[Deasoft sync] Updated lead ${lead._id} | id_lead=${leadSystemId}`);
+        console.log(`[Deasoft sync] Updated lead ${lead._id} | idNexus=${idNexus}`);
       } catch (error) {
-        const leadSystemId = String(lead._id);
+        const errorMessage = error?.response?.data ? JSON.stringify(error.response.data) : error.message;
+        const history = Array.isArray(lead.deasoft_sync?.syncHistory)
+          ? [...lead.deasoft_sync.syncHistory]
+          : [];
+        history.push({
+          at: new Date(),
+          ok: false,
+          error: errorMessage,
+          payload: null,
+        });
+        if (history.length > DEASOFT_HISTORY_LIMIT) {
+          history.splice(0, history.length - DEASOFT_HISTORY_LIMIT);
+        }
+
         lead.deasoft_sync = {
           ...(lead.deasoft_sync || {}),
           lastSyncAt: new Date(),
-          lastError: error?.response?.data ? JSON.stringify(error.response.data) : error.message,
-          lastLeadSystemId: leadSystemId,
+          lastError: errorMessage,
+          lastLeadSystemId: idNexus,
+          syncHistory: history,
         };
         await lead.save();
-        console.error(`[Deasoft sync] Failed lead ${lead._id}:`, error?.response?.data || error.message);
+        console.error(`[Deasoft sync] Failed lead ${lead._id} | idNexus=${idNexus}:`, error?.response?.data || error.message);
       }
     }
 
-    if (didConnectHere) await mongoose.disconnect();
     console.log('[Deasoft sync] Done');
   } catch (err) {
     console.error('[Deasoft sync] FAILED:', err?.response?.data || err.message);
   } finally {
+    try {
+      if (didConnectHere && mongoose.connection.readyState === 1) {
+        await mongoose.disconnect();
+      }
+    } catch (_) {}
     running = false;
   }
 }

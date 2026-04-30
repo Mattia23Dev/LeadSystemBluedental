@@ -66,11 +66,15 @@ async function syncOnce() {
 
     for (const lead of leads) {
       const idNexus = String(lead.idNexus || '').trim();
+      const nexusEsito = lead?.nexus_sync?.lastEsito || lead?.nexus_lead?.esito || 'N/D';
       if (!idNexus) {
         console.warn(`[Deasoft sync] Skip lead ${lead._id}: missing idNexus`);
         continue;
       }
       try {
+        console.log(
+          `[Deasoft sync] Fetch Deasoft lead ${lead._id} | idNexus=${idNexus} | nexusEsito="${nexusEsito}"`
+        );
         const deasoftLead = await getDeasoftLeadOutcome(idNexus, token);
         const history = Array.isArray(lead.deasoft_sync?.syncHistory)
           ? [...lead.deasoft_sync.syncHistory]

@@ -12,8 +12,9 @@ const { getAllLeadForCounter, LeadForMarketing } = require('../controllers/super
 const { getDataCap } = require('../controllers/comparadentista');
 const Orientatore = require('../models/orientatori');
 const Lead = require('../models/lead');
-const { saveLead, getLeadById: getLeadFromNexus } = require('../helpers/nexus');
+const { saveLead, saveLeadWithResult, getLeadById: getLeadFromNexus } = require('../helpers/nexus');
 const LastLeadUser = require('../models/lastLeadUser');
+const DeepagentLog = require('../models/deepagentLog');
 
 router.post("/get-leads-fb", getLeadsFb);
 router.post("/get-leads-manual", getLeadsManual);
@@ -341,10 +342,34 @@ router.post('/webhook-elevenlabs', async (req, res) => {
 });
 
 router.post('/webhook-n8n-bludental', async (req, res) => {
+  const startedAt = Date.now();
+  const log = {
+    receivedAt: new Date(),
+    endpoint: '/webhook-n8n-bludental',
+    source: 'deepagent',
+    payload: req.body,
+  };
+  const persist = async () => {
+    try {
+      log.processingMs = Date.now() - startedAt;
+      await DeepagentLog.create(log);
+    } catch (e) {
+      console.error('Errore salvataggio DeepagentLog:', e?.message || e);
+    }
+  };
+
   try {
     console.log(req.body);
     const { punteggio_qualifica, centro_scelto, user_phone, status, success, next_run_id } = req.body;
     console.log('Dati ricevuti da ElevenLabs:', { punteggio_qualifica, centro_scelto, user_phone, status, success, next_run_id });
+
+    // Salva i campi estratti nel log
+    log.userPhone = user_phone;
+    log.punteggio = punteggio_qualifica;
+    log.centroScelto = centro_scelto;
+    log.status = status;
+    log.success = success;
+    log.nextRunId = next_run_id;
 
     const user = await User.findById("65d3110eccfb1c0ce51f7492");
 
@@ -359,7 +384,11 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
     if (lead) {
       console.log('Lead trovato:', lead.numeroTelefono);
       console.log('Punteggio qualifica:', lead.esito);
-      
+
+      log.matchedLeadId = lead._id;
+      log.matchedIdNexus = lead.idNexus || null;
+      log.esitoBefore = lead.esito;
+
       // Aggiungi next_run_id all'array recallIds se presente
       if (next_run_id && next_run_id !== "") {
         if (!lead.recallIds) {
@@ -370,13 +399,16 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
       } else {
         console.log('No next_run_id presente');
       }
-      
+
       if (lead.esito == "Venduto" || lead.esito == "Lead persa" || lead.esito == "Non interessato") {
         console.log('Lead in stato non spostabile');
         // Salva comunque il next_run_id anche se lo stato non è spostabile
         if (next_run_id && next_run_id !== "") {
           await lead.save();
         }
+        log.outcome = 'non_spostabile';
+        log.esitoAfter = lead.esito;
+        await persist();
         return res.status(200).json({ message: 'Lead in stato non spostabile', esito: lead.esito });
       } else {
       if (punteggio_qualifica != null && punteggio_qualifica !== "") {
@@ -391,6 +423,7 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
         }
         lead.appVoiceBot = true;
         await lead.save();
+        log.esitoAfter = lead.esito;
         user.dailyLead += 1;
         user.save();
 
@@ -405,20 +438,41 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
             numero_tentativi: lead.recallAgent.recallType
           };
 
-          await saveLead(leadPayload);
+          log.nexusPushAttempted = true;
+          log.nexusPayload = leadPayload;
+          const nexusRes = await saveLeadWithResult(leadPayload);
+          if (nexusRes.ok) {
+            log.nexusPushOk = true;
+            log.nexusResponse = nexusRes.data;
+            log.outcome = 'scored_nexus_ok';
+          } else {
+            log.nexusPushOk = false;
+            log.nexusError = nexusRes.error;
+            log.outcome = 'scored_nexus_failed';
+            console.error('Invio PRE-META a Nexus FALLITO:', nexusRes.error);
+          }
+        } else {
+          log.outcome = 'scored_no_idnexus';
         }
       } else {
         console.log('Lead non ha punteggio qualificata', user_phone);
         lead.appVoiceBot = true;
         await lead.save();
+        log.esitoAfter = lead.esito;
+        log.outcome = 'no_punteggio';
       }
      }
     } else {
       console.log('Nessun lead trovato con i criteri specificati.');
+      log.outcome = 'lead_not_found';
     }
 
+    await persist();
     res.status(200).json({ message: 'Dati ricevuti con successo' });
   } catch (error) {
+    log.outcome = 'handler_error';
+    log.handlerError = error?.message || String(error);
+    await persist();
     console.error('Errore nel ricevere i dati da ElevenLabs:', error);
     res.status(500).json({ message: 'Errore nel ricevere i dati' });
   }

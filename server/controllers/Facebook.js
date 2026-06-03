@@ -5,7 +5,7 @@ const cron = require('node-cron');
 const axios = require('axios');
 
 const accessToken = 'EAAD6mNGgHKABO0VRMoANGbKwcHT4xFBwjf1vZBEu1QwThbS8vQEEGcX8L9Yw2k99cZCIMncdZBGRm9QbbIiZCWrVzNIWvGEjeGhvUdM7eanwQZCTTOycgif5ZAvJZBQdD7sh2illondwZBIJhx1lpbZCbK7iZBIKkuwwTOK5TOAvVMzEovRdpFpmrBdvja';
-const apiUrl = 'https://graph.facebook.com/v19.0';
+const apiUrl = 'https://graph.facebook.com/v23.0';
 const idCampagna = '23858081191190152'; //ECP [LEAD ADS] - LAL Vendite - vantaggi VIDEO
 const idCampagna2 = '23859089103880152'; //ECP - [LEAD ADS] - Master
 const fields = 'id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}';
@@ -16,6 +16,20 @@ const TOKENMIO = "EAAFdJPhqYRYBOzM5ueAFLxbzr6bhkJxeXmDxdaGx6nyi05ERuAgLFS4B55xM1
 const TOKEN1 = "EAAFdJPhqYRYBO7VZCpS19G591YHAF5S4v5HoVFOZBsA2NAejYULxTW6oteZC99OWLeMeXpQnThinhRVmIoZCrLpQXDaO0HL3sgbZAAFEj52Miu1H7ZCvzcjqL0mdZA6UynyKZB8r9RIA5u2OFOiEChTSxMPZB2LNV1g3hzxaHypoEA8ICnQD8NyvKfuTF";
 const { GoogleAdsApi, enums  } = require('google-ads-api');
 const Lead = require('../models/lead');
+
+// Intervallo (UTC) di ieri in Unix timestamp per since/until
+function getYesterdayUnixRange() {
+  const now = new Date();
+  const y = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  // porta a ieri (UTC)
+  y.setUTCDate(y.getUTCDate() - 1);
+  const start = new Date(Date.UTC(y.getUTCFullYear(), y.getUTCMonth(), y.getUTCDate(), 0, 0, 0));
+  const end = new Date(Date.UTC(y.getUTCFullYear(), y.getUTCMonth(), y.getUTCDate(), 23, 59, 59));
+  return {
+    since: Math.floor(start.getTime() / 1000),
+    until: Math.floor(end.getTime() / 1000),
+  };
+}
 
  const saveLeadFromFacebookAndInstagram = async (logs) => {
   const leads = logs;
@@ -152,59 +166,93 @@ const Lead = require('../models/lead');
 
 // NUOVO ID DELL'ACCOUNT PUBBLICITARIO 3.0 DENTISTA VICINO A ME     act_511963014361529
   exports.getDentistaLead = () => {
-    const url = 'https://graph.facebook.com/v19.0/act_511963014361529/campaigns';
-    const params = {
-      fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
-      effective_status: "['ACTIVE']",
-      access_token: TOKEN1,
+    const campaignsUrl = `${apiUrl}/act_511963014361529/campaigns`;
+    const { since, until } = getYesterdayUnixRange();
+
+    // Helper locale per paginazione semplice
+    const fetchAllPages = async (url, params) => {
+      const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+      const results = [];
+      let nextUrl = url;
+      let nextParams = params;
+      for (let i = 0; i < 1000 && nextUrl; i += 1) {
+        const res = await axios.get(nextUrl, { params: nextParams });
+        const data = res && res.data && res.data.data ? res.data.data : [];
+        if (Array.isArray(data) && data.length > 0) results.push(...data);
+        const next = res && res.data && res.data.paging && res.data.paging.next ? res.data.paging.next : null;
+        if (!next) break;
+        // throttling leggero per evitare rate limit
+        await sleep(250);
+        nextUrl = next;
+        nextParams = undefined;
+      }
+      return results;
     };
 
-    axios.get(url, { params })
-      .then(response => {
-        const dataFromFacebook = response.data.data;
+    (async () => {
+      try {
+        // 1) Campagne: solo id,name
+        const campaignsParams = {
+          fields: 'id,name',
+          effective_status: "['ACTIVE']",
+          access_token: TOKEN1,
+          limit: 25,
+        };
+        const campaigns = await fetchAllPages(campaignsUrl, campaignsParams);
+        console.log("campaigns.length", campaigns.length);
         const logs = [];
-        if (Array.isArray(dataFromFacebook)) {
-          for (const element of dataFromFacebook) {
-
-            const { account_id, ads, effective_status, id, name, objective, adsets, status } = element;
-            console.log(name);
-            if (ads && ads.data && ads.data.length > 0) {
-              for (const ad of ads.data) {
-                console.log(ad.name);
-                console.log(adsets.data[0].name);
-                if (ad.leads && ad.leads.data && ad.leads.data.length > 0) {
-                  for (const lead of ad.leads.data) {
-                    if (lead && lead.field_data && Array.isArray(lead.field_data)) {
-                      const fieldData = lead.field_data;
-                      const id = lead.id;
-                      const formId = lead.form_id;
-                      const log = {
-                        fieldData: fieldData,
-                        name: name,
-                        id: id,
-                        formId: formId,
-                        annunci: ad.name,
-                        adsets: adsets.data[0].name,
-                      };
-                      logs.push(log);
-                    }
-                  }
-                }
+        for (const campaign of campaigns) {
+          // 2) Ads per campagna: solo id,name,adset{name}
+          const adsUrl = `${apiUrl}/${campaign.id}/ads`;
+          const adsParams = {
+            fields: 'id,name,adset{name}',
+            access_token: TOKEN1,
+            limit: 50,
+          };
+          const ads = await fetchAllPages(adsUrl, adsParams);
+          console.log("ads.length", ads.length);
+          // 3) Leads per ad con since/until: pagina tutte
+          for (const ad of ads) {
+            const leadsUrl = `${apiUrl}/${ad.id}/leads`;
+            const leadsParams = {
+              fields: 'id,form_id,field_data',
+              access_token: TOKEN1,
+              since: since,
+              until: until,
+              limit: 100,
+            };
+            const leads = await fetchAllPages(leadsUrl, leadsParams);
+            console.log("leads.length", leads.length);
+            for (const lead of leads) {
+              if (lead && Array.isArray(lead.field_data)) {
+                logs.push({
+                  fieldData: lead.field_data,
+                  name: campaign.name || '',
+                  id: lead.id || '',
+                  formId: lead.form_id || '',
+                  annunci: ad.name || '',
+                  adsets: ad.adset && ad.adset.name ? ad.adset.name : '',
+                });
               }
             }
           }
-        } else {
-          console.error("dataFromFacebook non è un array");
         }
-        saveLeadFromFacebookAndInstagram(logs);
-      })
-      .catch(error => {
-        console.error('Errore:', error);
-      });
+
+        if (logs.length > 0) {
+          saveLeadFromFacebookAndInstagram(logs);
+        } else {
+          console.log('Nessun lead trovato per il periodo richiesto');
+        }
+      } catch (error) {
+        const status = error && error.response && error.response.status;
+        const data = error && error.response && error.response.data;
+        console.error('Errore getDentistaLead (flow campagne->ads->leads):', { status, data, message: error.message });
+      }
+    })();
   };
 //ACCOUNT 2.0 ACT_627545782710130
   exports.getDentistaLead2 = () => {
-    const url = 'https://graph.facebook.com/v19.0/act_627545782710130/campaigns';
+    const url = `${apiUrl}/act_627545782710130/campaigns`;
     const params = {
       fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
       effective_status: "['ACTIVE']",
@@ -260,11 +308,12 @@ const Lead = require('../models/lead');
   };
   // ACCOUNT 3.0 ACT_915414373405841
   exports.getDentistaLead3 = () => {
-    const url = 'https://graph.facebook.com/v19.0/act_915414373405841/campaigns';
+    const url = `${apiUrl}/act_915414373405841/campaigns`;
     const params = {
       fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
       effective_status: "['ACTIVE']",
       access_token: TOKEN1,
+      //limit: 1,
     };
 
     axios.get(url, { params })
@@ -311,16 +360,19 @@ const Lead = require('../models/lead');
         saveLeadFromFacebookAndInstagram(logs);
       })
       .catch(error => {
-        console.error('Errore:', error);
+        const status = error?.response?.status;
+        const data = error?.response?.data;
+        console.error('Errore getDentistaLead3:', { status, data, message: error.message });
       });
   };
 
   exports.getBludentalLead = () => {
-    const url = 'https://graph.facebook.com/v19.0/act_982532079362123/campaigns';
+    const url = `${apiUrl}/act_982532079362123/campaigns`;
     const params = {
       fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
       effective_status: "['ACTIVE']",
       access_token: TOKENBLUDENTAL,
+      //limit: 1,
     };
 
     axios.get(url, { params })
@@ -367,14 +419,15 @@ const Lead = require('../models/lead');
         saveLeadFromFacebookAndInstagram(logs);
       })
       .catch(error => {
-        console.error('Errore:', error);
-        console.log(error.data)
+        console.error('Errore:', error.message);
+        console.log(error.response.status);
+        console.log(error.response.data)
       });
   };
 
   //FUNNEL 1 THL
   exports.getThlLead1 = () => {
-    const url = 'https://graph.facebook.com/v19.0/act_451086867638673/campaigns';
+    const url = `${apiUrl}/act_451086867638673/campaigns`;
     const params = {
       fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
       effective_status: "['ACTIVE']",
@@ -431,7 +484,7 @@ const Lead = require('../models/lead');
 
   //FUNNEL 1 THL
   exports.getThlLead2 = () => {
-    const url = 'https://graph.facebook.com/v19.0/act_451330597692428/campaigns';
+    const url = `${apiUrl}/act_451330597692428/campaigns`;
     const params = {
       fields: 'effective_status,account_id,id,name,objective,status,adsets{name},ads{name,leads{form_id,field_data}}',
       effective_status: "['ACTIVE']",
@@ -501,7 +554,7 @@ const Lead = require('../models/lead');
 
 
   const getBludentalLeadManual = () => {
-    const url = 'https://graph.facebook.com/v19.0/act_982532079362123/campaigns';
+    const url = `${apiUrl}/act_982532079362123/campaigns`;
     const params = {
       fields: 'effective_status,account_id,id,name,ads{leads{field_data}}',
       effective_status: "['ACTIVE']",

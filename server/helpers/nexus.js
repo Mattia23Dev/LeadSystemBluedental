@@ -50,6 +50,20 @@ exports.saveLead = async (leadData) => {
     }
   }
 
+// Variante che NON ingoia l'errore: restituisce esito esplicito per il logging.
+exports.saveLeadWithResult = async (leadData) => {
+  try {
+    const response = await nexus.post('/lead/api/set', leadData);
+    return { ok: true, data: response.data, status: response.status };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error?.response?.data || error?.message || String(error),
+      status: error?.response?.status || null,
+    };
+  }
+};
+
 exports.getLeadById = async (idNexus) => {
   try {
     // API: GET /lead/api/get?id=...

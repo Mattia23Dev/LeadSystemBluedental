@@ -1,2 +1,10 @@
 
 .codegpt
+
+# Dati lead / export (contengono PII - NON versionare)
+*.xlsx
+server/csv/
+server/csv-2/
+
+# Log di run
+*.log

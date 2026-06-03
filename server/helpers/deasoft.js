@@ -21,11 +21,17 @@ function extractToken(payload) {
   return null;
 }
 
-exports.getDeasoftToken = async () => {
-  const tokenUrl = 'https://funnel-1032112960130.europe-west1.run.app/?Type=Token';
+const DEFAULT_TOKEN_URL = 'https://funnel-1032112960130.europe-west1.run.app/?Type=Token';
+const DEFAULT_RESULT_URL = 'https://funnel-1032112960130.europe-west1.run.app/?Type=Result';
 
-  const username = 'deasoft.funnel';
-  const password = 'BvUETnolC0SmmndORAS1jA==';
+/** Default credenziali Deasoft prod (sovrascrivibili con DEASOFT_USERNAME / DEASOFT_PASSWORD). */
+const DEFAULT_DEASOFT_USERNAME = 'fun.dea';
+const DEFAULT_DEASOFT_PASSWORD = 'RGVhc29mdC1mdW5uZWwyMDI2IQ==';
+
+exports.getDeasoftToken = async () => {
+  const tokenUrl = process.env.DEASOFT_TOKEN_URL || DEFAULT_TOKEN_URL;
+  const username = process.env.DEASOFT_USERNAME || DEFAULT_DEASOFT_USERNAME;
+  const password = process.env.DEASOFT_PASSWORD || DEFAULT_DEASOFT_PASSWORD;
 
   // Prova prima Basic Auth (RFC 7617): molti gateway accettano solo questo e non i query param.
   const response = await axios.get(tokenUrl, {
@@ -44,7 +50,7 @@ exports.getDeasoftToken = async () => {
 
 /** @param {string} idLeadSystem — id lead su LeadSystem (parametro id_leadsystem verso Deasoft). */
 exports.getDeasoftLeadOutcome = async (idLeadSystem, token) => {
-  const leadUrl = 'https://funnel-1032112960130.europe-west1.run.app/?Type=Result';
+  const leadUrl = process.env.DEASOFT_RESULT_URL || DEFAULT_RESULT_URL;
 
   const authMode = 'bearer';
   const tokenQueryName = 'token';

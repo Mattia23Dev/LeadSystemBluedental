@@ -6,13 +6,15 @@ const { Schema } = mongoose;
  * relativo comportamento, incluso l'invio a Nexus.
  *
  * outcome possibili:
- *   lead_not_found       -> nessuna lead trovata col numero ricevuto (NON salvato nulla)
- *   non_spostabile       -> lead in stato finale (Venduto / Lead persa / Non interessato): early-return
- *   no_punteggio         -> lead trovata ma deepagent non ha mandato punteggio_qualifica
- *   scored_no_idnexus    -> lead qualificata in locale ma senza idNexus: NON inviata a Nexus
- *   scored_nexus_ok      -> lead qualificata e PRE-META inviato a Nexus con successo
- *   scored_nexus_failed  -> lead qualificata ma invio PRE-META a Nexus FALLITO
- *   handler_error        -> eccezione non gestita nel webhook
+ *   lead_not_found            -> nessuna lead trovata col numero ricevuto (NON salvato nulla)
+ *   non_spostabile            -> lead in stato finale (Venduto / Lead persa / Non interessato): early-return
+ *   no_punteggio              -> lead trovata ma deepagent non ha mandato punteggio_qualifica
+ *   scored_no_idnexus         -> lead qualificata in locale ma senza idNexus: NON inviata a Nexus
+ *   scored_nexus_ok           -> lead qualificata e PRE-META inviato (UPDATE) a Nexus con successo
+ *   scored_nexus_failed       -> lead qualificata ma UPDATE PRE-META a Nexus FALLITO
+ *   scored_nexus_created      -> [v2] lead Meta Web differita CREATA su Nexus (PRE-META) con successo
+ *   scored_nexus_create_failed-> [v2] lead Meta Web differita: CREATE su Nexus FALLITA
+ *   handler_error             -> eccezione non gestita nel webhook
  */
 const DeepagentLogSchema = new Schema(
   {

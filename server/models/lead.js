@@ -156,6 +156,9 @@ const LeadSchema = new Schema({
     },
     consent_marketing: String,
     recallIds: [],
+    // Meta Web: invio a Nexus differito. true = creata ma NON ancora inviata a Nexus
+    // (verrà inviata alla qualifica deepagent oppure dal cron dopo 24h).
+    nexusDeferred: { type: Boolean, default: false },
   });
 
   LeadSchema.pre('save', function(next) {

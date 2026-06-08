@@ -12,7 +12,7 @@ const fs = require('fs');
 const csv = require('csv-parser');
 const moment = require('moment');
 const path = require('path');
-const { saveLead } = require('../helpers/nexus');
+const { saveLead, saveLeadWithResult } = require('../helpers/nexus');
 
 let lastUserReceivedLead = null;
 function filterOldLeads(leads) {
@@ -1023,43 +1023,42 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
               console.log("Eseguo la chiamata di Meta web per il lead " + newLead.email);
               await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
               newLead.chiamato = true;
+              // Meta Web: invio a Nexus DIFFERITO. Non inviamo subito a Nexus; parte solo n8n
+              // (qualifica + chiamate via makeOutboundCall). L'invio a Nexus avverra':
+              //  - alla qualifica deepagent con punteggio (endpoint /webhook-n8n-bludental-v2), oppure
+              //  - dal cron di fallback dopo 24h se non arriva punteggio (inviaMetaWebDifferiteScadute).
+              newLead.nexusDeferred = true;
               await newLead.save();
-              //lastFunctionExecuted = 'calculateAndAssignLeadsEveryDayMetaWeb';
 
-              const leadPayload = {
-                nome: newLead.nome,
-                ragione_sociale: newLead.nome,
-                email: newLead.email,
-                telefono: normalizePhoneForNexus(newLead.numeroTelefono),
-                punteggio: null,
-                riassunto_chiamata: null,
-                //data_entrata: null,
-                id_lead_leadsystem: newLead._id,
-                note: null,
-                data_appuntamento: null,
-                citta: newLead.città,
-                trattamento: newLead.trattamento,
-                lead_status: "Da contattare", //FISSO
-                dettaglio_status_negativo: null,
-                numero_tentativi: null,
-                macro_fonte: "Online", //FISSO
-                micro_fonte: "META WEB",
-                campagna: leadWithoutUser.name ? leadWithoutUser.name : "",
-                adset: leadWithoutUser.adsets ? leadWithoutUser.adsets : "",
-                ad: leadWithoutUser.annunci ? leadWithoutUser.annunci : "",
-                sorgente: "Funnel", //FISSO
-                /*_list_phone_numbers: [
-                  {
-                    tipo: "cell",
-                    numero: newLead.numeroTelefono
-                  }
-                ]*/
-              };
-  
-              const leadNexus = await saveLead(leadPayload);
-              newLead.idNexus = leadNexus.id;
-              await newLead.save();
-            console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);            
+              // === VECCHIO COMPORTAMENTO: invio immediato a Nexus all'assegnazione. ===
+              // Per tornare indietro: riabilitare questo blocco e rimuovere "newLead.nexusDeferred = true" sopra.
+              // const leadPayload = {
+              //   nome: newLead.nome,
+              //   ragione_sociale: newLead.nome,
+              //   email: newLead.email,
+              //   telefono: normalizePhoneForNexus(newLead.numeroTelefono),
+              //   punteggio: null,
+              //   riassunto_chiamata: null,
+              //   //data_entrata: null,
+              //   id_lead_leadsystem: newLead._id,
+              //   note: null,
+              //   data_appuntamento: null,
+              //   citta: newLead.città,
+              //   trattamento: newLead.trattamento,
+              //   lead_status: "Da contattare", //FISSO
+              //   dettaglio_status_negativo: null,
+              //   numero_tentativi: null,
+              //   macro_fonte: "Online", //FISSO
+              //   micro_fonte: "META WEB",
+              //   campagna: leadWithoutUser.name ? leadWithoutUser.name : "",
+              //   adset: leadWithoutUser.adsets ? leadWithoutUser.adsets : "",
+              //   ad: leadWithoutUser.annunci ? leadWithoutUser.annunci : "",
+              //   sorgente: "Funnel", //FISSO
+              // };
+              // const leadNexus = await saveLead(leadPayload);
+              // newLead.idNexus = leadNexus.id;
+              // await newLead.save();
+            console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome} (Nexus differito)`);
           } else {
             //await trigger(newLead, user)
             await user.save();
@@ -1330,6 +1329,78 @@ cron.schedule('20,10,35,50 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * *
   console.log('Assegno i lead di bludental Meta web');
 });
 //calculateAndAssignLeadsEveryDayMetaWeb();
+
+// FALLBACK 24h: invia a Nexus le lead Meta Web con invio differito che dopo 24h dalla
+// creazione non hanno ricevuto una prequalifica con punteggio. Vengono inviate come lead
+// "normale" (micro_fonte META WEB, lead_status "Da contattare", punteggio null), come se fosse
+// avvenuto all'assegnazione. Le lead qualificate prima delle 24h sono gia' state inviate
+// dall'endpoint /webhook-n8n-bludental-v2 (quindi hanno gia' idNexus e vengono escluse qui).
+const inviaMetaWebDifferiteScadute = async () => {
+  try {
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    // Tutte le lead Meta Web differite NON ancora inviate a Nexus dopo 24h.
+    // (non filtriamo sul punteggio: cosi' recuperiamo anche le qualificate la cui
+    //  creazione su Nexus dal webhook v2 fosse fallita, evitando di perderle).
+    const leads = await Lead.find({
+      nexusDeferred: true,
+      idNexus: { $in: [null, ''] },   // non ancora inviata a Nexus
+      dataTimestamp: { $lte: cutoff },
+    }).limit(200);
+
+    if (!leads.length) {
+      console.log('[Meta Web 24h] Nessuna lead da inviare a Nexus');
+      return;
+    }
+    console.log(`[Meta Web 24h] Lead da inviare a Nexus: ${leads.length}`);
+
+    for (const lead of leads) {
+      const haPunteggio = lead.punteggio != null;
+      const leadPayload = {
+        nome: lead.nome,
+        ragione_sociale: lead.nome,
+        email: lead.email,
+        telefono: normalizePhoneForNexus(lead.numeroTelefono),
+        // Se nel frattempo e' arrivato un punteggio (es. create v2 fallita), inviamo come PRE-META;
+        // altrimenti e' una lead "normale" non qualificata.
+        punteggio: haPunteggio ? lead.punteggio : null,
+        riassunto_chiamata: null,
+        id_lead_leadsystem: lead._id,
+        note: null,
+        data_appuntamento: null,
+        citta: lead.città,
+        trattamento: lead.trattamento,
+        lead_status: "Da contattare", //FISSO
+        dettaglio_status_negativo: null,
+        numero_tentativi: lead.recallAgent ? lead.recallAgent.recallType : null,
+        macro_fonte: "Online", //FISSO
+        micro_fonte: haPunteggio ? "PRE-META" : "META WEB",
+        campagna: lead.utmCampaign ? lead.utmCampaign : "",
+        adset: lead.utmAdset ? lead.utmAdset : "",
+        ad: lead.utmContent ? lead.utmContent : "",
+        sorgente: "Funnel", //FISSO
+      };
+
+      const r = await saveLeadWithResult(leadPayload);
+      if (r.ok && r.data && r.data.id) {
+        lead.idNexus = r.data.id;
+        lead.nexusDeferred = false;
+        await lead.save();
+        console.log(`[Meta Web 24h] Inviata a Nexus lead ${lead._id} -> idNexus ${r.data.id}`);
+      } else {
+        // Resta nexusDeferred:true senza idNexus: verra' ritentata al giro successivo.
+        console.error(`[Meta Web 24h] Invio FALLITO lead ${lead._id}:`, JSON.stringify(r.error));
+      }
+    }
+  } catch (error) {
+    console.error('[Meta Web 24h] Errore generale:', error?.message || error);
+  }
+};
+
+// Ogni ora: cattura le lead Meta Web con piu' di 24h senza punteggio e non ancora inviate.
+cron.schedule('0 * * * *', () => {
+  inviaMetaWebDifferiteScadute();
+  console.log('Invio a Nexus lead Meta Web differite (>24h, senza punteggio)');
+});
 /*cron.schedule('12 8,9,10,11,12,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   //getTagLeads();
   calculateAndAssignLeadsEveryDayWordpress();

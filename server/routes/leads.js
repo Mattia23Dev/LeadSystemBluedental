@@ -12,7 +12,7 @@ const { getAllLeadForCounter, LeadForMarketing } = require('../controllers/super
 const { getDataCap } = require('../controllers/comparadentista');
 const Orientatore = require('../models/orientatori');
 const Lead = require('../models/lead');
-const { saveLead, saveLeadWithResult, getLeadById: getLeadFromNexus } = require('../helpers/nexus');
+const { saveLead, saveLeadWithResult, normalizePhoneForNexus, getLeadById: getLeadFromNexus } = require('../helpers/nexus');
 const LastLeadUser = require('../models/lastLeadUser');
 const DeepagentLog = require('../models/deepagentLog');
 
@@ -474,6 +474,167 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
     log.handlerError = error?.message || String(error);
     await persist();
     console.error('Errore nel ricevere i dati da ElevenLabs:', error);
+    res.status(500).json({ message: 'Errore nel ricevere i dati' });
+  }
+});
+
+// === Endpoint deepagent V2 (Meta Web con invio a Nexus differito) ===
+// Identico a /webhook-n8n-bludental, MA quando arriva il punteggio e la lead NON ha ancora
+// idNexus (Meta Web differita), la CREA su Nexus con i dati completi + punteggio + PRE-META.
+// L'endpoint /webhook-n8n-bludental originale resta invariato: per tornare indietro basta
+// rimettere quell'URL su n8n.
+router.post('/webhook-n8n-bludental-v2', async (req, res) => {
+  const startedAt = Date.now();
+  const log = {
+    receivedAt: new Date(),
+    endpoint: '/webhook-n8n-bludental-v2',
+    source: 'deepagent-v2',
+    payload: req.body,
+  };
+  const persist = async () => {
+    try {
+      log.processingMs = Date.now() - startedAt;
+      await DeepagentLog.create(log);
+    } catch (e) {
+      console.error('Errore salvataggio DeepagentLog:', e?.message || e);
+    }
+  };
+
+  try {
+    console.log(req.body);
+    const { punteggio_qualifica, centro_scelto, user_phone, status, success, next_run_id } = req.body;
+
+    log.userPhone = user_phone;
+    log.punteggio = punteggio_qualifica;
+    log.centroScelto = centro_scelto;
+    log.status = status;
+    log.success = success;
+    log.nextRunId = next_run_id;
+
+    const user = await User.findById("65d3110eccfb1c0ce51f7492");
+
+    const lead = await Lead.findOne({
+      utente: "65d3110eccfb1c0ce51f7492",
+      $or: [
+        { numeroTelefono: user_phone },
+        { numeroTelefono: `+39${user_phone}` }
+      ]
+    }).sort({ dataTimestamp: -1 });
+
+    if (lead) {
+      log.matchedLeadId = lead._id;
+      log.matchedIdNexus = lead.idNexus || null;
+      log.esitoBefore = lead.esito;
+
+      if (next_run_id && next_run_id !== "") {
+        if (!lead.recallIds) lead.recallIds = [];
+        lead.recallIds.push(next_run_id);
+      }
+
+      if (lead.esito == "Venduto" || lead.esito == "Lead persa" || lead.esito == "Non interessato") {
+        if (next_run_id && next_run_id !== "") await lead.save();
+        log.outcome = 'non_spostabile';
+        log.esitoAfter = lead.esito;
+        await persist();
+        return res.status(200).json({ message: 'Lead in stato non spostabile', esito: lead.esito });
+      }
+
+      if (punteggio_qualifica != null && punteggio_qualifica !== "") {
+        lead.luogo = centro_scelto;
+        lead.summary = "";
+        lead.punteggio = punteggio_qualifica;
+        lead.esito = "Lead qualificata";
+        if (success && success == "SEGRETERIA" || success && success == "NEUTRO") {
+          lead.status = "segreteria";
+        } else {
+          lead.status = status;
+        }
+        lead.appVoiceBot = true;
+        log.esitoAfter = lead.esito;
+
+        if (lead.idNexus) {
+          // Lead gia' presente su Nexus: aggiorna PRE-META (come v1)
+          const leadPayload = {
+            id: lead.idNexus,
+            punteggio: punteggio_qualifica,
+            micro_fonte: "PRE-META",
+            numero_tentativi: lead.recallAgent ? lead.recallAgent.recallType : null
+          };
+          log.nexusPushAttempted = true;
+          log.nexusPayload = leadPayload;
+          const nexusRes = await saveLeadWithResult(leadPayload);
+          if (nexusRes.ok) {
+            log.nexusPushOk = true;
+            log.nexusResponse = nexusRes.data;
+            log.outcome = 'scored_nexus_ok';
+          } else {
+            log.nexusPushOk = false;
+            log.nexusError = nexusRes.error;
+            log.outcome = 'scored_nexus_failed';
+            console.error('Update PRE-META a Nexus FALLITO:', nexusRes.error);
+          }
+        } else {
+          // Meta Web differita: CREA la lead su Nexus con dati completi + punteggio + PRE-META
+          const leadPayload = {
+            nome: lead.nome,
+            ragione_sociale: lead.nome,
+            email: lead.email,
+            telefono: normalizePhoneForNexus(lead.numeroTelefono),
+            punteggio: punteggio_qualifica,
+            riassunto_chiamata: null,
+            id_lead_leadsystem: lead._id,
+            note: null,
+            data_appuntamento: null,
+            citta: lead.città,
+            trattamento: lead.trattamento,
+            lead_status: "Da contattare", //FISSO
+            dettaglio_status_negativo: null,
+            numero_tentativi: lead.recallAgent ? lead.recallAgent.recallType : null,
+            macro_fonte: "Online", //FISSO
+            micro_fonte: "PRE-META",
+            campagna: lead.utmCampaign ? lead.utmCampaign : "",
+            adset: lead.utmAdset ? lead.utmAdset : "",
+            ad: lead.utmContent ? lead.utmContent : "",
+            sorgente: "Funnel", //FISSO
+          };
+          log.nexusPushAttempted = true;
+          log.nexusPayload = leadPayload;
+          const nexusRes = await saveLeadWithResult(leadPayload);
+          if (nexusRes.ok && nexusRes.data && nexusRes.data.id) {
+            lead.idNexus = nexusRes.data.id;
+            lead.nexusDeferred = false;
+            log.nexusPushOk = true;
+            log.nexusResponse = nexusRes.data;
+            log.matchedIdNexus = nexusRes.data.id;
+            log.outcome = 'scored_nexus_created';
+          } else {
+            log.nexusPushOk = false;
+            log.nexusError = nexusRes.error || 'no id returned';
+            log.outcome = 'scored_nexus_create_failed';
+            console.error('Creazione lead su Nexus FALLITA:', nexusRes.error);
+          }
+        }
+
+        await lead.save();
+        user.dailyLead += 1;
+        user.save();
+      } else {
+        lead.appVoiceBot = true;
+        await lead.save();
+        log.esitoAfter = lead.esito;
+        log.outcome = 'no_punteggio';
+      }
+    } else {
+      log.outcome = 'lead_not_found';
+    }
+
+    await persist();
+    res.status(200).json({ message: 'Dati ricevuti con successo' });
+  } catch (error) {
+    log.outcome = 'handler_error';
+    log.handlerError = error?.message || String(error);
+    await persist();
+    console.error('Errore nel ricevere i dati da ElevenLabs (v2):', error);
     res.status(500).json({ message: 'Errore nel ricevere i dati' });
   }
 });

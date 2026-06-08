@@ -64,6 +64,16 @@ exports.saveLeadWithResult = async (leadData) => {
   }
 };
 
+// Normalizza il numero per Nexus: tiene solo le ultime 10 cifre (parte locale italiana).
+exports.normalizePhoneForNexus = (phone) => {
+  if (!phone) return '';
+  const original = String(phone).trim();
+  const digitsOnly = original.replace(/\D/g, '');
+  if (!digitsOnly) return original;
+  if (digitsOnly.length > 10) return digitsOnly.slice(-10) || original;
+  return digitsOnly || original;
+};
+
 exports.getLeadById = async (idNexus) => {
   try {
     // API: GET /lead/api/get?id=...

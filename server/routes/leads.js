@@ -373,13 +373,7 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
 
     const user = await User.findById("65d3110eccfb1c0ce51f7492");
 
-    const lead = await Lead.findOne({
-      utente: "65d3110eccfb1c0ce51f7492",
-      $or: [
-        { numeroTelefono: user_phone },
-        { numeroTelefono: `+39${user_phone}` }
-      ]
-    }).sort({ dataTimestamp: -1 }); // Ordina per data decrescente per ottenere il più recente
+    const lead = await findLeadByPhone("65d3110eccfb1c0ce51f7492", user_phone);
 
     if (lead) {
       console.log('Lead trovato:', lead.numeroTelefono);
@@ -513,13 +507,7 @@ router.post('/webhook-n8n-bludental-v2', async (req, res) => {
 
     const user = await User.findById("65d3110eccfb1c0ce51f7492");
 
-    const lead = await Lead.findOne({
-      utente: "65d3110eccfb1c0ce51f7492",
-      $or: [
-        { numeroTelefono: user_phone },
-        { numeroTelefono: `+39${user_phone}` }
-      ]
-    }).sort({ dataTimestamp: -1 });
+    const lead = await findLeadByPhone("65d3110eccfb1c0ce51f7492", user_phone);
 
     if (lead) {
       log.matchedLeadId = lead._id;
@@ -763,6 +751,33 @@ function generatePhoneVariants(phoneNumber) {
 
   return variants;
 }
+
+// Trova la lead piu' recente di un utente a partire da un numero in QUALSIASI formato
+// (nudo "348...", "39348...", "+39348...", con o senza spazi/trattini).
+// 1) match esatto sulle varianti generate (veloce, usa l'indice);
+// 2) fallback sulle ultime 10 cifre, per gestire formati anomali (spazi interni, ecc.).
+async function findLeadByPhone(userId, rawPhone) {
+  if (!rawPhone) return null;
+  const variants = generatePhoneVariants(String(rawPhone));
+
+  let lead = await Lead.findOne({
+    utente: userId,
+    numeroTelefono: { $in: variants },
+  }).sort({ dataTimestamp: -1 });
+  if (lead) return lead;
+
+  // Fallback: confronta sulla parte locale (ultime 10 cifre)
+  const digits = String(rawPhone).replace(/\D/g, '');
+  const last10 = digits.slice(-10);
+  if (last10.length >= 8) {
+    lead = await Lead.findOne({
+      utente: userId,
+      numeroTelefono: { $regex: last10 + '$' },
+    }).sort({ dataTimestamp: -1 });
+  }
+  return lead;
+}
+
 function isValidPhoneNumber(phoneNumber) {
   if (!phoneNumber) return false;
   

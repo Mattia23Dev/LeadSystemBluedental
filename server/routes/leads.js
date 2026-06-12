@@ -425,7 +425,9 @@ router.post('/webhook-n8n-bludental', async (req, res) => {
 
           const leadPayload = {
             id: lead.idNexus,
-            punteggio: punteggio_qualifica,
+            // Inviato come STRINGA: Nexus scarta il numero 0 (lo tratta come vuoto)
+            // ma accetta "0" e lo normalizza a 0.
+            punteggio: String(punteggio_qualifica),
             micro_fonte: "PRE-META",
             //riassunto_chiamata: lead.summary || "",
             //data_appuntamento: lead.appFissato,
@@ -544,7 +546,9 @@ router.post('/webhook-n8n-bludental-v2', async (req, res) => {
           // Lead gia' presente su Nexus: aggiorna PRE-META (come v1)
           const leadPayload = {
             id: lead.idNexus,
-            punteggio: punteggio_qualifica,
+            // Inviato come STRINGA: Nexus scarta il numero 0 (lo tratta come vuoto)
+            // ma accetta "0" e lo normalizza a 0.
+            punteggio: String(punteggio_qualifica),
             micro_fonte: "PRE-META",
             numero_tentativi: lead.recallAgent ? lead.recallAgent.recallType : null
           };
@@ -568,7 +572,9 @@ router.post('/webhook-n8n-bludental-v2', async (req, res) => {
             ragione_sociale: lead.nome,
             email: lead.email,
             telefono: normalizePhoneForNexus(lead.numeroTelefono),
-            punteggio: punteggio_qualifica,
+            // Inviato come STRINGA: Nexus scarta il numero 0 (lo tratta come vuoto)
+            // ma accetta "0" e lo normalizza a 0.
+            punteggio: String(punteggio_qualifica),
             riassunto_chiamata: null,
             id_lead_leadsystem: lead._id,
             note: null,

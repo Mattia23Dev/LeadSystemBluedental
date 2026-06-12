@@ -46,7 +46,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     try { before = await getLeadById(id); }
     catch (e) { console.log('  GET FALLITO ' + id.slice(0,8) + ': ' + (e.message)); falliti++; continue; }
 
-    if (String(before.punteggio) === '0') { giaOk++; continue; } // gia' corretto
+    // Correggi SOLO le lead con punteggio null/vuoto (lo 0 scartato da Nexus).
+    // Se su Nexus c'e' gia' un valore (0,1,2,...) NON lo sovrascrivo: potrebbe
+    // essere una ri-qualifica piu' recente o un valore messo dal centro.
+    const cur = before.punteggio;
+    if (cur !== null && cur !== undefined && cur !== '') { giaOk++; continue; }
     daCorreggere++;
 
     if (!WRITE) {

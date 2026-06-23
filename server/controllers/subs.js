@@ -396,8 +396,10 @@ const calculateAndAssignLeadsEveryDay = async () => {
               lead_status: "Da contattare", //FISSO
               dettaglio_status_negativo: null,
               numero_tentativi: null,
-              macro_fonte: "Online", //FISSO
-              micro_fonte: leadWithoutUser.name.toLowerCase().includes("gold") ? "GOLD" : 
+              // PROMO ABT+SB: campagna nuova con fonte dedicata (macro FUNNEL / micro PROMO ABT+SB).
+              macro_fonte: leadWithoutUser.name.toLowerCase().includes("promo abt+sb") ? "FUNNEL" : "Online",
+              micro_fonte: leadWithoutUser.name.toLowerCase().includes("promo abt+sb") ? "PROMO ABT+SB" :
+               leadWithoutUser.name.toLowerCase().includes("gold") ? "GOLD" :
                leadWithoutUser.name.toLowerCase().includes("ambra") ? "AMBRA WEB" :
                leadWithoutUser.name.toLowerCase().includes("meta web") ? "META WEB" :
                leadWithoutUser.name.toLowerCase().includes("allineatori") ? "ALLINEATORI" :

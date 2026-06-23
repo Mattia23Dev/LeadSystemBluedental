@@ -13,8 +13,65 @@ const csv = require('csv-parser');
 const moment = require('moment');
 const path = require('path');
 const { saveLead, saveLeadWithResult } = require('../helpers/nexus');
+const DeepagentLog = require('../models/deepagentLog');
 
 let lastUserReceivedLead = null;
+
+// === CAP MENSILE QUALIFICHE (qualificatore deepagent) ===
+// Le qualifiche le paga il cliente (~2€/qualifica). C'e' un tetto mensile di
+// qualifiche pagate: raggiunto il cap, le Meta Web NON vanno piu' al qualificatore
+// ma vengono inviate DIRETTAMENTE a Nexus in real-time (score nullo, nessuna
+// conversazione), come il vecchio comportamento all'assegnazione. Al cambio di
+// mese il contatore riparte da 0 e si torna automatici al flusso qualificatore.
+const CAP_QUALIFICHE_DEFAULT = 2500;        // "always on" da luglio 2026 in poi
+const CAP_QUALIFICHE_OVERRIDE = {
+  '2026-06': 3500,                          // giugno 2026: eccezione (microservizio)
+};
+// outcome di deepagentlogs che rappresentano una qualifica RICEVUTA e inviata a
+// Nexus come PRE-META (cioe' una qualifica fatturata). Vedi models/deepagentLog.js.
+const SCORED_OUTCOMES = [
+  'scored_nexus_ok',
+  'scored_nexus_failed',
+  'scored_no_idnexus',
+  'scored_nexus_created',
+  'scored_nexus_create_failed',
+];
+
+// Cap di qualifiche valido per il mese della data passata.
+function getCapQualifiche(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const key = `${y}-${m}`;
+  return CAP_QUALIFICHE_OVERRIDE[key] != null ? CAP_QUALIFICHE_OVERRIDE[key] : CAP_QUALIFICHE_DEFAULT;
+}
+
+// Conta le qualifiche RICEVUTE nel mese corrente (lead distinti inviati come
+// PRE-META a Nexus, score 0/1/2 inclusi). Fonte: collection deepagentlogs.
+async function countQualificheMese(now = new Date()) {
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+  // Conta lead DISTINTI per non contare due volte eventuali retry dello stesso lead.
+  const leadIds = await DeepagentLog.distinct('matchedLeadId', {
+    receivedAt: { $gte: startOfMonth },
+    outcome: { $in: SCORED_OUTCOMES },
+    matchedLeadId: { $ne: null },
+  });
+  return leadIds.length;
+}
+
+// True se per questo mese abbiamo gia' raggiunto/superato il cap di qualifiche.
+async function capQualificheRaggiunto(now = new Date()) {
+  try {
+    const cap = getCapQualifiche(now);
+    const count = await countQualificheMese(now);
+    const raggiunto = count >= cap;
+    console.log(`[CAP QUALIFICHE] mese ${now.getFullYear()}-${now.getMonth() + 1}: ${count}/${cap}${raggiunto ? ' -> CAP RAGGIUNTO: Meta Web dirette a Nexus' : ''}`);
+    return raggiunto;
+  } catch (e) {
+    // In caso di errore nel conteggio NON blocchiamo il qualificatore (comportamento di default).
+    console.error('[CAP QUALIFICHE] errore nel conteggio, proseguo col qualificatore:', e.message);
+    return false;
+  }
+}
 function filterOldLeads(leads) {
   const fourteenDaysAgo = new Date();
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 10);
@@ -772,6 +829,9 @@ const calculateAndAssignLeadsEveryDayEstetica = async () => {
 
 const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
   try {
+    // Cap mensile qualifiche: se raggiunto, le Meta Web non vanno al qualificatore
+    // ma dritte a Nexus. Calcolato una volta per esecuzione (non per ogni lead).
+    const capRaggiunto = await capQualificheRaggiunto();
     const callCenter = "664c5b2f3055d6de1fcaa22b";
     const callCenterUser = await User.findById(callCenter)
     const bludental = "65d3110eccfb1c0ce51f7492";
@@ -1020,6 +1080,46 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
             //await sendEmailLeadArrivati(user._id);
             console.log(currentHour)
+            if (capRaggiunto) {
+              // === CAP QUALIFICHE RAGGIUNTO: invio DIRETTO a Nexus in real-time. ===
+              // Si salta il qualificatore (niente makeOutboundCall => niente conversazione),
+              // si invia subito a Nexus con punteggio nullo, come "META WEB" / "Da contattare".
+              console.log("Cap qualifiche raggiunto: invio diretto a Nexus per il lead " + newLead.email);
+              const leadPayload = {
+                nome: newLead.nome,
+                ragione_sociale: newLead.nome,
+                email: newLead.email,
+                telefono: normalizePhoneForNexus(newLead.numeroTelefono),
+                punteggio: null,
+                riassunto_chiamata: null,
+                id_lead_leadsystem: newLead._id,
+                note: null,
+                data_appuntamento: null,
+                citta: newLead.città,
+                trattamento: newLead.trattamento,
+                lead_status: "Da contattare", //FISSO
+                dettaglio_status_negativo: null,
+                numero_tentativi: null,
+                macro_fonte: "Online", //FISSO
+                micro_fonte: "META WEB",
+                campagna: leadWithoutUser.name ? leadWithoutUser.name : "",
+                adset: leadWithoutUser.adsets ? leadWithoutUser.adsets : "",
+                ad: leadWithoutUser.annunci ? leadWithoutUser.annunci : "",
+                sorgente: "Funnel", //FISSO
+              };
+              const r = await saveLeadWithResult(leadPayload);
+              if (r.ok && r.data && r.data.id) {
+                newLead.idNexus = r.data.id;
+                newLead.nexusDeferred = false;   // gia' su Nexus, non differita
+                await newLead.save();
+                console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome} (Nexus diretto, cap raggiunto) -> idNexus ${r.data.id}`);
+              } else {
+                // Invio fallito: lascio differita cosi' la riprende il cron di fallback.
+                newLead.nexusDeferred = true;
+                await newLead.save();
+                console.error(`Invio diretto a Nexus FALLITO per lead ${leadWithoutUser?._id} (cap raggiunto), resta differita:`, JSON.stringify(r.error));
+              }
+            } else {
               console.log("Eseguo la chiamata di Meta web per il lead " + newLead.email);
               await makeOutboundCall(newLead.numeroTelefono, newLead.città, newLead.nome, 'bludental');
               newLead.chiamato = true;
@@ -1029,36 +1129,8 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
               //  - dal cron di fallback dopo 24h se non arriva punteggio (inviaMetaWebDifferiteScadute).
               newLead.nexusDeferred = true;
               await newLead.save();
-
-              // === VECCHIO COMPORTAMENTO: invio immediato a Nexus all'assegnazione. ===
-              // Per tornare indietro: riabilitare questo blocco e rimuovere "newLead.nexusDeferred = true" sopra.
-              // const leadPayload = {
-              //   nome: newLead.nome,
-              //   ragione_sociale: newLead.nome,
-              //   email: newLead.email,
-              //   telefono: normalizePhoneForNexus(newLead.numeroTelefono),
-              //   punteggio: null,
-              //   riassunto_chiamata: null,
-              //   //data_entrata: null,
-              //   id_lead_leadsystem: newLead._id,
-              //   note: null,
-              //   data_appuntamento: null,
-              //   citta: newLead.città,
-              //   trattamento: newLead.trattamento,
-              //   lead_status: "Da contattare", //FISSO
-              //   dettaglio_status_negativo: null,
-              //   numero_tentativi: null,
-              //   macro_fonte: "Online", //FISSO
-              //   micro_fonte: "META WEB",
-              //   campagna: leadWithoutUser.name ? leadWithoutUser.name : "",
-              //   adset: leadWithoutUser.adsets ? leadWithoutUser.adsets : "",
-              //   ad: leadWithoutUser.annunci ? leadWithoutUser.annunci : "",
-              //   sorgente: "Funnel", //FISSO
-              // };
-              // const leadNexus = await saveLead(leadPayload);
-              // newLead.idNexus = leadNexus.id;
-              // await newLead.save();
-            console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome} (Nexus differito)`);
+              console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome} (Nexus differito)`);
+            }
           } else {
             //await trigger(newLead, user)
             await user.save();

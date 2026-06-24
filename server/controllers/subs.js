@@ -25,7 +25,7 @@ let lastUserReceivedLead = null;
 // mese il contatore riparte da 0 e si torna automatici al flusso qualificatore.
 const CAP_QUALIFICHE_DEFAULT = 2500;        // "always on" da luglio 2026 in poi
 const CAP_QUALIFICHE_OVERRIDE = {
-  '2026-06': 3500,                          // giugno 2026: eccezione (microservizio)
+  '2026-06': 3000,                          // giugno 2026: abbassato a 3000 il 24/06 per bloccare subito (eravamo a 3302)
 };
 // outcome di deepagentlogs che rappresentano una qualifica RICEVUTA e inviata a
 // Nexus come PRE-META (cioe' una qualifica fatturata). Vedi models/deepagentLog.js.

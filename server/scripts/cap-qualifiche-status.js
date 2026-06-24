@@ -4,7 +4,7 @@ const DeepagentLog = require('../models/deepagentLog');
 
 // Stesse costanti/logica di controllers/subs.js (cap mensile qualifiche).
 const CAP_QUALIFICHE_DEFAULT = 2500;
-const CAP_QUALIFICHE_OVERRIDE = { '2026-06': 3500 };
+const CAP_QUALIFICHE_OVERRIDE = { '2026-06': 3000 };
 const SCORED_OUTCOMES = [
   'scored_nexus_ok',
   'scored_nexus_failed',

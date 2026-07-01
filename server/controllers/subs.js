@@ -14,6 +14,8 @@ const moment = require('moment');
 const path = require('path');
 const { saveLead, saveLeadWithResult } = require('../helpers/nexus');
 const DeepagentLog = require('../models/deepagentLog');
+// Gestione lead senza campagna (form 02_BS_* Volume/Intent via Zapier) -> lead_donot_send.
+const { spostaInDoNotSend, spostaLeadSenzaCampagna } = require('../helpers/doNotSend');
 
 let lastUserReceivedLead = null;
 
@@ -256,6 +258,11 @@ const calculateAndAssignLeadsEveryDay = async () => {
     let leads = await LeadFacebook.find({
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
       $and: [
+        // Deve avere una CAMPAGNA valorizzata: i lead senza attribuzione (name vuoto/null,
+        // tipici dei form Meta "02_BS_*" Volume/Intent via Zapier) NON vanno assegnati ne'
+        // inviati a Nexus e vengono spostati a parte (vedi spostaLeadSenzaCampagna + lead_donot_send).
+        // Cosi' non entrano nemmeno nella finestra .limit(100) e non la intasano.
+        { name: { $regex: /\S/ } },
         { name: { $not: { $regex: /Meta Web/, $options: 'i' } } },
         { name: { $not: { $regex: /ESTETICA/, $options: 'i' } } },
         { name: { $not: { $regex: /GFU/, $options: 'i' } } }
@@ -335,6 +342,15 @@ const calculateAndAssignLeadsEveryDay = async () => {
           }
         }
 
+        // SAFETY NET: la query gia' esclude i lead senza campagna, ma se un lead con campagna
+        // valorizzata arrivasse comunque senza nome (full_name vuoto -> `nome` required fallirebbe),
+        // lo spostiamo in lead_donot_send invece di farlo intasare la coda.
+        if (!userData.first_name || String(userData.first_name).trim() === '') {
+          console.log(`Lead ${leadWithoutUser?._id} -> lead_donot_send: full_name vuoto | campagna: ${leadWithoutUser.name}`);
+          await spostaInDoNotSend(leadWithoutUser, 'empty_full_name');
+          continue;
+        }
+
         const newLead = new Lead({
           data: new Date(),
           nome: userData.first_name,
@@ -397,13 +413,13 @@ const calculateAndAssignLeadsEveryDay = async () => {
               dettaglio_status_negativo: null,
               numero_tentativi: null,
               // PROMO ABT+SB: campagna nuova con fonte dedicata (macro FUNNEL / micro PROMO ABT+SB).
-              macro_fonte: leadWithoutUser.name.toLowerCase().includes("promo abt+sb") ? "FUNNEL" : "Online",
-              micro_fonte: leadWithoutUser.name.toLowerCase().includes("promo abt+sb") ? "PROMO ABT+SB" :
-               leadWithoutUser.name.toLowerCase().includes("gold") ? "GOLD" :
-               leadWithoutUser.name.toLowerCase().includes("ambra") ? "AMBRA WEB" :
-               leadWithoutUser.name.toLowerCase().includes("meta web") ? "META WEB" :
-               leadWithoutUser.name.toLowerCase().includes("allineatori") ? "ALLINEATORI" :
-               leadWithoutUser.name.toLowerCase().includes("grandi riabilitazioni") ? "GRANDI RIABILITAZIONI" :
+              macro_fonte: (leadWithoutUser.name || '').toLowerCase().includes("promo abt+sb") ? "FUNNEL" : "Online",
+              micro_fonte: (leadWithoutUser.name || '').toLowerCase().includes("promo abt+sb") ? "PROMO ABT+SB" :
+               (leadWithoutUser.name || '').toLowerCase().includes("gold") ? "GOLD" :
+               (leadWithoutUser.name || '').toLowerCase().includes("ambra") ? "AMBRA WEB" :
+               (leadWithoutUser.name || '').toLowerCase().includes("meta web") ? "META WEB" :
+               (leadWithoutUser.name || '').toLowerCase().includes("allineatori") ? "ALLINEATORI" :
+               (leadWithoutUser.name || '').toLowerCase().includes("grandi riabilitazioni") ? "GRANDI RIABILITAZIONI" :
                "Nessuno",
               campagna: leadWithoutUser.name ? leadWithoutUser.name : "",
               adset: leadWithoutUser.adsets ? leadWithoutUser.adsets : "",
@@ -1392,6 +1408,13 @@ async function updateDataTimestampForAllLeads() {
 }
 
 //updateDataTimestampForAllLeads()
+
+// Sposta in lead_donot_send i grezzi senza campagna (form 02_BS_* Volume/Intent via Zapier),
+// cosi' non intasano l'assegnazione. Ogni 30 min, poco prima del giro di assegnazione.
+cron.schedule('5,35 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
+  spostaLeadSenzaCampagna();
+  console.log('Sweep lead senza campagna -> lead_donot_send');
+});
 
 cron.schedule('15,58,25,40 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *', () => {
   calculateAndAssignLeadsEveryDay();

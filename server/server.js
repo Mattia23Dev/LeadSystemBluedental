@@ -727,4 +727,6 @@ const port = process.env.PORT || 8000;
 require('./scripts/nexus-nightly-sync');
 // Register Deasoft nightly cron (token + esiti by id_lead).
 // require('./scripts/deasoft-nightly-sync');
+// Register Deasoft EventResult cron (agendazione diretta: esiti by id_deasoft, ambiente beta).
+require('./scripts/deasoft-event-sync');
 app.listen(port, () => console.log(`Server is running on port ${port}`));

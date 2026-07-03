@@ -154,6 +154,32 @@ const LeadSchema = new Schema({
         }
       ]
     },
+    // === Agendazione diretta Deasoft (servizio voce+WA esterno) ===
+    // true = la lead ha effettuato la prenotazione sul servizio di agendazione.
+    agendata: { type: Boolean, default: false },
+    // Momento in cui abbiamo ricevuto la conferma di agendazione (callback API).
+    agendataAt: Date,
+    // Raw payload dell'ultimo EventResult Deasoft (esiti post-appuntamento by id_deasoft).
+    deasoft_event: Schema.Types.Mixed,
+    deasoft_event_sync: {
+      lastSyncAt: Date,
+      lastError: String,
+      /** Ultimo id_deasoft usato per GET ?Type=EventResult. */
+      lastIdDeasoft: String,
+      // Esiti mappati best-effort dal payload EventResult (dipende dallo schema Deasoft).
+      presentato: Schema.Types.Mixed,
+      preventivato: Schema.Types.Mixed,
+      fatturato: Schema.Types.Mixed,
+      valore: Schema.Types.Mixed,
+      syncHistory: [
+        {
+          at: Date,
+          ok: Boolean,
+          error: String,
+          payload: Schema.Types.Mixed,
+        }
+      ]
+    },
     consent_marketing: String,
     recallIds: [],
     // Meta Web: invio a Nexus differito. true = creata ma NON ancora inviata a Nexus

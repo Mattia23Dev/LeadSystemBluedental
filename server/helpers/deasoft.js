@@ -23,6 +23,9 @@ function extractToken(payload) {
 
 const DEFAULT_TOKEN_URL = 'https://funnel-1032112960130.europe-west1.run.app/?Type=Token';
 const DEFAULT_RESULT_URL = 'https://funnel-1032112960130.europe-west1.run.app/?Type=Result';
+// Nuovo endpoint (beta) per gli esiti dell'agendazione diretta: GET ?Type=EventResult&id_deasoft=...
+// Distinto dal vecchio ?Type=Result (che usa id_leadsystem). Vedi mail Marica Ferri (Deasoft) 2 lug 2026.
+const DEFAULT_EVENT_RESULT_URL = 'https://funnelbeta-1032112960130.europe-west1.run.app/?Type=EventResult';
 
 /** Default credenziali Deasoft prod (sovrascrivibili con DEASOFT_USERNAME / DEASOFT_PASSWORD). */
 const DEFAULT_DEASOFT_USERNAME = 'fun.dea';
@@ -70,5 +73,33 @@ exports.getDeasoftLeadOutcome = async (idLeadSystem, token) => {
   }
 
   const response = await axios.get(leadUrl, config);
+  return response.data;
+};
+
+/**
+ * Esiti dell'agendazione diretta su Deasoft (presentato/non presentato, preventivato,
+ * fatturato, valore) tramite il nuovo endpoint EventResult, chiave id_deasoft.
+ * @param {string|number} idDeasoft — id paziente Deasoft (parametro id_deasoft).
+ * @param {string} token — bearer token Deasoft (da getDeasoftToken()).
+ */
+exports.getDeasoftEventResult = async (idDeasoft, token) => {
+  const eventUrl = process.env.DEASOFT_EVENT_RESULT_URL || DEFAULT_EVENT_RESULT_URL;
+
+  const config = {
+    params: {
+      id_deasoft: idDeasoft,
+    },
+    headers: {},
+  };
+
+  // Auth Bearer come per il vecchio endpoint Result (scelta confermata).
+  // Override opzionale: DEASOFT_EVENT_AUTH_MODE=query mette il token come query param.
+  if ((process.env.DEASOFT_EVENT_AUTH_MODE || 'bearer').toLowerCase() === 'query') {
+    config.params.token = token;
+  } else if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await axios.get(eventUrl, config);
   return response.data;
 };

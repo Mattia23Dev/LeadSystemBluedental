@@ -213,6 +213,62 @@ async function makeOutboundCall(number, city, name, type) {
   }
 }
 
+// === Agendazione diretta (Patient Journey) ===
+// Invia la lead al servizio esterno di agendazione (voce+WA), distinto dalla qualifica.
+// Usato SOLO per le Meta Web il cui nome campagna contiene "Patient Journey".
+const AGENDAZIONE_URL = process.env.AGENDAZIONE_URL || 'https://prequalifica-ai-workflow-production.up.railway.app/webhook';
+const AGENDAZIONE_API_KEY = process.env.AGENDAZIONE_API_KEY || 'whk_9RYl0B1YnsG-c1qaewOM1C1AeXDORyiLczZeGtfJjjs';
+const AGENDAZIONE_PROJECT_ID = process.env.AGENDAZIONE_PROJECT_ID || '525f869b-adf6-4ea7-9f30-cd115dff07da';
+
+// Il Meta form fornisce un unico "full_name": split sul primo spazio -> name / surname.
+function splitFullName(fullName) {
+  const parts = String(fullName || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { name: '', surname: '' };
+  if (parts.length === 1) return { name: parts[0], surname: '' };
+  return { name: parts[0], surname: parts.slice(1).join(' ') };
+}
+
+async function makeAgendazioneCall(fullName, phone, email, citta, source = 'facebook_ad') {
+  let number = String(phone || '').replace(/\s+/g, '');
+  // Stesso aggiustamento prefisso di makeOutboundCall.
+  if (!number.startsWith('+39')) {
+    if (number.startsWith('39') && number.length === 12) {
+      number = '+' + number;
+    } else if (number.length === 10) {
+      number = '+39' + number;
+    }
+  }
+
+  const { name, surname } = splitFullName(fullName);
+  const body = {
+    project_id: AGENDAZIONE_PROJECT_ID,
+    name,
+    surname,
+    phone: number,
+    email: email || '',
+    source,
+    dynamicVariables: {
+      surname,
+      name,
+      citta: citta || '',
+    },
+  };
+
+  try {
+    const response = await axios.post(AGENDAZIONE_URL, body, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': AGENDAZIONE_API_KEY,
+      },
+    });
+    console.log('[Agendazione] Chiamata ok:', response.data);
+    return { ok: true, data: response.data };
+  } catch (error) {
+    console.error('[Agendazione] Chiamata FALLITA:', error?.response?.data || error.message);
+    return { ok: false, error: error?.response?.data || error.message };
+  }
+}
+
 let lastFunctionExecuted = "calculateAndAssignLeadsEveryDay";
 
 //makeOutboundCall('+393409610597', 'Bari', 'Alessandro', 'bludental');
@@ -1098,7 +1154,22 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
 
             //await sendEmailLeadArrivati(user._id);
             console.log(currentHour)
-            if (capRaggiunto) {
+            // Patient Journey: la lead Meta Web va al servizio di AGENDAZIONE diretta
+            // (non al qualificatore). Discriminante = nome campagna. Oggi non esistono
+            // ancora campagne "Patient Journey", quindi questo ramo non scatta finche'
+            // non ne verra' creata una: comportamento attuale invariato.
+            const isPatientJourney = (leadWithoutUser.name || '').toLowerCase().includes('patient journey');
+            if (isPatientJourney) {
+              // === FLUSSO AGENDAZIONE DIRETTA (Patient Journey) ===
+              console.log("Patient Journey: invio ad agendazione per il lead " + newLead.email);
+              await makeAgendazioneCall(newLead.nome, newLead.numeroTelefono, newLead.email, newLead.città);
+              newLead.chiamato = true;
+              // Come le Meta Web: invio a Nexus DIFFERITO. L'esito/agendazione (id_deasoft)
+              // arrivera' via callback /webhook-agendazione-deasoft + cron esiti EventResult.
+              newLead.nexusDeferred = true;
+              await newLead.save();
+              console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome} (AGENDAZIONE Patient Journey)`);
+            } else if (capRaggiunto) {
               // === CAP QUALIFICHE RAGGIUNTO: invio DIRETTO a Nexus in real-time. ===
               // Si salta il qualificatore (niente makeOutboundCall => niente conversazione),
               // si invia subito a Nexus con punteggio nullo, come "META WEB" / "Da contattare".

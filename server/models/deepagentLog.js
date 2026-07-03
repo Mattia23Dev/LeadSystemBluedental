@@ -42,6 +42,10 @@ const DeepagentLogSchema = new Schema(
     // Esito elaborazione
     outcome: { type: String, index: true },
 
+    // Agendazione diretta Deasoft (callback /webhook-agendazione-deasoft)
+    idDeasoft: { type: String, default: null },
+    agendazione: Schema.Types.Mixed,
+
     // Invio a Nexus
     nexusPushAttempted: { type: Boolean, default: false },
     nexusPushOk: { type: Boolean, default: null },

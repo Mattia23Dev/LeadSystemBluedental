@@ -989,4 +989,116 @@ router.post('/webhook-elevenlabs-sql-errore-chiamata', async (req, res) => {
   }
 });
 
+// Trova la lead PIU' RECENTE con un dato telefono, in QUALSIASI formato, senza
+// vincolo di utente (l'agendazione diretta arriva da una campagna diversa, l'utente
+// non e' ancora fissato). Se DEASOFT_AGENDAZIONE_UTENTE e' impostato, filtra su quello.
+async function findLatestLeadByPhoneGlobal(rawPhone) {
+  if (!rawPhone) return null;
+  const utente = process.env.DEASOFT_AGENDAZIONE_UTENTE || null;
+  const base = utente ? { utente } : {};
+  const variants = generatePhoneVariants(String(rawPhone));
+
+  let lead = await Lead.findOne({
+    ...base,
+    numeroTelefono: { $in: variants },
+  }).sort({ dataTimestamp: -1 });
+  if (lead) return lead;
+
+  // Fallback: match sulle ultime 10 cifre (formati anomali con spazi interni, ecc.)
+  const digits = String(rawPhone).replace(/\D/g, '');
+  const last10 = digits.slice(-10);
+  if (last10.length >= 8) {
+    lead = await Lead.findOne({
+      ...base,
+      numeroTelefono: { $regex: last10 + '$' },
+    }).sort({ dataTimestamp: -1 });
+  }
+  return lead;
+}
+
+// === API: agendazione ufficiale completata (servizio voce+WA esterno) ===
+// Chiamata DOPO che la lead ha effettuato la prenotazione. Salva: agendata=true,
+// quando (appFissato), luogo/info utili e l'id_deasoft (id paziente Deasoft).
+// Il cron notturno deasoft-event-sync usa poi l'id_deasoft per allineare gli esiti.
+// Match lead: telefono, lead piu' recente con quel numero.
+router.post('/webhook-agendazione-deasoft', async (req, res) => {
+  const startedAt = Date.now();
+  const b = req.body || {};
+
+  // Campi accettati con alias (il contratto del servizio esterno e' in definizione).
+  const userPhone = b.user_phone || b.numero_telefono || b.Numero_Telefono || b.phone || b.telefono || null;
+  const idDeasoft = b.id_deasoft || b.idDeasoft || b.id_paziente || null;
+  const when = b.data_appuntamento || b.appFissato || b.Data_e_Orario || b.data_e_orario || b.when || null;
+  const centro = b.centro_scelto || b.Centro_Scelto || b.centro || b.luogo || null;
+  const note = b.note || b.info || b.summary || null;
+
+  const log = {
+    receivedAt: new Date(),
+    endpoint: '/webhook-agendazione-deasoft',
+    source: 'agendazione-deasoft',
+    payload: b,
+    userPhone,
+    idDeasoft: idDeasoft != null ? String(idDeasoft) : null,
+    centroScelto: centro,
+    agendazione: { when, centro, note },
+  };
+  const persist = async () => {
+    try {
+      log.processingMs = Date.now() - startedAt;
+      await DeepagentLog.create(log);
+    } catch (e) {
+      console.error('Errore salvataggio DeepagentLog (agendazione):', e?.message || e);
+    }
+  };
+
+  try {
+    console.log('[Agendazione Deasoft] payload:', b);
+
+    if (!userPhone) {
+      log.outcome = 'missing_phone';
+      await persist();
+      return res.status(400).json({ message: 'user_phone mancante' });
+    }
+
+    const lead = await findLatestLeadByPhoneGlobal(userPhone);
+
+    if (!lead) {
+      log.outcome = 'lead_not_found';
+      await persist();
+      console.log('[Agendazione Deasoft] Nessuna lead trovata per', userPhone);
+      return res.status(404).json({ message: 'Lead non trovata' });
+    }
+
+    log.matchedLeadId = lead._id;
+    log.matchedIdNexus = lead.idNexus || null;
+    log.esitoBefore = lead.esito;
+
+    if (idDeasoft != null && idDeasoft !== '') lead.idDeasoft = String(idDeasoft);
+    if (when) lead.appFissato = String(when);
+    if (centro) lead.luogo = centro;
+    if (note) lead.note = note;
+    lead.agendata = true;
+    lead.agendataAt = new Date();
+
+    await lead.save();
+
+    log.esitoAfter = lead.esito;
+    log.outcome = idDeasoft ? 'agendata_ok' : 'agendata_no_iddeasoft';
+    await persist();
+
+    console.log(`[Agendazione Deasoft] Lead ${lead._id} agendata | idDeasoft=${lead.idDeasoft || '-'} | when=${when || '-'}`);
+    return res.status(200).json({
+      message: 'Agendazione salvata',
+      leadId: lead._id,
+      idDeasoft: lead.idDeasoft || null,
+    });
+  } catch (error) {
+    log.outcome = 'handler_error';
+    log.handlerError = error?.message || String(error);
+    await persist();
+    console.error('[Agendazione Deasoft] Errore handler:', error);
+    return res.status(500).json({ message: 'Errore nel salvataggio agendazione' });
+  }
+});
+
 module.exports = router;

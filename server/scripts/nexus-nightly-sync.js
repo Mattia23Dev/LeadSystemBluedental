@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cron = require('node-cron');
 const Lead = require('../models/lead');
 const { getLeadById, listLeads } = require('../helpers/nexus');
+const { buildAppuntamento } = require('../helpers/appuntamento');
 
 let running = false;
 const DRY_RUN = false;
@@ -205,6 +206,9 @@ async function syncOnce() {
           }
         }
 
+        // Blocco appuntamento/no-show: append-only, non sovrascrive fissato ne' no show.
+        const { appuntamento, changes } = buildAppuntamento(localLead.appuntamento, nexusLead);
+
         const updateDoc = {
           nexus_lead: nexusLead,
           nexus_sync: {
@@ -213,16 +217,19 @@ async function syncOnce() {
             lastLeadStatus: nextLeadStatus,
             lastEsito: nextEsito,
             statusHistory: history,
-          }
+          },
+          appuntamento,
         };
+
+        const appLog = changes.length ? ` | appuntamento=[${changes.join(',')}]` : '';
 
         if (dryRun) {
           updated++;
-          console.log(`[Nexus sync][DRY_RUN] Update | mongoLeadId=${String(localLead._id)} | idNexus=${lastResolvedNexusId} | statusChanged=${statusChanged} | prevStatus=${prevLeadStatus ?? '-'} | nextStatus=${nextLeadStatus ?? '-'} | prevEsito=${prevEsito ?? '-'} | nextEsito=${nextEsito ?? '-'}`);
+          console.log(`[Nexus sync][DRY_RUN] Update | mongoLeadId=${String(localLead._id)} | idNexus=${lastResolvedNexusId} | statusChanged=${statusChanged} | prevStatus=${prevLeadStatus ?? '-'} | nextStatus=${nextLeadStatus ?? '-'} | prevEsito=${prevEsito ?? '-'} | nextEsito=${nextEsito ?? '-'}${appLog}`);
         } else {
           await Lead.updateOne({ _id: localLead._id }, { $set: updateDoc });
           updated++;
-          console.log(`[Nexus sync] Update | mongoLeadId=${String(localLead._id)} | idNexus=${lastResolvedNexusId} | statusChanged=${statusChanged} | lead_status=${nextLeadStatus ?? '-'} | esito=${nextEsito ?? '-'}`);
+          console.log(`[Nexus sync] Update | mongoLeadId=${String(localLead._id)} | idNexus=${lastResolvedNexusId} | statusChanged=${statusChanged} | lead_status=${nextLeadStatus ?? '-'} | esito=${nextEsito ?? '-'}${appLog}`);
         }
       }
     }

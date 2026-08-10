@@ -15,6 +15,7 @@ const Lead = require('../models/lead');
 const { saveLead, saveLeadWithResult, normalizePhoneForNexus, getLeadById: getLeadFromNexus } = require('../helpers/nexus');
 const LastLeadUser = require('../models/lastLeadUser');
 const DeepagentLog = require('../models/deepagentLog');
+const { normalizzaRisposta, applicaConferma } = require('../helpers/statoConferma');
 
 router.post("/get-leads-fb", getLeadsFb);
 router.post("/get-leads-manual", getLeadsManual);
@@ -1098,6 +1099,118 @@ router.post('/webhook-agendazione-deasoft', async (req, res) => {
     await persist();
     console.error('[Agendazione Deasoft] Errore handler:', error);
     return res.status(500).json({ message: 'Errore nel salvataggio agendazione' });
+  }
+});
+
+// === API: risposta del paziente al reminder appuntamento ===
+// Il qualificatore invia il template WhatsApp ("Ci sarai?" -> Si / No) e richiama
+// questo endpoint con la risposta. Noi scriviamo su Nexus il campo stato_conferma
+// (SI-CONFERMA / NO-CONFERMA), che NON tocca il campo campagna: l'origine della lead
+// resta leggibile per l'attribuzione delle performance.
+//
+// Body accettato (alias tolleranti, il contratto del qualificatore e' in definizione):
+//   risposta | conferma | answer | esito : "si" | "no" | true | false | testo libero
+//   user_phone | telefono | phone            (oppure)
+//   lead_id | leadId                         (oppure)
+//   id_nexus | idNexus
+//
+// Autenticazione: se e' impostata la env REMINDER_WEBHOOK_TOKEN, la richiesta deve
+// portare quel valore in header `x-webhook-token` (o Authorization: Bearer, o campo
+// `token` nel body). Senza la env l'endpoint resta aperto, come durante i test.
+router.post('/webhook-conferma-appuntamento', async (req, res) => {
+  const startedAt = Date.now();
+  const b = req.body || {};
+
+  const atteso = process.env.REMINDER_WEBHOOK_TOKEN || '';
+  if (atteso) {
+    const ricevuto =
+      req.get('x-webhook-token') ||
+      String(req.get('authorization') || '').replace(/^Bearer\s+/i, '') ||
+      b.token ||
+      '';
+    if (ricevuto !== atteso) {
+      console.warn('[Conferma appuntamento] token non valido da', req.ip);
+      return res.status(401).json({ message: 'Token non valido' });
+    }
+  }
+
+  const rispostaRaw = b.risposta ?? b.conferma ?? b.answer ?? b.esito ?? b.reply ?? b.value ?? null;
+  const userPhone = b.user_phone || b.numero_telefono || b.phone || b.telefono || null;
+  const leadId = b.lead_id || b.leadId || null;
+  const idNexus = b.id_nexus || b.idNexus || null;
+
+  const log = {
+    receivedAt: new Date(),
+    endpoint: '/webhook-conferma-appuntamento',
+    source: 'reminder-appuntamento',
+    payload: b,
+    userPhone,
+  };
+  const persist = async () => {
+    try {
+      log.processingMs = Date.now() - startedAt;
+      await DeepagentLog.create(log);
+    } catch (e) {
+      console.error('Errore salvataggio DeepagentLog (conferma):', e?.message || e);
+    }
+  };
+
+  try {
+    console.log('[Conferma appuntamento] payload:', b);
+
+    const risposta = normalizzaRisposta(rispostaRaw);
+    if (!risposta) {
+      log.outcome = 'risposta_non_riconosciuta';
+      await persist();
+      return res.status(400).json({ message: 'Risposta non riconosciuta', ricevuto: rispostaRaw });
+    }
+
+    // Match lead: id esplicito > idNexus > telefono (piu' recente).
+    let lead = null;
+    if (leadId && /^[a-f0-9]{24}$/i.test(String(leadId))) lead = await Lead.findById(leadId);
+    if (!lead && idNexus) lead = await Lead.findOne({ idNexus: String(idNexus) }).sort({ dataTimestamp: -1 });
+    if (!lead && userPhone) lead = await findLatestLeadByPhoneGlobal(userPhone);
+
+    if (!lead) {
+      log.outcome = 'lead_not_found';
+      await persist();
+      return res.status(404).json({ message: 'Lead non trovata' });
+    }
+
+    log.matchedLeadId = lead._id;
+    log.matchedIdNexus = lead.idNexus || null;
+    log.esitoBefore = lead.esito;
+
+    // dry_run=true: utile in fase di test del qualificatore, non scrive su Nexus.
+    const dryRun = b.dry_run === true || String(b.dry_run || '').toLowerCase() === 'true';
+    const esitoConferma = await applicaConferma(lead, risposta, { raw: b, dryRun });
+    log.dryRun = dryRun;
+
+    log.nexusPushAttempted = true;
+    log.nexusPayload = { id: lead.idNexus, stato_conferma: esitoConferma.statoConferma };
+    log.nexusPushOk = esitoConferma.ok;
+    log.nexusResponse = esitoConferma.nexus?.data;
+    log.nexusError = esitoConferma.nexus?.error;
+    log.outcome = esitoConferma.ok
+      ? `conferma_ok:${esitoConferma.statoConferma}`
+      : `conferma_fallita:${esitoConferma.motivo || 'errore_nexus'}`;
+    await persist();
+
+    console.log(`[Conferma appuntamento] Lead ${lead._id} | risposta=${risposta} | stato_conferma=${esitoConferma.statoConferma} | nexusOk=${esitoConferma.ok}`);
+
+    return res.status(esitoConferma.ok ? 200 : 502).json({
+      message: esitoConferma.ok ? 'Conferma registrata' : 'Conferma salvata in locale ma non inviata a Nexus',
+      leadId: lead._id,
+      risposta,
+      stato_conferma: esitoConferma.statoConferma,
+      appuntamento: lead?.appuntamento?.dataOra || null,
+    });
+  } catch (error) {
+    log.outcome = 'handler_error';
+    log.handlerError = error?.message || String(error);
+    await persist();
+    console.error('[Conferma appuntamento] Errore handler:', error);
+    return res.status(500).json({ message: 'Errore nel salvataggio della conferma' });
   }
 });
 

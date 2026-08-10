@@ -180,6 +180,55 @@ const LeadSchema = new Schema({
         }
       ]
     },
+    // === Appuntamento / No Show (campi Nexus rilasciati il 06/08/2026) ===
+    // Blocco dedicato e "append-only": l'esito fissato e il no show, una volta
+    // rilevati, NON vengono piu' sovrascritti dai sync successivi. Serve a tenere
+    // separati "quanti appuntamenti ho generato" e "quanti si sono davvero svolti".
+    // Popolato da scripts/nexus-nightly-sync.js via helpers/appuntamento.js.
+    appuntamento: {
+      // -- esito di fissazione, scritto una volta sola --
+      fissato: { type: Boolean, default: false },
+      fissatoAt: Date,
+      esitoFissatoOriginale: String,
+      leadStatusFissatoOriginale: String,
+      // -- esito corrente su Nexus (puo' cambiare) --
+      esitoCorrente: String,
+      leadStatusCorrente: String,
+      esitoCorrenteAt: Date,
+      // -- data/ora appuntamento (ISO 8601 con fuso, come da Nexus) --
+      dataOra: String,
+      dataOraTs: Date,
+      dataOraPrima: String,
+      dataOraPrimaAt: Date,
+      dataOraVistaAt: Date,
+      dataOraSparitaAt: Date,
+      spostamenti: [{ at: Date, da: String, a: String }],
+      // -- no show: sticky, mai azzerato --
+      noShow: { type: Boolean, default: false },
+      noShowAt: Date,
+      noShowValoreNexus: String,
+      noShowVistoAt: Date,
+      noShowRimossoAt: Date,
+      noShowStorico: [{ at: Date, valore: String, dataOra: String, esito: String }],
+      // -- stato_conferma cosi' come risulta su Nexus --
+      statoConfermaNexus: String,
+      // -- reminder + conferma appuntamento (flusso WhatsApp) --
+      reminder: {
+        inviatoAt: Date,
+        perDataOra: String,     // orario per cui e' stato mandato: se cambia, si rimanda
+        canale: String,
+        esitoInvio: String,     // ok | failed | skipped
+        errore: String,
+        tentativi: { type: Number, default: 0 },
+        risposta: String,       // SI | NO | NESSUNA
+        rispostaAt: Date,
+        rispostaRaw: Schema.Types.Mixed,
+        statoConferma: String,  // SI-CONFERMA | NO-CONFERMA
+        statoConfermaPushAt: Date,
+        statoConfermaPushOk: Boolean,
+        statoConfermaError: String,
+      },
+    },
     consent_marketing: String,
     recallIds: [],
     // Meta Web: invio a Nexus differito. true = creata ma NON ancora inviata a Nexus

@@ -15,6 +15,17 @@ const { Schema } = mongoose;
  *   scored_nexus_created      -> [v2] lead Meta Web differita CREATA su Nexus (PRE-META) con successo
  *   scored_nexus_create_failed-> [v2] lead Meta Web differita: CREATE su Nexus FALLITA
  *   handler_error             -> eccezione non gestita nel webhook
+ *
+ * Reminder appuntamento (cron reminder-appuntamenti + /webhook-conferma-appuntamento):
+ *   reminder_inviato          -> template WhatsApp richiesto al qualificatore con successo
+ *   reminder_fallito          -> chiamata al qualificatore in errore
+ *   reminder_non_configurato  -> REMINDER_API_URL assente: invio saltato
+ *   lead_locale_non_trovata   -> appuntamento su Nexus senza lead corrispondente in Mongo
+ *   telefono_mancante         -> lead senza numero: reminder impossibile
+ *   conferma_ok:<valore>      -> risposta paziente registrata e stato_conferma scritto su Nexus
+ *   conferma_fallita:<motivo> -> risposta registrata in locale ma non scritta su Nexus
+ *   risposta_non_riconosciuta -> payload di conferma senza un si/no interpretabile
+ *   no_conferma_inviata       -> nessuna risposta entro il cutoff: NO-CONFERMA su Nexus
  */
 const DeepagentLogSchema = new Schema(
   {
@@ -45,6 +56,9 @@ const DeepagentLogSchema = new Schema(
     // Agendazione diretta Deasoft (callback /webhook-agendazione-deasoft)
     idDeasoft: { type: String, default: null },
     agendazione: Schema.Types.Mixed,
+
+    // Reminder appuntamento / conferma (cron reminder-appuntamenti + webhook conferma)
+    dryRun: { type: Boolean, default: false },
 
     // Invio a Nexus
     nexusPushAttempted: { type: Boolean, default: false },

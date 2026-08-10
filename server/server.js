@@ -729,4 +729,9 @@ require('./scripts/nexus-nightly-sync');
 // require('./scripts/deasoft-nightly-sync');
 // Register Deasoft EventResult cron (agendazione diretta: esiti by id_deasoft, ambiente beta).
 require('./scripts/deasoft-event-sync');
+// Register agenda sync (allinea data/ora appuntamento e disdette nel mirror locale).
+require('./scripts/nexus-agenda-sync');
+// Register reminder appuntamenti (invio entro 72h + chiusura non risposte).
+// Si attiva solo con REMINDER_ENABLED=true; di default logga e resta spento.
+require('./scripts/reminder-appuntamenti');
 app.listen(port, () => console.log(`Server is running on port ${port}`));

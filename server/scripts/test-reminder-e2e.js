@@ -8,6 +8,7 @@
  *                   (quello che chiamera' il qualificatore), che scrive
  *                   stato_conferma su Nexus
  *   4) stato     -> stampa lead locale, blocco reminder e log delle chiamate ricevute
+ *   5) reset     -> azzera il blocco reminder per rifare il giro sulla stessa lead
  *
  * Esempi:
  *   node server/scripts/test-reminder-e2e.js crea --tel 3513257290 --nome Mattia --cognome Test --email mattia@test.com
@@ -241,6 +242,23 @@ async function conferma(o) {
   }
 }
 
+// ================================ RESET ===================================
+/**
+ * Azzera il blocco reminder della lead di test: serve a rifare il giro da capo
+ * (nuovo invio + nuova risposta) senza creare un'altra lead su Nexus.
+ * Non tocca `stato_conferma` gia' scritto su Nexus: lo sovrascrivera' la
+ * prossima conferma.
+ */
+async function reset(o) {
+  const lead = await trovaLead(o.tel);
+  if (!lead) return console.log('Lead di test non trovata');
+  console.log('reminder prima del reset:', JSON.stringify(lead.appuntamento?.reminder || null));
+  lead.appuntamento = lead.appuntamento || {};
+  lead.appuntamento.reminder = undefined;
+  await lead.save();
+  console.log(`Reminder azzerato su ${lead._id} | appuntamento=${lead.appuntamento?.dataOra || '-'}`);
+}
+
 // ================================ 4) STATO ================================
 async function stato(o) {
   const lead = await trovaLead(o.tel);
@@ -267,7 +285,8 @@ async function stato(o) {
     else if (cmd === 'reminder') await reminder(o);
     else if (cmd === 'conferma') await conferma(o);
     else if (cmd === 'stato') await stato(o);
-    else console.log('Comandi: crea | reminder | conferma | stato');
+    else if (cmd === 'reset') await reset(o);
+    else console.log('Comandi: crea | reminder | conferma | stato | reset');
   } finally {
     await mongoose.disconnect();
   }

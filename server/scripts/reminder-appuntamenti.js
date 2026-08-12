@@ -5,15 +5,22 @@
  *
  *  1) INVIO (default ogni ora)
  *     Legge dal MIRROR LOCALE (Lead.appuntamento, tenuto allineato da
- *     scripts/nexus-agenda-sync.js) tutti gli appuntamenti che cadono nelle prossime
- *     72 ore e chiede al qualificatore di mandare il template WhatsApp
- *     ("Ci sarai?" -> Si / No).
- *     La finestra e' "entro 72h", non "esattamente a 3 giorni": un appuntamento
- *     fissato o spostato con meno di 3 giorni di preavviso riceve comunque il
- *     reminder al primo giro utile, invece di essere saltato per sempre.
- *     Non reinvia due volte per lo stesso orario; se l'appuntamento viene spostato
- *     (reminder.perDataOra != data/ora corrente) il reminder riparte.
- *     Salta gli appuntamenti spariti dall'agenda Nexus (disdette).
+ *     scripts/nexus-agenda-sync.js) gli appuntamenti in arrivo e chiede al
+ *     qualificatore di mandare il template WhatsApp ("Ci sarai?" -> Si / No).
+ *
+ *     Due flussi distinti lato qualificatore, scelti in base a quanto manca:
+ *       stage '4g' -> appuntamento fra STAGE_1G_ORE e STAGE_4G_ORE (default 24h-96h)
+ *       stage '1g' -> appuntamento fra MIN_ORE e STAGE_1G_ORE   (default 3h-24h)
+ *     Lo stesso appuntamento riceve quindi fino a DUE reminder: il primo qualche
+ *     giorno prima, il secondo il giorno prima.
+ *
+ *     Le finestre sono "entro X ore", non "esattamente a N giorni": un appuntamento
+ *     fissato o spostato con poco preavviso riceve comunque il reminder al primo
+ *     giro utile (con il flusso giusto) invece di essere saltato per sempre.
+ *     Non reinvia due volte lo STESSO stage per lo stesso orario; se l'appuntamento
+ *     viene spostato (perDataOra != data/ora corrente) i reminder ripartono.
+ *     Salta gli appuntamenti spariti dall'agenda Nexus (disdette) e chi ha gia'
+ *     risposto NO (disdetta esplicita: inutile insistere il giorno prima).
  *
  *  2) CHIUSURA NON RISPOSTE (default ogni ora)
  *     Chi non ha risposto entro CUTOFF ore dall'appuntamento viene marcato
@@ -25,7 +32,10 @@
  *   REMINDER_ENABLED             abilita i cron (default false: si accende quando il
  *                                qualificatore e' collegato e i test sono ok)
  *   REMINDER_DRY_RUN             true = nessun invio, nessuna scrittura (default true)
- *   REMINDER_FINESTRA_ORE        quanto prima dell'appuntamento si puo' inviare (default 72)
+ *   REMINDER_STAGE_4G_ORE        limite alto: oltre queste ore dall'appuntamento non si
+ *                                invia nulla (default 96 = flusso "4 giorni")
+ *   REMINDER_STAGE_1G_ORE        soglia fra i due flussi: sotto queste ore si usa il
+ *                                flusso "1 giorno" (default 24)
  *   REMINDER_MIN_ORE             sotto queste ore dall'appuntamento non si invia piu'
  *                                (default 3: un reminder a ridosso e' inutile)
  *   REMINDER_CUTOFF_ORE          ore prima dell'appuntamento oltre le quali la mancata
@@ -44,7 +54,8 @@
  *     -> invio REALE alla sola lead con quel numero (--lead <idMongo> per l'id Mongo)
  *   node server/scripts/reminder-appuntamenti.js invio --limit 1 --live
  *     -> invio REALE al primo appuntamento in finestra
- *   --force  rimanda anche se il reminder per quell'orario e' gia' partito
+ *   --stage 4g|1g  forza il flusso invece di dedurlo dalle ore mancanti
+ *   --force  rimanda anche se quello stage per quell'orario e' gia' partito
  *   --live   e' rifiutato senza un filtro (--tel/--lead/--limit): niente invii di massa per errore
  *
  *   node server/scripts/reminder-appuntamenti.js chiusura
@@ -61,7 +72,9 @@ const { applicaConferma } = require('../helpers/statoConferma');
 
 const ENABLED = String(process.env.REMINDER_ENABLED || 'false').toLowerCase() === 'true';
 const DRY_RUN = String(process.env.REMINDER_DRY_RUN || 'true').toLowerCase() === 'true';
-const FINESTRA_ORE = Number(process.env.REMINDER_FINESTRA_ORE || 72);
+const STAGE_4G_ORE = Number(process.env.REMINDER_STAGE_4G_ORE || 96);
+const STAGE_1G_ORE = Number(process.env.REMINDER_STAGE_1G_ORE || 24);
+const FINESTRA_ORE = STAGE_4G_ORE;
 const MIN_ORE = Number(process.env.REMINDER_MIN_ORE || 3);
 const CUTOFF_ORE = Number(process.env.REMINDER_CUTOFF_ORE || 24);
 const ATTESA_ORE = Number(process.env.REMINDER_ATTESA_ORE || 6);
@@ -106,13 +119,27 @@ async function appuntamentiInFinestra(finestraOre = FINESTRA_ORE, minOre = MIN_O
     .limit(2000);
 }
 
-/** Il reminder per questo preciso orario e' gia' stato gestito? */
-function giaGestito(lead) {
+/**
+ * Quale flusso serve a questo appuntamento: '1g' se manca meno di STAGE_1G_ORE,
+ * altrimenti '4g'. Restituisce null se l'appuntamento e' fuori da ogni finestra.
+ */
+function stagePerAppuntamento(dataOraTs, ora = Date.now()) {
+  if (!dataOraTs) return null;
+  const oreMancanti = (new Date(dataOraTs).getTime() - ora) / 3600000;
+  if (oreMancanti < MIN_ORE || oreMancanti > STAGE_4G_ORE) return null;
+  return oreMancanti <= STAGE_1G_ORE ? '1g' : '4g';
+}
+
+/** Questo stage, per questo preciso orario, e' gia' partito? */
+function giaGestito(lead, stage) {
   const app = lead.appuntamento || {};
   const rem = app.reminder || {};
-  if (rem.perDataOra !== app.dataOra) return false; // orario nuovo o spostato: si rimanda
-  if (rem.esitoInvio === 'ok') return true;
-  if (rem.risposta) return true;
+  // Chi ha gia' detto NO ha disdetto: non lo si richiama il giorno prima.
+  if (rem.perDataOra === app.dataOra && rem.risposta === 'NO') return true;
+  const invii = Array.isArray(rem.invii) ? rem.invii : [];
+  if (invii.some((i) => i.stage === stage && i.perDataOra === app.dataOra && i.esito === 'ok')) return true;
+  // Retrocompatibilita' con gli invii fatti prima dello storico per stage.
+  if (!invii.length && rem.perDataOra === app.dataOra && rem.esitoInvio === 'ok' && (rem.stage || '4g') === stage) return true;
   return false;
 }
 
@@ -162,7 +189,7 @@ async function invioOnce(opts = {}) {
   try {
     const inFinestra = await appuntamentiInFinestra();
     const candidati = filtrato ? applicaFiltri(inFinestra, opts) : inFinestra;
-    console.log(`[Reminder invio] finestra ${MIN_ORE}h-${FINESTRA_ORE}h | appuntamenti in agenda=${inFinestra.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
+    console.log(`[Reminder invio] finestra ${MIN_ORE}h-${STAGE_4G_ORE}h (stage 1g sotto ${STAGE_1G_ORE}h) | appuntamenti in agenda=${inFinestra.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
 
     if (filtrato && candidati.length === 0) {
       console.log('[Reminder invio] Nessuna lead corrisponde ai filtri. Appuntamenti attualmente in finestra:');
@@ -182,7 +209,11 @@ async function invioOnce(opts = {}) {
       const app = lead.appuntamento || {};
       const rem = app.reminder || {};
 
-      if (!opts.force && giaGestito(lead)) { saltati++; continue; }
+      // Il flusso da usare dipende da quanto manca; --stage lo forza (test).
+      const stage = opts.stage || stagePerAppuntamento(app.dataOraTs);
+      if (!stage) { saltati++; continue; }
+
+      if (!opts.force && giaGestito(lead, stage)) { saltati++; continue; }
 
       const telefono = lead.numeroTelefono;
       if (!telefono) {
@@ -192,7 +223,7 @@ async function invioOnce(opts = {}) {
       }
 
       if (dryRun) {
-        console.log(`[Reminder invio][DRY_RUN] lead=${lead._id} tel=${telefono} app=${app.dataOra}`);
+        console.log(`[Reminder invio][DRY_RUN] lead=${lead._id} tel=${telefono} app=${app.dataOra} stage=${stage}`);
         inviati++;
         continue;
       }
@@ -201,21 +232,42 @@ async function invioOnce(opts = {}) {
         lead,
         dataOra: app.dataOra,
         nome: lead.nome,
+        cognome: lead.cognome,
         telefono,
-        centro: lead.luogo,
-        citta: lead.città,
-        idNexus: lead.idNexus,
+        email: lead.email,
+        stage,
       });
 
+      const esito = res.ok ? 'ok' : (res.skipped ? 'skipped' : 'failed');
+      const errore = res.ok ? null : JSON.stringify(res.error).slice(0, 500);
       const stessoOrario = rem.perDataOra === app.dataOra;
+      // Orario spostato: lo storico degli invii per il vecchio orario non serve piu'.
+      const invii = (stessoOrario && Array.isArray(rem.invii) ? rem.invii : []).slice(-9);
+
       lead.appuntamento.reminder = {
-        ...rem,
+        ...(rem.toObject ? rem.toObject() : rem),
         inviatoAt: new Date(),
         perDataOra: app.dataOra,
         canale: 'whatsapp',
-        esitoInvio: res.ok ? 'ok' : (res.skipped ? 'skipped' : 'failed'),
-        errore: res.ok ? null : JSON.stringify(res.error).slice(0, 500),
+        stage,
+        flowId: res.payload?.flow_id || null,
+        connectorLeadId: res.data?.lead_id || null,
+        connectorContactId: res.data?.contact_id || null,
+        connectorConversationId: res.data?.conversation_id || null,
+        esitoInvio: esito,
+        errore,
         tentativi: (rem.tentativi || 0) + 1,
+        invii: [...invii, {
+          at: new Date(),
+          stage,
+          flowId: res.payload?.flow_id || null,
+          perDataOra: app.dataOra,
+          esito,
+          errore,
+          connectorLeadId: res.data?.lead_id || null,
+          connectorContactId: res.data?.contact_id || null,
+          connectorConversationId: res.data?.conversation_id || null,
+        }],
         // Appuntamento spostato: la risposta data per il vecchio orario non vale piu'.
         risposta: stessoOrario ? rem.risposta : null,
         rispostaAt: stessoOrario ? rem.rispostaAt : null,
@@ -224,11 +276,12 @@ async function invioOnce(opts = {}) {
       await lead.save();
 
       if (res.ok) inviati++; else falliti++;
+      console.log(`[Reminder invio] lead=${lead._id} tel=${telefono} app=${app.dataOra} stage=${stage} esito=${esito}${res.ok ? '' : ` errore=${errore}`}`);
 
       await log({
         endpoint: 'cron:reminder-invio',
         source: 'reminder-appuntamento',
-        payload: { dataOra: app.dataOra, spostato: !stessoOrario },
+        payload: { dataOra: app.dataOra, stage, spostato: !stessoOrario },
         userPhone: telefono,
         matchedLeadId: lead._id,
         matchedIdNexus: lead.idNexus,
@@ -308,6 +361,7 @@ function parseArgs(argv) {
     if (a === '--tel' || a === '--telefono') opts.tel = argv[++i];
     else if (a === '--lead' || a === '--leadId') opts.leadId = argv[++i];
     else if (a === '--limit') opts.limit = Number(argv[++i]) || 0;
+    else if (a === '--stage') opts.stage = argv[++i];
     else if (a === '--force') opts.force = true;
     else if (a === '--live') opts.live = true;
   }
@@ -322,11 +376,11 @@ if (require.main === module) {
     .then(() => process.exit(0))
     .catch((e) => { console.error('[Reminder]', e?.message || e); process.exit(1); });
 } else if (ENABLED) {
-  console.log(`[Reminder] cron attivi | invio='${CRON_INVIO}' chiusura='${CRON_CHIUSURA}' | finestra=${MIN_ORE}h-${FINESTRA_ORE}h cutoff=${CUTOFF_ORE}h attesa=${ATTESA_ORE}h dryRun=${DRY_RUN}`);
+  console.log(`[Reminder] cron attivi | invio='${CRON_INVIO}' chiusura='${CRON_CHIUSURA}' | finestra=${MIN_ORE}h-${STAGE_4G_ORE}h (1g sotto ${STAGE_1G_ORE}h) cutoff=${CUTOFF_ORE}h attesa=${ATTESA_ORE}h dryRun=${DRY_RUN}`);
   cron.schedule(CRON_INVIO, () => invioOnce().catch((e) => console.error('[Reminder invio] schedule error:', e?.message || e)));
   cron.schedule(CRON_CHIUSURA, () => chiusuraOnce().catch((e) => console.error('[Reminder chiusura] schedule error:', e?.message || e)));
 } else {
   console.log('[Reminder] cron NON attivi (REMINDER_ENABLED != true)');
 }
 
-module.exports = { invioOnce, chiusuraOnce, appuntamentiInFinestra };
+module.exports = { invioOnce, chiusuraOnce, appuntamentiInFinestra, stagePerAppuntamento, giaGestito };

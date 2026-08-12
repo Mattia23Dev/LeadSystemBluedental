@@ -220,6 +220,26 @@ const LeadSchema = new Schema({
         esitoInvio: String,     // ok | failed | skipped
         errore: String,
         tentativi: { type: Number, default: 0 },
+        // Ultimo flusso qualificatore usato: '4g' (4 giorni prima) | '1g' (1 giorno prima).
+        stage: String,
+        flowId: String,
+        // Id restituiti dal connector del qualificatore sull'ultimo invio.
+        connectorLeadId: String,
+        connectorContactId: String,
+        connectorConversationId: String,
+        // Storico degli invii: serve per non rimandare due volte lo STESSO stage
+        // per lo stesso orario, pur mandando 4g e 1g allo stesso appuntamento.
+        invii: [{
+          at: Date,
+          stage: String,
+          flowId: String,
+          perDataOra: String,
+          esito: String,        // ok | failed | skipped
+          errore: String,
+          connectorLeadId: String,
+          connectorContactId: String,
+          connectorConversationId: String,
+        }],
         risposta: String,       // SI | NO | NESSUNA
         rispostaAt: Date,
         rispostaRaw: Schema.Types.Mixed,

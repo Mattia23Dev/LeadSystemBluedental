@@ -1108,11 +1108,17 @@ router.post('/webhook-agendazione-deasoft', async (req, res) => {
 // (SI-CONFERMA / NO-CONFERMA), che NON tocca il campo campagna: l'origine della lead
 // resta leggibile per l'attribuzione delle performance.
 //
-// Body accettato (alias tolleranti, il contratto del qualificatore e' in definizione):
-//   risposta | conferma | answer | esito : "si" | "no" | true | false | testo libero
+// Body accettato (alias tolleranti):
+//   risposta | conferma | answer | esito | esito_conferma | reply | value
+//     -> "si" | "no" | true | false | testo libero ("Si dovrei esserci")
+//     `esito_conferma` e' il nome della variabile usata dal qualificatore, che la
+//     valorizza "Si - Conferma" / "No - Disdetta": il parsing tollerante la copre.
 //   user_phone | telefono | phone            (oppure)
 //   lead_id | leadId                         (oppure)
 //   id_nexus | idNexus
+//
+// `lead_id`: il qualificatore riceve il NOSTRO id nella richiesta di invio e lo tiene
+// in vars.lead_id, quindi puo' rimandarcelo e il match e' certo.
 //
 // Autenticazione: se e' impostata la env REMINDER_WEBHOOK_TOKEN, la richiesta deve
 // portare quel valore in header `x-webhook-token` (o Authorization: Bearer, o campo
@@ -1134,7 +1140,7 @@ router.post('/webhook-conferma-appuntamento', async (req, res) => {
     }
   }
 
-  const rispostaRaw = b.risposta ?? b.conferma ?? b.answer ?? b.esito ?? b.reply ?? b.value ?? null;
+  const rispostaRaw = b.risposta ?? b.conferma ?? b.esito_conferma ?? b.stato_conferma ?? b.answer ?? b.esito ?? b.reply ?? b.value ?? null;
   const userPhone = b.user_phone || b.numero_telefono || b.phone || b.telefono || null;
   const leadId = b.lead_id || b.leadId || null;
   const idNexus = b.id_nexus || b.idNexus || null;

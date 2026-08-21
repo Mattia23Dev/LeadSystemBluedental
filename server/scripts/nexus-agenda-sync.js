@@ -43,7 +43,10 @@ let running = false;
 
 const SELECT =
   't.id, t.id_lead_leadsystem, t.telefono, t.nominativo, t.data_ora_appuntamento, ' +
-  't.esito, t.lead_status, t.no_show, t.stato_conferma, t.citta, t.centro_bludental';
+  't.esito, t.lead_status, t.no_show, t.stato_conferma, t.citta, t.centro_bludental, ' +
+  // Campi consegnati da NextUp il 21/08/2026: il centro serve a delimitare il pilota
+  // ai 15 centri e a compilare il messaggio; il mancato appuntamento serve alla Fase 3.
+  't.id_centro_bludental, t.indirizzo_completo_centro_bludental, t.data_ora_mancato_appuntamento';
 
 async function connetti() {
   if (mongoose.connection.readyState === 1) return false;
@@ -78,7 +81,7 @@ async function syncOnce() {
     const visti = new Set();
     let aggiornate = 0;
     let senzaLead = 0;
-    const conteggi = { spostamento: 0, no_show: 0, data_ora_prima: 0, stato_conferma_nexus: 0 };
+    const conteggi = { spostamento: 0, no_show: 0, data_ora_prima: 0, stato_conferma_nexus: 0, centro: 0, cambio_centro: 0, no_show_data_ora: 0 };
 
     for (const r of righe) {
       const id = r.id_lead_leadsystem;
@@ -95,6 +98,10 @@ async function syncOnce() {
         no_show: r.no_show,
         data_ora_appuntamento: r.data_ora_appuntamento,
         stato_conferma: r.stato_conferma,
+        centro_bludental: r.centro_bludental,
+        id_centro_bludental: r.id_centro_bludental,
+        indirizzo_completo_centro_bludental: r.indirizzo_completo_centro_bludental,
+        data_ora_mancato_appuntamento: r.data_ora_mancato_appuntamento,
       });
       if (!changes.length && locale.idNexus === r.id) continue;
 
@@ -130,6 +137,7 @@ async function syncOnce() {
     console.log(
       `[Agenda sync] Fine | righeNexus=${righe.length} | aggiornate=${aggiornate} | senzaLead=${senzaLead} | ` +
       `spostamenti=${conteggi.spostamento} noShowNuovi=${conteggi.no_show} nuoviOrari=${conteggi.data_ora_prima} | ` +
+      `centri=${conteggi.centro} cambiCentro=${conteggi.cambio_centro} noShowDataOra=${conteggi.no_show_data_ora} | ` +
       `spariti/disdette=${spariti.length} | dryRun=${DRY_RUN}`
     );
   } catch (e) {

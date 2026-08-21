@@ -68,6 +68,7 @@ const cron = require('node-cron');
 const Lead = require('../models/lead');
 const DeepagentLog = require('../models/deepagentLog');
 const { inviaReminder, isConfigurato } = require('../helpers/qualificatore');
+const { isPilota, variabiliMessaggio } = require('../config/centri-bludental');
 const { applicaConferma } = require('../helpers/statoConferma');
 
 const ENABLED = String(process.env.REMINDER_ENABLED || 'false').toLowerCase() === 'true';
@@ -78,6 +79,9 @@ const FINESTRA_ORE = STAGE_4G_ORE;
 const MIN_ORE = Number(process.env.REMINDER_MIN_ORE || 3);
 const CUTOFF_ORE = Number(process.env.REMINDER_CUTOFF_ORE || 24);
 const ATTESA_ORE = Number(process.env.REMINDER_ATTESA_ORE || 6);
+// Perimetro del pilota: si scrive solo ai pazienti dei 15 centri (Rev. 2.0 §3.2).
+// Metterlo a false apre l'invio a tutta la rete: da fare solo su decisione di Bludental.
+const SOLO_PILOTA = String(process.env.REMINDER_SOLO_PILOTA || 'true').toLowerCase() === 'true';
 const CRON_INVIO = process.env.REMINDER_CRON || '5 * * * *';
 const CRON_CHIUSURA = process.env.REMINDER_CLOSE_CRON || '35 * * * *';
 const MAX_PER_RUN = Number(process.env.REMINDER_MAX_PER_RUN || 300);
@@ -117,6 +121,29 @@ async function appuntamentiInFinestra(finestraOre = FINESTRA_ORE, minOre = MIN_O
   })
     .sort({ 'appuntamento.dataOraTs': 1 })
     .limit(2000);
+}
+
+/**
+ * Divide i candidati per perimetro:
+ *   dentro        centro nei 15 del pilota E censito in anagrafica -> si invia
+ *   fuoriPerimetro centro valido ma non nel pilota                 -> non si invia
+ *   senzaCentro   id centro assente o sconosciuto                  -> non si invia,
+ *                 perche' senza citta' e indirizzo il messaggio non e' compilabile
+ *
+ * Con SOLO_PILOTA=false resta attivo il solo controllo sull'anagrafica: si puo'
+ * allargare la rete, non si puo' mandare un messaggio senza indirizzo.
+ */
+function dividiPerPerimetro(leads) {
+  const dentro = [];
+  const fuoriPerimetro = [];
+  const senzaCentro = [];
+  for (const l of leads) {
+    const centroId = l?.appuntamento?.centroId;
+    if (!variabiliMessaggio(centroId)) { senzaCentro.push(l); continue; }
+    if (SOLO_PILOTA && !isPilota(centroId)) { fuoriPerimetro.push(l); continue; }
+    dentro.push(l);
+  }
+  return { dentro, fuoriPerimetro, senzaCentro };
 }
 
 /**
@@ -188,8 +215,13 @@ async function invioOnce(opts = {}) {
 
   try {
     const inFinestra = await appuntamentiInFinestra();
-    const candidati = filtrato ? applicaFiltri(inFinestra, opts) : inFinestra;
-    console.log(`[Reminder invio] finestra ${MIN_ORE}h-${STAGE_4G_ORE}h (stage 1g sotto ${STAGE_1G_ORE}h) | appuntamenti in agenda=${inFinestra.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
+    const perimetro = dividiPerPerimetro(inFinestra);
+    const candidati = filtrato ? applicaFiltri(perimetro.dentro, opts) : perimetro.dentro;
+    console.log(`[Reminder invio] finestra ${MIN_ORE}h-${STAGE_4G_ORE}h (stage 1g sotto ${STAGE_1G_ORE}h) | appuntamenti in agenda=${inFinestra.length} | nel pilota=${perimetro.dentro.length} | fuori perimetro=${perimetro.fuoriPerimetro.length} | senza centro=${perimetro.senzaCentro.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''} | soloPilota=${SOLO_PILOTA} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
+    // Un appuntamento senza centro e' un buco di dato, non una scelta: va visto.
+    for (const l of perimetro.senzaCentro.slice(0, 10)) {
+      console.log(`[Reminder invio] SALTATA senza centro | lead=${l._id} | app=${l?.appuntamento?.dataOra} | centroId=${l?.appuntamento?.centroId || '-'}`);
+    }
 
     if (filtrato && candidati.length === 0) {
       console.log('[Reminder invio] Nessuna lead corrisponde ai filtri. Appuntamenti attualmente in finestra:');
@@ -223,7 +255,8 @@ async function invioOnce(opts = {}) {
       }
 
       if (dryRun) {
-        console.log(`[Reminder invio][DRY_RUN] lead=${lead._id} tel=${telefono} app=${app.dataOra} stage=${stage}`);
+        const c = variabiliMessaggio(app.centroId);
+        console.log(`[Reminder invio][DRY_RUN] lead=${lead._id} tel=${telefono} app=${app.dataOra} stage=${stage} centro=${c?.nome || '-'} (${c?.citta || '-'}, ${c?.indirizzo || '-'})`);
         inviati++;
         continue;
       }
@@ -236,6 +269,9 @@ async function invioOnce(opts = {}) {
         telefono,
         email: lead.email,
         stage,
+        // Citta' e indirizzo vengono dall'anagrafica, non dalla stringa concatenata
+        // di Nexus: sono due variabili distinte del template.
+        centro: variabiliMessaggio(app.centroId),
       });
 
       const esito = res.ok ? 'ok' : (res.skipped ? 'skipped' : 'failed');

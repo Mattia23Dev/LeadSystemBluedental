@@ -94,11 +94,19 @@ function splitNome(nomeCompleto, cognomeEsplicito) {
   return { name: parti[0], surname: parti.slice(1).join(' ') };
 }
 
-/** Payload del connector. `stage` sceglie il flusso ('4g' | '1g'). */
-function buildPayload({ lead, dataOra, nome, cognome, telefono, email, stage = '4g', source }) {
+/**
+ * Payload del connector. `stage` sceglie il flusso ('4g' | '1g').
+ * `centro` e' l'oggetto restituito da config/centri-bludental.variabiliMessaggio():
+ * citta' e indirizzo viaggiano come due variabili distinte, perche' i testi Bludental
+ * li usano separati ("presso BluDental a [Citta] in [Indirizzo]").
+ */
+function buildPayload({ lead, dataOra, nome, cognome, telefono, email, stage = '4g', source, centro }) {
   const f = formattaItaliano(dataOra);
   const { name, surname } = splitNome(nome ?? lead?.nome, cognome ?? lead?.cognome);
   return {
+    citta_centro: centro?.citta || '',
+    indirizzo_centro: centro?.indirizzo || '',
+    nome_centro: centro?.nome || '',
     project_id: PROJECT_ID,
     name,
     surname,

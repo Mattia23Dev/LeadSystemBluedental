@@ -6,6 +6,10 @@
  *   - data_ora_appuntamento ISO 8601 con fuso esplicito (es. 2026-08-14T15:30:00+02:00)
  *   - stato_conferma        testo libero, lo scriviamo NOI (SI-CONFERMA / NO-CONFERMA)
  *
+ * Dal 21/08/2026 (consegna NextUp) si aggiungono:
+ *   - centro_bludental / id_centro_bludental / indirizzo_completo_centro_bludental
+ *   - data_ora_mancato_appuntamento  orario dell'appuntamento non onorato
+ *
  * Requisito nostro: l'esito "fissato" e il no show devono restare tracciati in campi
  * DEDICATI e NON sovrascrivibili, cosi' se in un sync successivo Nexus cambia esito
  * (ricontatto, nuovo appuntamento, lead persa) non perdiamo lo storico:
@@ -110,7 +114,40 @@ function buildAppuntamento(prev, nexusLead, now = new Date()) {
     changes.push('data_ora_sparita');
   }
 
+  // --- 2b) centro dell'appuntamento (campi Nexus del 21/08/2026) -----------
+  // Il centro segue l'appuntamento: se il paziente viene spostato su un'altra sede
+  // il valore cambia, e il messaggio va ricomposto con il nuovo indirizzo.
+  const centroId = nexusLead?.id_centro_bludental ? String(nexusLead.id_centro_bludental).trim() : null;
+  const centroNome = nexusLead?.centro_bludental || null;
+  if (centroId || centroNome) {
+    if (centroId && app.centroId !== centroId) {
+      if (app.centroId) {
+        app.cambiCentro = pushLimited(app.cambiCentro, { at: now, da: app.centroId, a: centroId });
+        changes.push('cambio_centro');
+      } else {
+        // Prima volta che vediamo il centro di questo appuntamento.
+        changes.push('centro');
+      }
+      if (!app.centroPrimoId) app.centroPrimoId = centroId;
+    }
+    app.centroId = centroId;
+    app.centroNome = centroNome;
+    // Stringa concatenata di Nexus: la teniamo come riferimento, ma citta' e indirizzo
+    // del messaggio vengono dall'anagrafica (config/centri-bludental.js).
+    app.centroIndirizzoNexus = nexusLead?.indirizzo_completo_centro_bludental || null;
+    app.centroVistoAt = now;
+  }
+
   // --- 3) no show: sticky, mai azzerato ------------------------------------
+  // Dal 21/08/2026 Nexus espone anche l'orario dell'appuntamento mancato: e' il dato
+  // che rende il no show riferibile a UN appuntamento e non al paziente (Rev. 2.0 §5.3.1).
+  const noShowDataOra = nexusLead?.data_ora_mancato_appuntamento || null;
+  if (noShowDataOra && app.noShowDataOra !== noShowDataOra) {
+    app.noShowDataOra = noShowDataOra;
+    app.noShowDataOraTs = parseDataOra(noShowDataOra);
+    changes.push('no_show_data_ora');
+  }
+
   if (noShow) {
     if (!app.noShow) {
       app.noShow = true;

@@ -203,8 +203,20 @@ const LeadSchema = new Schema({
       dataOraVistaAt: Date,
       dataOraSparitaAt: Date,
       spostamenti: [{ at: Date, da: String, a: String }],
+      // -- centro dell'appuntamento (campi Nexus del 21/08/2026) --
+      // centroId = id_centro_bludental (id Deasoft): chiave dell'anagrafica in
+      // config/centri-bludental.js, da cui prendiamo citta' e indirizzo del messaggio.
+      centroId: String,
+      centroPrimoId: String,
+      centroNome: String,
+      centroIndirizzoNexus: String,
+      centroVistoAt: Date,
+      cambiCentro: [{ at: Date, da: String, a: String }],
       // -- no show: sticky, mai azzerato --
       noShow: { type: Boolean, default: false },
+      // orario dell'appuntamento non onorato (data_ora_mancato_appuntamento)
+      noShowDataOra: String,
+      noShowDataOraTs: Date,
       noShowAt: Date,
       noShowValoreNexus: String,
       noShowVistoAt: Date,

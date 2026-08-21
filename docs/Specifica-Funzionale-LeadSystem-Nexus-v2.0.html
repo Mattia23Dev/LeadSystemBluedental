@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Specifica Funzionale LeadSystem ↔ Nexus · Rev. 2.0</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm 20mm 14mm; }
+
+  :root{
+    --ink:#111111;
+    --ink-soft:#3d3d3d;
+    --gray:#6f6f6f;
+    --line:#d8d8d8;
+    --wash:#f4f4f4;
+    --wash2:#fbfbf6;
+    --yellow:#ffd400;
+    --yellow-soft:#fff6b8;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+  body{
+    margin:0;
+    font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size:9.4pt;
+    line-height:1.5;
+    color:var(--ink);
+  }
+
+  p{ margin:0 0 7pt; }
+  strong{ font-weight:700; }
+  em{ font-style:italic; }
+
+  /* ---------- copertina ---------- */
+  .cover{
+    background:#000;
+    color:#fff;
+    padding:22mm 14mm 16mm 14mm;
+    margin-bottom:9mm;
+  }
+  .brand{
+    font-size:21pt;
+    font-weight:700;
+    letter-spacing:.5pt;
+    margin:0 0 13mm;
+  }
+  .brand .y{ color:var(--yellow); }
+  .kicker{
+    font-size:7pt;
+    letter-spacing:2.6pt;
+    color:var(--yellow);
+    text-transform:uppercase;
+    margin:0 0 4mm;
+  }
+  .cover h1{
+    font-size:25pt;
+    font-weight:700;
+    letter-spacing:.6pt;
+    margin:0 0 5mm;
+    line-height:1.12;
+  }
+  .cover .sub{
+    font-size:10pt;
+    color:#c9c9c9;
+    line-height:1.45;
+    margin:0;
+  }
+  .rule{
+    width:34mm;
+    height:2.6pt;
+    background:var(--yellow);
+    margin-top:8mm;
+  }
+
+  /* ---------- tabella metadati ---------- */
+  table.meta{
+    width:100%;
+    border-collapse:collapse;
+    margin-bottom:9mm;
+  }
+  table.meta td{
+    border-bottom:.5pt solid var(--line);
+    padding:3.4mm 0;
+    vertical-align:top;
+  }
+  table.meta td.k{
+    width:31mm;
+    font-size:6.8pt;
+    letter-spacing:1.5pt;
+    text-transform:uppercase;
+    color:var(--gray);
+    padding-right:5mm;
+    padding-top:4.1mm;
+  }
+
+  /* ---------- sezioni ---------- */
+  h2.sec{
+    border-top:2.2pt solid #000;
+    padding-top:3.2mm;
+    margin:9mm 0 5mm;
+    font-size:12.4pt;
+    font-weight:700;
+    letter-spacing:.3pt;
+    text-transform:uppercase;
+  }
+  h2.sec .n{ color:var(--yellow); margin-right:2.6mm; }
+  h2.sec.phase{ border-top-color:var(--yellow); border-top-width:3.4pt; }
+
+  h3{
+    font-size:9.4pt;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.7pt;
+    margin:6.5mm 0 2.6mm;
+    padding-left:5mm;
+    position:relative;
+  }
+  h3::before{
+    content:"";
+    position:absolute;
+    left:0; top:1.1mm;
+    width:2.4mm; height:2.4mm;
+    background:var(--yellow);
+  }
+
+  h4{
+    font-size:9pt;
+    font-weight:700;
+    margin:5mm 0 2mm;
+  }
+
+  /* ---------- badge ---------- */
+  .badge{
+    display:inline-block;
+    font-size:6.4pt;
+    font-weight:700;
+    letter-spacing:1.1pt;
+    text-transform:uppercase;
+    padding:.9mm 2.1mm;
+    background:var(--yellow);
+    color:#000;
+    vertical-align:middle;
+    margin-left:2mm;
+    white-space:nowrap;
+  }
+  .badge.dark{ background:#000; color:#fff; }
+  .badge.open{ background:#000; color:var(--yellow); }
+
+  /* ---------- codice ---------- */
+  code{
+    font-family:"Consolas","Courier New",monospace;
+    font-size:8.4pt;
+    background:var(--wash);
+    padding:.3mm 1.1mm;
+    white-space:nowrap;
+  }
+  pre{
+    font-family:"Consolas","Courier New",monospace;
+    font-size:7.9pt;
+    line-height:1.45;
+    background:var(--wash);
+    border-left:2.2pt solid #000;
+    padding:3mm 3.4mm;
+    margin:0 0 7pt;
+    white-space:pre-wrap;
+    page-break-inside:avoid;
+  }
+
+  /* ---------- callout ---------- */
+  .call{
+    border-left:2.6pt solid var(--yellow);
+    background:var(--wash);
+    padding:3.4mm 4mm 1.4mm;
+    margin:4mm 0 5mm;
+    page-break-inside:avoid;
+  }
+  .call.dark{ border-left-color:#000; }
+  .call .t{
+    font-weight:700;
+    text-transform:uppercase;
+    font-size:7.4pt;
+    letter-spacing:1pt;
+    margin:0 0 2.2mm;
+  }
+  .box{
+    border:.6pt solid var(--line);
+    background:var(--wash2);
+    padding:3.4mm 4mm 1.4mm;
+    margin:4mm 0 5mm;
+    page-break-inside:avoid;
+  }
+
+  /* ---------- messaggio WhatsApp ---------- */
+  .msg{
+    border:.6pt solid var(--line);
+    border-left:2.6pt solid var(--gray);
+    padding:3mm 4mm 1.4mm;
+    margin:3mm 0 4mm;
+    font-size:8.9pt;
+    page-break-inside:avoid;
+  }
+  .msg .h{
+    font-weight:700;
+    font-size:7.4pt;
+    letter-spacing:1pt;
+    text-transform:uppercase;
+    color:var(--gray);
+    margin:0 0 2mm;
+  }
+  .msg .body{ white-space:pre-wrap; line-height:1.5; }
+
+  /* ---------- tabelle dati ---------- */
+  table.d{
+    width:100%;
+    border-collapse:collapse;
+    margin:3mm 0 5mm;
+    font-size:8.3pt;
+  }
+  table.d thead th{
+    background:#000;
+    color:#fff;
+    text-align:left;
+    font-size:6.6pt;
+    letter-spacing:1.2pt;
+    text-transform:uppercase;
+    padding:2.4mm 2.4mm;
+    font-weight:700;
+    line-height:1.32;
+  }
+  table.d td{
+    border-bottom:.5pt solid var(--line);
+    padding:2.4mm 2.4mm;
+    vertical-align:top;
+    line-height:1.42;
+  }
+  table.d tr{ page-break-inside:avoid; }
+  table.d tr.hl td{ background:var(--yellow-soft); }
+  table.d td.c{ text-align:center; }
+  .nw{ white-space:nowrap; }
+
+  ul,ol{ margin:0 0 7pt; padding-left:5.2mm; }
+  li{ margin-bottom:1.7mm; }
+  li > ul, li > ol{ margin-top:1.7mm; }
+
+  .avoid{ page-break-inside:avoid; }
+  .newpage{ page-break-before:always; }
+
+  /* ---------- contatti ---------- */
+  .contacts{
+    background:#000;
+    color:#fff;
+    padding:9mm 12mm;
+    margin-top:10mm;
+  }
+  .contacts .kicker{ margin-bottom:6mm; }
+  .contacts .cols{ display:flex; gap:16mm; }
+  .contacts .col{ flex:1; }
+  .contacts .lbl{
+    font-size:6.6pt;
+    letter-spacing:1.6pt;
+    text-transform:uppercase;
+    color:#9a9a9a;
+    margin:0 0 3mm;
+  }
+  .contacts .nm{ font-weight:700; font-size:9.6pt; margin:0; }
+  .contacts .rl{ color:#b9b9b9; margin:0 0 4mm; font-size:8.6pt; }
+
+  /* ---------- piè di pagina finale ---------- */
+  .foot{
+    border-top:.5pt solid var(--line);
+    margin-top:8mm;
+    padding-top:2.2mm;
+    font-size:6.4pt;
+    letter-spacing:1.3pt;
+    text-transform:uppercase;
+    color:var(--gray);
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ COPERTINA ============ -->
+<div class="cover">
+  <p class="brand"><span>FU</span><span class="y">NN</span><span>EL.</span></p>
+  <p class="kicker">Specifica funzionale · Integrazione API · Rev. 2.0</p>
+  <h1>LEADSYSTEM &#8596; NEXUS</h1>
+  <p class="sub">Progetto pilota Bludental — attivazione in tre fasi<br>
+  Recall appuntamento · Reingaggio contatti non rispondenti · Recupero No Show</p>
+  <div class="rule"></div>
+</div>
+
+<table class="meta">
+  <tr><td class="k">Committente</td><td>Bludental / Funnel Consulting</td></tr>
+  <tr><td class="k">Fornitore</td><td>NextUp — piattaforma Nexus</td></tr>
+  <tr><td class="k">Oggetto</td><td>Requisiti di integrazione necessari ad attivare i tre progetti del <em>Progetto Pilota MKT</em> Bludental, ordinati per priorità di rilascio</td></tr>
+  <tr><td class="k">Riferimenti</td><td>Specifica funzionale Rev. 1.2 del 06/08/2026 — che il presente documento <strong>sostituisce integralmente</strong> · Documento <em>Progetto Pilota MKT</em> Bludental (v3) · Rilascio NextUp del 05/08/2026 · Verifiche tecniche Funnel del 06/08/2026 e del 12/08/2026</td></tr>
+  <tr><td class="k">Revisione</td><td><strong>Rev. 2.0</strong> — riorganizza i requisiti nelle tre fasi del progetto pilota, recepisce i desiderata Bludental (sequenza di recall a tre messaggi, reingaggio NR, recupero No Show) e registra un <strong>nuovo blocco critico rilevato il 12/08/2026</strong> (§1.3)</td></tr>
+  <tr><td class="k">Data</td><td>12 agosto 2026</td></tr>
+  <tr><td class="k">Priorità</td><td><span class="badge">Fase 1 — alta</span> Le fasi 2 e 3 seguono. Il §1.3 è bloccante per tutte.</td></tr>
+</table>
+
+<!-- ============ 00 ============ -->
+<h2 class="sec"><span class="n">/00</span> STRUTTURA DEL DOCUMENTO</h2>
+
+<p>Bludental ha definito tre progetti di comunicazione automatica al paziente via WhatsApp. Sono indipendenti fra loro e vanno attivati in sequenza, secondo la priorità indicata dal cliente. Questo documento li tratta come <strong>tre fasi</strong> e, per ciascuna, elenca soltanto ciò che serve da Nexus perché la fase possa partire.</p>
+
+<table class="d">
+  <thead><tr><th style="width:13mm">Fase</th><th style="width:38mm">Progetto</th><th>Obiettivo</th><th style="width:52mm">Dipendenza principale da Nexus</th></tr></thead>
+  <tbody>
+    <tr class="hl">
+      <td><strong>1</strong><br><span class="nw">(§03)</span></td>
+      <td><strong>Recall appuntamento</strong><br>Promemoria e conferma</td>
+      <td>Ridurre i No Show: promemoria e richiesta di conferma al paziente prima della visita. <strong>Obiettivo primario del cliente.</strong></td>
+      <td>Valorizzazione dei campi appuntamento sulle lead nuove (§1.3) e <strong>centro + indirizzo</strong> dell'appuntamento (§3.4.2)</td>
+    </tr>
+    <tr>
+      <td><strong>2</strong><br><span class="nw">(§04)</span></td>
+      <td><strong>Reingaggio NR</strong><br>Contatti non rispondenti</td>
+      <td>Recuperare le richieste di prima visita che il contact center non riesce a raggiungere telefonicamente.</td>
+      <td><strong>Webhook di notifica</strong> sul passaggio dell'esito a <em>Non risponde</em> (§2.6) e rientro della lead in coda di lavorazione (§4.3)</td>
+    </tr>
+    <tr>
+      <td><strong>3</strong><br><span class="nw">(§05)</span></td>
+      <td><strong>Recupero No Show</strong></td>
+      <td>Riportare in agenda i pazienti che non si sono presentati alla prima visita.</td>
+      <td><strong>No Show riferito al singolo appuntamento</strong> e non al paziente (§2.5) e valorizzazione retroattiva (§5.3)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Il §02 raccoglie i <strong>requisiti trasversali</strong>, validi per tutte e tre le fasi: sono il modo in cui chiediamo che le nuove informazioni siano scritte e conservate. Il §06 è il riepilogo operativo di tutte le richieste; il §07 la nomenclatura degli esiti proposta; il §08 i riscontri che vi chiediamo.</p>
+
+<div class="call dark">
+  <p class="t">Due principi che valgono su tutto il documento</p>
+  <p><strong>1. Nessuna informazione esistente viene sovrascritta.</strong> Gli esiti già presenti su Nexus (<em>Appuntamento Fissato</em>, <em>Non risponde</em>, …), il campo <code>campagna</code>, <code>lead_status</code> ed <code>esito</code> devono restare invariati. Ogni informazione prodotta dai flussi automatici è <em>aggiuntiva</em>. Sulla campagna di provenienza si basa l'intera attribuzione degli investimenti pubblicitari: se si perde, si perde la misurazione del progetto.</p>
+  <p><strong>2. Tutto resta tracciato e visibile a chi lavora.</strong> Ogni messaggio inviato e ogni risposta del paziente devono restare leggibili nello storico della lead <em>e</em> risultare visibili alle operatrici del contact center dentro Nexus, come esiti aggiuntivi a quelli base. Il progetto è un pilota: senza storico non è misurabile, e senza visibilità a video il contact center non può lavorare i pazienti che rispondono.</p>
+</div>
+
+<!-- ============ 01 ============ -->
+<h2 class="sec"><span class="n">/01</span> STATO DELL'INTEGRAZIONE AL 12/08/2026</h2>
+
+<h3>1.1 Come funziona oggi</h3>
+<p>LeadSystem invia a Nexus le lead generate dalle campagne di acquisizione (<code>POST /lead/api/set</code>) e, tramite un <strong>sync notturno</strong>, rilegge da Nexus lo stato di lavorazione di ogni lead già collegata (<code>GET /lead/api/get?id=&lt;id_nexus&gt;</code>), archiviandone il payload completo. Su questi dati poggiano la reportistica di performance delle campagne e l'ottimizzazione degli investimenti.</p>
+<p>Sul nostro lato è inoltre già attivo un <strong>mirror orario dell'agenda</strong>, che rileva appuntamenti nuovi, spostamenti e disdette, e il <strong>flusso di invio dei messaggi WhatsApp</strong> con raccolta della risposta del paziente e scrittura dell'esito su Nexus: collaudato e funzionante.</p>
+
+<h3>1.2 Cosa è stato rilasciato il 05/08/2026 <span class="badge">verificato</span></h3>
+<p>La tabella <code>lead</code> è passata da 55 a 58 colonne, esposte sia su <code>GET /lead/api/get</code> sia su <code>POST /lead/api/list</code>:</p>
+<table class="d">
+  <thead><tr><th style="width:44mm">Campo</th><th style="width:36mm">Formato rilasciato</th><th>Riscontro Funnel</th></tr></thead>
+  <tbody>
+    <tr><td><code>no_show</code></td><td>stringa <code>'1'</code> / <code>NULL</code></td><td>Formato pienamente utilizzabile. <strong>Non chiediamo modifiche al formato</strong>: chiediamo solo che nome, tipo e valori ammessi restino stabili nel tempo. Resta aperta la granularità (§2.5).</td></tr>
+    <tr><td><code>data_ora_appuntamento</code></td><td>ISO 8601 con fuso esplicito</td><td>Conforme e verificato: <code>+02:00</code> sugli appuntamenti in ora legale, <code>+01:00</code> su quelli invernali. Requisito soddisfatto.</td></tr>
+    <tr><td><code>stato_conferma</code></td><td>testo, max 255 caratteri</td><td>Scrittura da parte nostra verificata: l'aggiornamento è parziale e non tocca <code>campagna</code>, <code>esito</code> né <code>lead_status</code>. Soluzione adottata e confermata.</td></tr>
+  </tbody>
+</table>
+<p>Il rilascio ha risolto i punti 1 e 3 della Rev. 1.2 sul piano del formato. Restano aperti i punti di copertura del dato, di seguito.</p>
+
+<h3>1.3 Blocco critico rilevato il 12/08/2026 <span class="badge dark">bloccante per tutte le fasi</span></h3>
+<p>Dalla verifica condotta il 12/08/2026 direttamente su Nexus emerge che <strong>i nuovi campi non vengono valorizzati sulle lead create dopo il rilascio</strong>:</p>
+<ul>
+  <li>su <strong>363 lead create dal 06/08/2026 e passate a stato di appuntamento fissato, 0 hanno <code>data_ora_appuntamento</code> e 0 hanno <code>no_show</code></strong>;</li>
+  <li>le righe valorizzate sono passate da 924 (06/08) a 1.007 (12/08), quindi il meccanismo <em>non</em> è un backfill esaurito e aggiorna anche lead vecchie: ma tutte le righe valorizzate risultano agganciate a lead create <strong>entro il 05/08/2026</strong>;</li>
+  <li>non è un effetto della latenza di prenotazione: il ritardo tipico fra creazione della lead e appuntamento è di 19–30 giorni e gli slot di settembre sono già in agenda, ma risultano associati esclusivamente a lead anteriori al rilascio.</li>
+</ul>
+<div class="call">
+  <p class="t">Perché è il primo punto da sbloccare</p>
+  <p>Il flusso di recall lavora sugli appuntamenti delle lead <strong>nuove</strong>, quelle generate dalle campagne in corso. Se i campi appuntamento non vengono valorizzati sulle lead create dopo il 05/08, il flusso non ha nulla su cui lavorare: <strong>la Fase 1 non è attivabile</strong>, indipendentemente dal rilascio di centro e indirizzo. Lo stesso vale per il No Show della Fase 3.</p>
+  <p><strong>Richiesta:</strong> ricondurre la valorizzazione di <code>data_ora_appuntamento</code> e <code>no_show</code> a <em>tutte</em> le lead con appuntamento, indipendentemente dalla data di creazione della lead, e confermarci la causa dello scostamento.</p>
+</div>
+
+<h3>1.4 Altri scostamenti aperti</h3>
+<table class="d">
+  <thead><tr><th style="width:46mm">Punto</th><th>Riscontro tecnico Funnel</th><th style="width:24mm">Stato</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Centro e indirizzo dell'appuntamento</strong></td>
+      <td>La colonna <code>centro_bludental</code> esiste nella tabella <code>lead</code> ma <strong>risulta vuota su tutte le circa 86.000 lead</strong>. Il campo <code>citta</code> contiene la città dichiarata dalla lead e <strong>non coincide</strong> con il centro di prenotazione: non è utilizzabile come sostituto.</td>
+      <td><span class="badge dark">Da sviluppare</span></td>
+    </tr>
+    <tr>
+      <td><strong>Granularità del No Show</strong></td>
+      <td>Il flag si comporta come attributo <em>del paziente</em> e non <em>del singolo appuntamento</em>: esistono lead con <code>no_show = '1'</code> e contemporaneamente un appuntamento futuro già in agenda (pazienti che hanno mancato un appuntamento e ne hanno poi preso un altro). Non è quindi possibile sapere <em>quale</em> appuntamento sia stato disatteso, né quando.</td>
+      <td><span class="badge dark">Da sviluppare</span></td>
+    </tr>
+    <tr>
+      <td><strong>Retroattività</strong></td>
+      <td>Valorizzazione solo parziale. Rapporto No Show / appuntamenti fissati per mese: luglio 10,4% · giugno 3,6% · maggio 0,9% · aprile 0,7% · marzo 1,0% · febbraio 1,1% · gennaio 0,2%. Lo storico anteriore a giugno è di fatto vuoto. Su <code>data_ora_appuntamento</code> la data più remota presente è il 05/08/2026, giorno del rilascio.</td>
+      <td><span class="badge dark">Non soddisfatto</span></td>
+    </tr>
+    <tr>
+      <td><strong>Colonna <code>data_appuntamento</code></strong></td>
+      <td>Segnalazione: la colonna preesistente (2.128 righe, storico da marzo 2025) <strong>non contiene una data di appuntamento</strong> — coincide al minuto con <code>data_creazione</code> ed è valorizzata anche su esiti tipo <em>numero errato</em> o <em>occupato</em>. Non è utilizzabile per ricostruire lo storico: la segnaliamo per evitare che venga usata come base di un backfill.</td>
+      <td><span class="badge open">Segnalazione</span></td>
+    </tr>
+    <tr>
+      <td><strong>Campo <code>data_entrata</code></strong></td>
+      <td>Risulta <code>NULL</code> su tutte le righe. Per raggruppare le lead per giorno di ingresso usiamo <code>data_creazione</code>: se il campo è destinato a essere dismesso, confermatecelo.</td>
+      <td><span class="badge open">Segnalazione</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ============ 02 ============ -->
+<h2 class="sec"><span class="n">/02</span> REQUISITI TRASVERSALI ALLE TRE FASI</h2>
+
+<p>I requisiti di questa sezione non appartengono a una singola fase: definiscono <strong>come</strong> le informazioni prodotte dai flussi automatici devono essere scritte, conservate e mostrate. Ogni fase li richiama per la parte che la riguarda.</p>
+
+<h3>2.1 Nessuna sovrascrittura dei dati esistenti <span class="badge">vincolante</span></h3>
+<p>Tutte le informazioni introdotte dalle tre fasi sono <strong>additive</strong>. In particolare non devono in nessun caso essere modificati: <code>campagna</code>, <code>esito</code>, <code>lead_status</code> e l'esito originario di fissazione dell'appuntamento.</p>
+<p>Questo vale anche quando l'agenda cambia: se un appuntamento viene <strong>disdetto o spostato</strong>, il fatto che <em>quell'appuntamento sia stato generato</em> deve restare leggibile via API (§2.5). Diversamente la disdetta distruggerebbe il dato di performance della campagna che lo ha prodotto.</p>
+
+<h3>2.2 Esiti aggiuntivi: campi dedicati per fase</h3>
+<p>Chiediamo che gli esiti prodotti dai flussi automatici siano scritti su <strong>campi dedicati, uno per fase</strong>, distinti dal campo <code>esito</code> usato dal contact center:</p>
+<table class="d">
+  <thead><tr><th style="width:40mm">Campo</th><th style="width:20mm">Fase</th><th style="width:22mm">Stato</th><th>Contenuto</th></tr></thead>
+  <tbody>
+    <tr><td><code>stato_conferma</code></td><td>Fase 1</td><td><span class="badge">Esiste</span></td><td>Esito del ciclo di recall, con i soli due valori <code>SI-CONFERMA</code> e <code>NO-CONFERMA</code>. Già rilasciato e in uso: <strong>nessuna modifica richiesta</strong>.</td></tr>
+    <tr><td><code>stato_reingaggio</code></td><td>Fase 2</td><td><span class="badge dark">Nuovo</span></td><td>Esito del reingaggio dei contatti non rispondenti. Stessa struttura di <code>stato_conferma</code> (testo, max 255).</td></tr>
+    <tr><td><code>stato_recupero</code></td><td>Fase 3</td><td><span class="badge dark">Nuovo</span></td><td>Esito del recupero dei No Show. Stessa struttura di <code>stato_conferma</code> (testo, max 255).</td></tr>
+  </tbody>
+</table>
+<p>Tre campi distinti e non uno solo perché i tre stati sono <strong>indipendenti e possono coesistere</strong> sulla stessa lead: un paziente può essere stato reingaggiato da non rispondente, poi fissare un appuntamento, poi non presentarsi. Un campo unico farebbe perdere i passaggi precedenti.</p>
+<p>I valori ammessi sono elencati al <strong>§07</strong>. Chiediamo che siano censiti nella vostra anagrafica esiti con un <strong>codice stabile</strong> (quello che scriviamo via API) e una <strong>etichetta leggibile</strong> mostrata a video alle operatrici.</p>
+
+<h3>2.3 Storico degli esiti in sola aggiunta</h3>
+<p>I campi del §2.2 espongono <em>l'ultimo</em> stato. Per la lettura del pilota serve anche la <strong>successione degli eventi</strong>: chiediamo che ogni scrittura su questi campi alimenti lo storico della lead in modalità <strong>append-only</strong> (nessuna riga sovrascritta) e che tale storico sia <strong>leggibile via API</strong>, con almeno: valore, data e ora dell'evento (ISO 8601 con fuso), origine dell'evento.</p>
+<p>Se lo storico della lead già esiste in Nexus e viene alimentato automaticamente da queste scritture, è sufficiente esporlo nel payload: non chiediamo una struttura nuova se ne esiste una equivalente.</p>
+
+<h3>2.4 Evidenza visiva per il contact center</h3>
+<p>Gli esiti del §07 devono essere <strong>immediatamente riconoscibili a video</strong> nelle liste e nelle agende usate dalle operatrici (evidenziazione, badge, colore, filtro dedicato o equivalente secondo le vostre convenzioni) e devono essere <strong>filtrabili</strong> come gli esiti base.</p>
+<p>Non abbiamo richieste vincolanti sulla resa grafica, non conoscendo il vostro software: vi chiediamo di proporci la soluzione più semplice o di allinearvi direttamente con Bludental. Il vincolo è funzionale, e va sottolineato perché è il punto che il documento Bludental non copre: <strong>i pazienti che rispondono «SÌ» ai flussi delle Fasi 2 e 3 devono comparire in una coda di lavoro</strong>. Sono pazienti che hanno chiesto di essere richiamati per fissare: se l'informazione non arriva alle operatrici, il flusso genera domanda e la disperde.</p>
+<p>Devono inoltre essere <strong>distinguibili fra loro</strong> i due stati di conferma — paziente che ha <strong>confermato</strong> (<code>SI-CONFERMA</code>) e paziente <strong>non confermato</strong> (<code>NO-CONFERMA</code>) — e nessuno dei due va confuso con il campo ancora vuoto, che segnala soltanto un ciclo di recall non ancora concluso.</p>
+
+<h3>2.5 L'appuntamento come oggetto con identificativo proprio <span class="badge dark">requisito strutturale</span></h3>
+<p>È la richiesta più importante del documento, perché risolve alla radice i problemi di granularità del §1.4 e abilita in un colpo solo tutte e tre le fasi.</p>
+<p>Oggi le informazioni sull'appuntamento sono <strong>campi piatti sulla lead</strong>: una lead con più appuntamenti nel tempo non è rappresentabile, il No Show non si sa a quale appuntamento si riferisca e non c'è modo di indirizzare una scrittura a un appuntamento specifico.</p>
+<p>Chiediamo che il payload della lead esponga gli appuntamenti come <strong>elenco di oggetti, ciascuno con un identificativo univoco e stabile</strong>, in ordine cronologico e comprensivo di quelli passati:</p>
+<pre>"appuntamenti": [
+  {
+    "id_appuntamento":   "A-10029384",          // univoco e stabile: la chiave di tutto
+    "data_ora":          "2026-08-24T10:30:00+02:00",
+    "centro":            "Roma Casilina",
+    "codice_centro":     "RM-CAS",              // se disponibile
+    "indirizzo":         "Via Casilina 1234",
+    "cap":               "00169",
+    "citta":             "Roma",
+    "provincia":         "RM",
+    "stato":             "FISSATO",             // FISSATO | SVOLTO | NO-SHOW | DISDETTO | SPOSTATO
+    "no_show":           null,                  // '1' oppure null, riferito A QUESTO appuntamento
+    "esito_fissazione":  "Appuntamento Fissato",// esito con cui l'appuntamento è stato generato
+    "stato_conferma":    "SI-CONFERMA",
+    "id_precedente":     null,                  // id dell'appuntamento sostituito, in caso di spostamento
+    "creato_il":         "2026-08-14T09:12:00+02:00",
+    "aggiornato_il":     "2026-08-20T16:03:00+02:00"
+  }
+]</pre>
+<p>Tre precisazioni:</p>
+<ul>
+  <li><strong>La richiesta è additiva.</strong> I campi piatti già rilasciati (<code>data_ora_appuntamento</code>, <code>no_show</code>, <code>stato_conferma</code>) restano dove sono e con lo stesso significato: non chiediamo di rimuoverli e continuiamo a leggerli. L'elenco si aggiunge.</li>
+  <li><strong>La scrittura deve poter essere indirizzata.</strong> Chiediamo che <code>POST /lead/api/set</code> accetti <code>id_appuntamento</code>, così che <code>stato_conferma</code> venga scritto sull'appuntamento corretto. Su un paziente con due appuntamenti aperti, una scrittura a livello di lead è ambigua.</li>
+  <li><strong>Se l'elenco completo non è realizzabile in tempi utili</strong>, la Rev. 1.2 indicava un'alternativa minima che resta valida: legare il flag No Show all'appuntamento, oppure esporre in aggiunta la <strong>data dell'appuntamento non onorato</strong>. È una soluzione di ripiego: risolve la Fase 3, non le altre.</li>
+</ul>
+
+<h3>2.6 Webhook di notifica evento: Nexus → LeadSystem <span class="badge dark">nuovo</span></h3>
+<p>Oggi le informazioni arrivano solo in <em>pull</em>: sync notturno e mirror orario dell'agenda. Per i flussi automatici questo non basta.</p>
+<p><strong>Per la Fase 2 è indispensabile:</strong> il reingaggio dei non rispondenti si attiva nel momento in cui l'esito della lead diventa <em>Non risponde</em>, e ci serve saperlo quando accade.</p>
+<p><strong>Per la Fase 1 è fortemente raccomandato:</strong> il primo messaggio di recall parte a 4 giorni dall'appuntamento. Con la sola lettura periodica, un appuntamento fissato con meno di 4 giorni di preavviso perde il primo messaggio; con la notifica in tempo reale il flusso si aggancia comunque al primo passaggio utile.</p>
+<p>Esponiamo noi l'endpoint, già predisposto lato nostro. A voi chiediamo di chiamarlo:</p>
+<pre>POST https://leadsystembluedental-production.up.railway.app/api/webhook-nexus-evento
+Content-Type: application/json
+X-Webhook-Token: &lt;token che concordiamo con voi&gt;
+
+{
+  "evento":                "esito_non_risponde",
+  "id_nexus":              "123456",
+  "telefono":              "+393331234567",
+  "esito":                 "Non risponde",
+  "lead_status":           "In lavorazione",
+  "numero_tentativi":      3,
+  "data_ultimo_tentativo": "2026-08-25T16:40:00+02:00",
+  "id_appuntamento":       null,
+  "timestamp":             "2026-08-25T16:40:05+02:00"
+}</pre>
+<table class="d">
+  <thead><tr><th style="width:52mm">Evento</th><th style="width:20mm">Fase</th><th>Quando</th></tr></thead>
+  <tbody>
+    <tr class="hl"><td><code>esito_non_risponde</code></td><td>Fase 2</td><td>L'esito della lead passa a <em>Non risponde</em>. <strong>Obbligatorio</strong> per attivare la Fase 2.</td></tr>
+    <tr><td><code>appuntamento_creato</code></td><td>Fase 1</td><td>Nuovo appuntamento in agenda. Raccomandato.</td></tr>
+    <tr><td><code>appuntamento_spostato</code></td><td>Fase 1</td><td>Cambio di data, ora o centro. Raccomandato: il ciclo di recall deve ripartire sul nuovo orario.</td></tr>
+    <tr><td><code>appuntamento_disdetto</code></td><td>Fase 1</td><td>Appuntamento eliminato dall'agenda. Raccomandato: interrompe i messaggi già programmati.</td></tr>
+    <tr><td><code>stato_conferma_modificato</code></td><td>Fase 1</td><td>Un'operatrice modifica a video lo stato di conferma (§3.4.6). Raccomandato: fra il secondo e il terzo messaggio passano poche ore.</td></tr>
+    <tr><td><code>no_show</code></td><td>Fase 3</td><td>Appuntamento marcato come non onorato. Facoltativo: in assenza ce ne accorgiamo con il sync notturno.</td></tr>
+  </tbody>
+</table>
+<p>Convenzioni che ci bastano: consegna <em>at-least-once</em> con ritentativo in caso di risposta diversa da <code>2xx</code>; <strong>la deduplica la gestiamo noi</strong>, quindi una notifica ripetuta non è un problema. Rispondiamo <code>200</code> immediatamente, senza lavorazione sincrona. Se l'invio di eventi non è previsto dalla piattaforma, indicatecelo: per la sola Fase 2 valuteremo un ripiego in lettura periodica, meno tempestivo e quindi meno efficace.</p>
+
+<h3>2.7 Rispetto della volontà del paziente (opt-out)</h3>
+<p>I tre flussi scrivono al paziente su WhatsApp. Un paziente può chiedere di non essere più contattato: la richiesta va registrata e rispettata da <strong>tutti e tre i flussi</strong>, anche a distanza di mesi e anche se la lead viene rilavorata.</p>
+<p>Chiediamo un <strong>campo dedicato</strong> a livello di lead — proponiamo <code>opt_out_whatsapp</code>, valorizzato a <code>'1'</code> — scrivibile da noi via API e visibile a video alle operatrici. Il presidio lato nostro è già previsto (esito <code>WA-OPT-OUT</code>, §07); il campo su Nexus serve perché l'informazione sia condivisa fra i due sistemi e visibile a chi telefona.</p>
+<p>Il punto non è nei documenti Bludental, ma su un canale di messaggistica diretta è un presidio necessario e va concordato prima dell'avvio del pilota, non dopo.</p>
+
+<h3>2.8 Convenzioni tecniche</h3>
+<ul>
+  <li><strong>Date e orari:</strong> ISO 8601 con fuso esplicito (<code>2026-08-24T10:30:00+02:00</code>) oppure UTC. Il formato già adottato su <code>data_ora_appuntamento</code> è corretto: chiediamo di mantenerlo su ogni nuovo campo temporale.</li>
+  <li><strong>Esposizione:</strong> tutti i campi nuovi devono comparire sia su <code>GET /lead/api/get</code> sia, ove pertinente, su <code>POST /lead/api/list</code>.</li>
+  <li><strong>Retrocompatibilità:</strong> nessuna modifica ai campi esistenti che interrompa l'integrazione attuale. Le aggiunte non devono cambiare tipo o significato di ciò che già leggiamo.</li>
+  <li><strong>Stabilità dei nomi:</strong> ogni variazione di nome campo, tipo o valori ammessi comporta un intervento sul nostro parser: chiediamo di concordarla in anticipo.</li>
+  <li><strong>Difetto minore da correggere:</strong> su <code>POST /lead/api/set</code> un valore numerico pari a <code>0</code> viene salvato come <code>NULL</code>. Oggi lo aggiriamo inviando la stringa <code>"0"</code>, ma è un comportamento da sanare perché espone a perdite di dato silenziose sui campi numerici.</li>
+</ul>
+
+<h3>2.9 Collaudo</h3>
+<p>Per verificare senza toccare pazienti reali chiediamo, per ciascuna fase: la possibilità di lavorare su <strong>lead di prova</strong> riconoscibili (o un ambiente di test, se disponibile), il <strong>token</strong> per il webhook del §2.6, e <strong>almeno una lead di esempio già valorizzata</strong> con i campi nuovi su cui allineare il parser prima dell'avvio.</p>
+
+<!-- ============ 03 ============ -->
+<h2 class="sec phase newpage"><span class="n">/03</span> FASE 1 — RECALL APPUNTAMENTO <span class="badge">Priorità 1</span></h2>
+
+<h3>3.1 Obiettivo</h3>
+<p>Ridurre i mancati arrivi: il paziente riceve un promemoria dell'appuntamento con <strong>data, ora e luogo</strong> e la possibilità di confermare o disdire rispondendo al messaggio. È l'obiettivo primario dichiarato da Bludental ed è la fase su cui lo sviluppo lato Funnel è già completato e collaudato: mancano solo i dati.</p>
+
+<h3>3.2 Perimetro del pilota</h3>
+<p>La fase parte su <strong>15 cliniche</strong>, raggruppate da Bludental per volume:</p>
+<table class="d">
+  <thead><tr><th style="width:24mm">Gruppo</th><th>Cliniche</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Top</strong></td><td>Pomezia · Bari · Pordenone</td></tr>
+    <tr><td><strong>Medie</strong></td><td>Latina · Brianza · Casilina</td></tr>
+    <tr><td><strong>Low</strong></td><td>Rho · Lodi · Bologna · Mestre · Perugia · Forlì · Mantova · Vicenza · Abbiategrasso</td></tr>
+  </tbody>
+</table>
+<div class="call">
+  <p class="t">Richiesta a Bludental e Nexus</p>
+  <p>Ci serve l'<strong>elenco delle 15 cliniche con la denominazione e il codice esatti con cui sono censite su Nexus</strong>. I nomi qui sopra sono quelli brevi del documento di progetto («Brianza», «Casilina», «Abbiategrasso»): non sono sufficienti per selezionare in modo affidabile gli appuntamenti del perimetro.</p>
+</div>
+
+<h3>3.3 La sequenza dei messaggi</h3>
+<p>Tre messaggi, secondo il disegno Bludental. Ogni messaggio chiede al paziente di rispondere <strong>SI</strong> o <strong>NO</strong>, e la risposta determina se il messaggio successivo parte oppure no.</p>
+
+<div class="call">
+  <p class="t">Nessun nuovo esito per la Fase 1</p>
+  <p>Gli <strong>unici valori che scriviamo su Nexus in tutta la Fase 1 sono <code>SI-CONFERMA</code> e <code>NO-CONFERMA</code></strong>, sul campo <code>stato_conferma</code> già rilasciato e in uso. Non chiediamo esiti aggiuntivi, non chiediamo nuovi campi e non chiediamo nuove chiamate API per questa fase: la logica dei tre messaggi è interamente lato nostro, e su Nexus arriva solo l'esito finale del ciclo.</p>
+</div>
+
+<table class="d">
+  <thead><tr><th style="width:20mm">Momento</th><th style="width:34mm">Messaggio</th><th style="width:40mm">A chi viene inviato</th><th>Cosa scriviamo su Nexus</th></tr></thead>
+  <tbody>
+    <tr><td><strong>&minus;4 giorni</strong></td><td>Primo promemoria con richiesta di conferma</td><td>Tutti gli appuntamenti in agenda nei 15 centri</td><td>SI &rarr; <code>SI-CONFERMA</code><br>NO &rarr; <code>NO-CONFERMA</code><br>Nessuna risposta &rarr; nulla</td></tr>
+    <tr><td><strong>&minus;2 giorni</strong></td><td>Sollecito di conferma</td><td>Solo chi <strong>non ha risposto</strong> al primo messaggio</td><td>SI &rarr; <code>SI-CONFERMA</code><br>NO &rarr; <code>NO-CONFERMA</code><br>Nessuna risposta entro 12 ore &rarr; <code>NO-CONFERMA</code></td></tr>
+    <tr><td><strong>&minus;1 giorno</strong></td><td>Promemoria finale, senza richiesta di conferma</td><td>Solo chi <strong>ha confermato</strong>, al primo o al secondo messaggio</td><td>Nulla: la conferma è già stata scritta</td></tr>
+  </tbody>
+</table>
+
+<h4>Il flusso in dettaglio</h4>
+<ul>
+  <li><strong>Risposta SI al primo messaggio (&minus;4 giorni):</strong> scriviamo <code>SI-CONFERMA</code>. Il sollecito a &minus;2 giorni <strong>non parte</strong>, perché il paziente ha già confermato; parte solo il promemoria a &minus;1 giorno.</li>
+  <li><strong>Risposta NO al primo messaggio:</strong> scriviamo <code>NO-CONFERMA</code> e il ciclo si chiude. Non parte né il sollecito né il promemoria.</li>
+  <li><strong>Nessuna risposta al primo messaggio:</strong> non scriviamo nulla e a &minus;2 giorni parte il sollecito. Da qui:
+    <ul>
+      <li><strong>risposta SI al sollecito</strong> &rarr; <code>SI-CONFERMA</code>, e parte il promemoria a &minus;1 giorno;</li>
+      <li><strong>risposta NO al sollecito</strong> &rarr; <code>NO-CONFERMA</code>, il promemoria non parte;</li>
+      <li><strong>nessuna risposta al sollecito entro 12 ore</strong> &rarr; scriviamo <code>NO-CONFERMA</code>, il promemoria non parte.</li>
+    </ul>
+  </li>
+</ul>
+<p>Il promemoria a &minus;1 giorno raggiunge quindi <strong>soltanto i pazienti che hanno confermato</strong>, indifferentemente al primo o al secondo messaggio, e non produce alcuna scrittura su Nexus.</p>
+
+<p>I testi definiti da Bludental, riportati integralmente:</p>
+
+<div class="msg">
+  <p class="h">&minus;4 giorni · primo promemoria</p>
+  <p class="body">Gentile [Nome],
+Le ricordiamo il Suo appuntamento presso BluDental a [Città dove è stato fissato l'appuntamento] in [Indirizzo centro dove è stato fissato l'appuntamento], il [data] alle ore [ora].
+
+Può confermarlo rispondendo "SI" a questo messaggio. Qualora non potesse venire, risponda "NO" e la ricontatteremo per trovare una nuova data.
+
+A presto,
+Team BluDental</p>
+</div>
+
+<div class="msg">
+  <p class="h">&minus;2 giorni · sollecito a chi non ha confermato</p>
+  <p class="body">Gentile Paziente,
+Non abbiamo ancora ricevuto conferma per il Suo appuntamento presso BluDental a [Città dove è stato fissato l'appuntamento] in [Indirizzo centro dove è stato fissato l'appuntamento] il [data] alle ore [ora].
+
+La preghiamo di confermarci la Sua presenza rispondendo "SI" o di cancellare l'appuntamento rispondendo "NO" a questo messaggio.
+
+In assenza di riscontro entro la giornata odierna, cancelleremo l'appuntamento e la ricontatteremo per trovare una nuova data.
+
+Cordiali saluti
+Team BluDental</p>
+</div>
+
+<div class="msg">
+  <p class="h">&minus;1 giorno · promemoria a chi ha confermato</p>
+  <p class="body">Gentile [Nome],
+Le ricordiamo il Suo appuntamento di domani alle ore [orario] presso il centro BluDental di [Città], in [Indirizzo].
+
+A domani,
+Team BluDental</p>
+</div>
+
+<h3>3.4 Cosa serve da Nexus</h3>
+
+<h4>3.4.1 Valorizzazione dei campi appuntamento sulle lead nuove <span class="badge dark">bloccante</span></h4>
+<p>Come descritto al <strong>§1.3</strong>. È il primo punto in ordine di priorità assoluta: senza di esso la fase non parte anche se tutto il resto viene rilasciato.</p>
+
+<h4>3.4.2 Centro e indirizzo dell'appuntamento <span class="badge dark">bloccante</span></h4>
+<p>Il payload deve esporre <strong>il centro Bludental presso cui l'appuntamento è stato prenotato e il relativo indirizzo</strong>, valorizzati solo per le lead con appuntamento fissato.</p>
+<ul>
+  <li><strong>Dati richiesti:</strong> denominazione del centro (es. <em>Roma Casilina</em>) e indirizzo completo — via e civico, CAP, città, provincia. Se esiste un <strong>codice univoco di centro/sede</strong>, chiediamo di esporlo insieme alla denominazione: ci consente di normalizzare il dato lato nostro.</li>
+  <li><strong>Se la denominazione del centro non è disponibile</strong> nella forma indicata sopra, per noi è sufficiente ricevere <code>citta_centro</code> insieme a <code>indirizzo</code>, <code>cap</code> e <code>provincia</code>: con questi quattro dati il messaggio è compilabile e il perimetro dei 15 centri è selezionabile. Non è quindi un ostacolo se il nome commerciale della sede non è censito come tale.</li>
+  <li><strong>Struttura: campi separati.</strong> Ci servono <code>centro</code>, <code>indirizzo</code>, <code>cap</code>, <code>citta_centro</code>, <code>provincia</code> come <strong>campi distinti</strong>, preferibilmente all'interno dell'oggetto appuntamento del §2.5. <strong>Non è per noi utilizzabile un unico campo testuale</strong> che concateni i valori: dovremmo scomporlo con regole di interpretazione fragili, e città e indirizzo vanno inseriti in <em>variabili separate</em> del messaggio WhatsApp al paziente.</li>
+  <li><strong>Il riferimento è l'appuntamento, non la lead:</strong> se il paziente viene spostato su un altro centro, il dato deve seguire l'appuntamento, esattamente come la data e l'ora.</li>
+</ul>
+
+<div class="box">
+  <p><strong>Il campo <code>data_ora_appuntamento</code> resta dov'è: non va rimosso né modificato.</strong> È stato rilasciato il 05/08/2026, è conforme a quanto avevamo chiesto e lo leggiamo già in produzione. I campi di centro e indirizzo <strong>si aggiungono</strong> ad esso, non lo sostituiscono.</p>
+  <p>Lo precisiamo per evitare equivoci in fase di sviluppo: <strong>data, ora, centro e indirizzo servono tutti e quattro insieme</strong>, perché sono le variabili con cui viene composto il messaggio al paziente (§3.3). Lo stesso vale se sceglierete di esporre i dati nell'oggetto appuntamento del §2.5: anche in quel caso il campo piatto oggi in uso deve restare disponibile, per non interrompere l'integrazione attiva (§2.8).</p>
+</div>
+<div class="call">
+  <p class="t">Perché è bloccante due volte</p>
+  <p><strong>1. Il messaggio non è compilabile senza il luogo.</strong> Tutti e tre i testi Bludental contengono città e indirizzo. Molti pazienti hanno più centri Bludental raggiungibili nella stessa città: senza la sede il reminder non solo non è compilabile, ma il rischio di mancata presentazione <em>aumenta</em> invece di ridursi.</p>
+  <p><strong>2. Senza il centro non possiamo delimitare il pilota.</strong> Il perimetro è di 15 cliniche su tutta la rete: il centro dell'appuntamento è l'unico dato che consente di selezionarle. Il campo <code>citta</code> non è utilizzabile, perché contiene la città dichiarata dalla lead e non quella di prenotazione. Senza questo dato l'unica alternativa sarebbe inviare a tutta la rete, che non è ciò che Bludental ha chiesto.</p>
+</div>
+
+<h4>3.4.3 Aggiornamento in caso di spostamento</h4>
+<p>Data, ora, centro e indirizzo devono essere <strong>aggiornati</strong> quando l'appuntamento viene spostato, anche su un altro centro. Il ciclo di recall riparte sul nuovo orario e le risposte raccolte per il vecchio orario vengono annullate.</p>
+
+<h4>3.4.4 Chiusura del ciclo in assenza di riscontro</h4>
+<p><strong>Su questo punto non chiediamo nulla di nuovo a Nexus.</strong> Il paziente che non risponde nemmeno al sollecito viene chiuso da noi a <code>NO-CONFERMA</code> dopo 12 ore, esattamente come chi disdice in modo esplicito: nessuna azione di annullamento via API, nessun esito aggiuntivo, nessun campo ulteriore. Sul vostro lato non cambia niente rispetto a quanto già rilasciato.</p>
+<p>Ne discende però l'importanza del §2.4: <strong><code>NO-CONFERMA</code> è l'unico segnale che arriva al centro.</strong> È su quella evidenza che l'operatrice libera lo slot e ricontatta il paziente per concordare una nuova data, come il messaggio a &minus;2 giorni gli ha annunciato. Se il valore non è riconoscibile e filtrabile nell'agenda, l'informazione resta nel database e il ciclo di recall non produce l'effetto per cui è stato pensato.</p>
+
+<h4>3.4.5 Evidenza visiva degli esiti di conferma</h4>
+<p>Vale quanto richiesto ai §2.3 e §2.4 per i due valori <code>SI-CONFERMA</code> e <code>NO-CONFERMA</code>, già in uso e verificati sul campo <code>stato_conferma</code>. Per questa fase <strong>non c'è alcun nuovo valore da censire</strong>: chiediamo soltanto che i due stati siano riconoscibili a video e filtrabili dalle operatrici, e che le scritture alimentino lo storico della lead.</p>
+
+<h4>3.4.6 Modifica dello stato di conferma da interfaccia <span class="badge dark">nuovo</span></h4>
+<p>Chiediamo che il campo <code>stato_conferma</code> sia <strong>modificabile dall'operatrice direttamente da interfaccia</strong>, sui due valori <code>SI-CONFERMA</code> e <code>NO-CONFERMA</code>. Oggi il campo viene scritto solo da noi via API: serve che possa essere impostato anche a mano.</p>
+<p>Il motivo è che il ciclo di recall non è a senso unico. Il caso tipico: un paziente risulta <code>NO-CONFERMA</code> — perché ha disdetto o perché non ha risposto al sollecito — l'operatrice lo richiama, e <strong>al telefono conferma che verrà</strong>. Se l'operatrice può correggere il valore a video, la modifica ci torna in lettura e il paziente <strong>rientra nel nostro flusso</strong>: riceve il promemoria del giorno prima e viene contato correttamente fra i confermati. Se il campo non è modificabile, quella conferma telefonica resta invisibile al flusso automatico e il paziente viene trattato fino all'ultimo come non confermato.</p>
+<p>Vale anche il caso opposto, ed è quello che evita un errore verso il paziente: chi aveva confermato via WhatsApp e poi disdice per telefono deve poter essere riportato a <code>NO-CONFERMA</code>, così che il promemoria del giorno prima <strong>non parta</strong> per un appuntamento che non c'è più.</p>
+<p>Perché sia utilizzabile ci servono tre condizioni:</p>
+<ul>
+  <li><strong>La modifica manuale è leggibile via API</strong> sullo stesso campo, esattamente come quelle scritte da noi (§2.8). È la condizione minima e sufficiente: la rileviamo con la lettura periodica.</li>
+  <li><strong>Tempestività</strong> — raccomandata, non bloccante. Fra il secondo e il terzo messaggio passano poche ore: l'evento <code>stato_conferma_modificato</code> del §2.6 ci consente di riallineare il ciclo subito, mentre con la sola lettura periodica una correzione fatta a ridosso dell'appuntamento rischia di arrivarci tardi.</li>
+  <li><strong>Distinzione dell'origine</strong> nello storico del §2.3: sapere se la conferma è arrivata <em>via WhatsApp</em> o <em>per telefono dall'operatrice</em>. Senza questa distinzione le conferme telefoniche si sommano a quelle automatiche e non è più misurabile quanto il recall abbia effettivamente contribuito — che è l'oggetto stesso del pilota.</li>
+</ul>
+<p>Restano validi i vincoli del §2.1: anche la modifica manuale non deve toccare <code>campagna</code>, <code>esito</code> né <code>lead_status</code>.</p>
+
+<h3>3.5 Cosa è già pronto e cosa adeguiamo lato Funnel</h3>
+<table class="d">
+  <thead><tr><th style="width:60mm">Componente</th><th>Stato</th></tr></thead>
+  <tbody>
+    <tr><td>Mirror dell'agenda Nexus, aggiornamento orario</td><td><span class="badge">Attivo</span> rileva appuntamenti nuovi, spostamenti e disdette</td></tr>
+    <tr><td>Invio dei messaggi WhatsApp e raccolta della risposta</td><td><span class="badge">Attivo e collaudato</span> sui due invii oggi previsti (&minus;4 e &minus;1 giorni)</td></tr>
+    <tr><td>Scrittura di <code>stato_conferma</code> su Nexus</td><td><span class="badge">Attivo e verificato</span></td></tr>
+    <tr><td>Terzo messaggio e sollecito a &minus;2 giorni</td><td>Da sviluppare lato nostro, con il template dedicato. Non dipende da Nexus.</td></tr>
+    <tr><td>Logica di concatenamento dei tre messaggi e chiusura a <code>NO-CONFERMA</code> dopo 12 ore dal sollecito</td><td>Adeguamento della regola attuale, interamente lato nostro (§3.3). Non dipende da Nexus.</td></tr>
+    <tr><td>Rientro nel flusso dei pazienti la cui conferma è stata modificata a video dall'operatrice</td><td>Da sviluppare lato nostro non appena il campo sarà modificabile: rileggiamo il valore e riallineiamo il ciclo di recall (§3.4.6).</td></tr>
+    <tr><td>Inserimento di città e indirizzo nel testo del messaggio</td><td><strong>In attesa del §3.4.2.</strong> Attività di poche ore, avviabile il giorno del rilascio.</td></tr>
+  </tbody>
+</table>
+<div class="box">
+  <p><strong>Nota di coordinamento — non riguarda Nexus.</strong> Per inserire città e indirizzo nel messaggio serve anche l'aggiornamento del <strong>template WhatsApp</strong> con le nuove variabili, che è in carico al fornitore del servizio di messaggistica. È un'attività parallela, già identificata, e la coordiniamo noi: la segnaliamo qui solo perché la comunicazione di rilascio da parte di Nexus è l'evento che la fa partire.</p>
+</div>
+
+<h3>3.6 Criteri di accettazione della Fase 1</h3>
+<ul>
+  <li>Una lead creata dopo il rilascio, con appuntamento fissato, espone <code>data_ora_appuntamento</code> valorizzato. <em>(§3.4.1)</em></li>
+  <li>La stessa lead espone il <strong>centro e l'indirizzo</strong> presso cui l'appuntamento è stato agendato. <em>(§3.4.2)</em></li>
+  <li>Spostando l'appuntamento su un altro centro, entrambi i dati seguono l'appuntamento. <em>(§3.4.3)</em></li>
+  <li>I valori <code>SI-CONFERMA</code> e <code>NO-CONFERMA</code> sono riconoscibili a video e filtrabili nell'agenda del centro, e non alterano <code>campagna</code>, <code>esito</code> né <code>lead_status</code>. <em>(§3.4.5, §2.1)</em></li>
+  <li>Un'operatrice può modificare <code>stato_conferma</code> da interfaccia, e la modifica è leggibile via API con l'indicazione dell'origine. <em>(§3.4.6)</em></li>
+</ul>
+
+<!-- ============ 04 ============ -->
+<h2 class="sec phase newpage"><span class="n">/04</span> FASE 2 — REINGAGGIO CONTATTI NON RISPONDENTI <span class="badge">Priorità 2</span></h2>
+
+<h3>4.1 Obiettivo</h3>
+<p>Recuperare le richieste di prima visita che il contact center non riesce a raggiungere per telefono. Al paziente con esito <em>Non risponde</em> viene inviato un messaggio WhatsApp: se risponde «SÌ», torna in coda al contact center per essere richiamato e fissare.</p>
+<p>Il perimetro è quello del §3.2 quando il dato di centro è disponibile; diversamente va concordato con Bludental un criterio di selezione alternativo.</p>
+
+<h3>4.2 Il messaggio</h3>
+<div class="msg">
+  <p class="h">Testo definito da Bludental</p>
+  <p class="body">Gentile Paziente,
+Abbiamo provato a contattarla telefonicamente in merito alla Sua richiesta di prima visita.
+
+La Prima Visita prevede un check up completo e gratuito con i nostri professionisti per valutare in modo approfondito lo stato della sua salute orale.
+
+Se desidera fissare un appuntamento, può risponderci con un semplice "SI" e la ricontatteremo per concordare data e orario.
+Se preferisce rimandare, risponda "NO" e resteremo comunque a disposizione.
+
+A presto,
+Team BluDental</p>
+</div>
+
+<h3>4.3 Cosa serve da Nexus</h3>
+
+<h4>4.3.1 Notifica del passaggio a «Non risponde» <span class="badge dark">bloccante</span></h4>
+<p>Evento <code>esito_non_risponde</code> sul webhook del <strong>§2.6</strong>, chiamato quando l'esito della lead assume il valore <em>Non risponde</em>.</p>
+<p>L'esito è già leggibile nel payload che riceviamo (<code>esito = "Non risponde"</code>): quello che manca è la <strong>tempestività</strong>. La regola di ingaggio (§4.4) dipende da quanti tentativi telefonici sono stati fatti e da quanto tempo è passato dall'ultimo: applicarla su una lettura notturna significa scrivere al paziente con un ritardo che ne riduce l'efficacia, e non consente di distinguere un primo tentativo a vuoto da un contatto ormai abbandonato.</p>
+<p>Nel payload dell'evento ci servono in particolare <code>numero_tentativi</code> e <code>data_ultimo_tentativo</code>: sono i due dati su cui applichiamo la regola. Se non sono disponibili sull'evento, chiediamo di esporli come campi sulla lead.</p>
+
+<h4>4.3.2 Rientro della lead in coda di lavorazione <span class="badge dark">bloccante</span></h4>
+<p>È il punto che il documento Bludental non copre e che va risolto perché la fase abbia senso. Un paziente che risponde «SÌ» ha chiesto esplicitamente di essere richiamato per fissare: deve <strong>tornare lavorabile dal contact center</strong>, non restare un dato archiviato.</p>
+<p>Chiediamo che la scrittura dell'esito <code>WA-NR-SI</code> produca su Nexus:</p>
+<ul>
+  <li>evidenza visiva immediata sulla lead e possibilità di <strong>filtrare</strong> l'elenco dei pazienti in questo stato (§2.4);</li>
+  <li>preferibilmente, il rientro della lead nella <strong>coda di lavoro delle operatrici</strong> secondo le vostre convenzioni — riapertura, attività da svolgere, task o equivalente.</li>
+</ul>
+<p>Se il rientro automatico in coda non è previsto, indicateci quale sia la strada più semplice per ottenere lo stesso risultato: senza di essa la fase produce richieste di appuntamento che nessuno lavora.</p>
+
+<h4>4.3.3 Esiti</h4>
+<p>Valori <code>WA-NR-*</code> del §07 sul campo <strong>nuovo</strong> <code>stato_reingaggio</code> (§2.2), con le proprietà dei §2.1, §2.3 e §2.4. In particolare: <strong>l'esito <em>Non risponde</em> originario e la campagna di provenienza non devono essere modificati.</strong></p>
+
+<h3>4.4 Regola di ingaggio</h3>
+<p>La regola — dopo quanti tentativi telefonici a vuoto e dopo quanti giorni parte il messaggio, e se sia previsto un solo invio o più di uno — la definiamo noi con Bludental e la implementiamo lato LeadSystem. A Nexus non chiediamo di implementarla, ma di <strong>fornire i dati su cui si applica</strong> (§4.3.1) e di <strong>accogliere il risultato</strong> (§4.3.2, §4.3.3).</p>
+
+<h3>4.5 Criteri di accettazione della Fase 2</h3>
+<ul>
+  <li>Il passaggio dell'esito di una lead a <em>Non risponde</em> genera una chiamata al nostro webhook entro pochi minuti, con numero di tentativi e data dell'ultimo tentativo. <em>(§4.3.1)</em></li>
+  <li>Gli esiti <code>WA-NR-*</code> sono scrivibili via API su <code>stato_reingaggio</code> e non alterano <code>esito</code>, <code>lead_status</code> né <code>campagna</code>. <em>(§4.3.3)</em></li>
+  <li>Una lead in stato <code>WA-NR-SI</code> è riconoscibile a video, filtrabile e lavorabile dal contact center. <em>(§4.3.2)</em></li>
+</ul>
+
+<!-- ============ 05 ============ -->
+<h2 class="sec phase"><span class="n">/05</span> FASE 3 — RECUPERO NO SHOW <span class="badge">Priorità 3</span></h2>
+
+<h3>5.1 Obiettivo</h3>
+<p>Riportare in agenda i pazienti che non si sono presentati alla prima visita, proponendo una nuova data. Chi risponde «SÌ» torna in coda al contact center per essere riprogrammato.</p>
+
+<h3>5.2 Il messaggio</h3>
+<div class="msg">
+  <p class="h">Testo definito da Bludental</p>
+  <p class="body">Gentile Paziente,
+abbiamo notato che non ha potuto effettuare la prima visita che aveva prenotato.
+
+Desidera fissare una nuova data? Risponda "SI" a questo messaggio e la ricontatteremo per organizzare il suo appuntamento.
+Se preferisce rimandare, risponda "NO" e resteremo comunque a disposizione.
+
+Le ricordiamo che la Prima Visita è gratuita e prevede un check up completo con i nostri professionisti per valutare in modo approfondito lo stato della sua salute orale.
+
+La aspettiamo nel nostro centro,
+Team BluDental</p>
+</div>
+
+<h3>5.3 Cosa serve da Nexus</h3>
+
+<h4>5.3.1 No Show riferito al singolo appuntamento <span class="badge dark">bloccante</span></h4>
+<p>Come descritto al <strong>§1.4</strong> e risolto strutturalmente dal <strong>§2.5</strong>: oggi il flag è un attributo del paziente, non dell'appuntamento.</p>
+<p>La conseguenza pratica è duplice. <strong>Non possiamo inviare il messaggio in sicurezza:</strong> una lead con <code>no_show = '1'</code> e un appuntamento futuro già in agenda riceverebbe un invito a riprenotare quando ha già una prenotazione attiva. E <strong>non possiamo misurare il pilota:</strong> senza sapere quale appuntamento è stato disatteso non si calcola il rapporto fra appuntamenti fissati e appuntamenti realmente svolti per campagna, che è l'indicatore di qualità delle campagne.</p>
+<p>Soluzioni accettabili, in ordine di preferenza: <strong>(a)</strong> l'oggetto appuntamento del §2.5, con <code>no_show</code> al suo interno; <strong>(b)</strong> il flag legato all'appuntamento; <strong>(c)</strong> in aggiunta al flag, l'esposizione della <strong>data dell'appuntamento non onorato</strong>.</p>
+
+<h4>5.3.2 Valorizzazione retroattiva</h4>
+<p>Chiediamo la valorizzazione del No Show anche <strong>sullo storico</strong>, cioè sulle lead e sugli appuntamenti già presenti in Nexus. I dati del §1.4 mostrano che lo storico anteriore a giugno 2026 è di fatto vuoto.</p>
+<p>Non blocca l'invio dei messaggi, ma blocca la <strong>lettura dei risultati</strong>: senza storico non esiste una baseline con cui confrontare il tasso di No Show prima e dopo l'attivazione dei flussi, e il pilota non è valutabile. Segnaliamo inoltre, per evitare un backfill su base errata, che la colonna <code>data_appuntamento</code> non è utilizzabile a questo scopo (§1.4).</p>
+
+<h4>5.3.3 Esiti e rientro in coda</h4>
+<p>Valori <code>WA-NOSHOW-*</code> del §07 sul campo <strong>nuovo</strong> <code>stato_recupero</code> (§2.2). Per l'esito <code>WA-NOSHOW-SI</code> vale integralmente quanto richiesto al §4.3.2: il paziente che chiede una nuova data deve tornare lavorabile dal contact center.</p>
+<p>Anche qui il vincolo del §2.1 è essenziale: <strong>l'esito originario di appuntamento fissato non va sovrascritto</strong>. Solo mantenendo entrambe le informazioni si legge sia «quanti appuntamenti ho generato» sia «quanti si sono realmente svolti».</p>
+
+<h3>5.4 Trigger lato Funnel</h3>
+<p>L'invio parte il giorno successivo al sync notturno che rileva il No Show; la regola di dettaglio (attesa, eventuale secondo invio) la concordiamo con Bludental. È uno sviluppo nostro: a Nexus chiediamo solo il dato corretto (§5.3.1) e l'accoglimento dell'esito (§5.3.3). Con l'evento <code>no_show</code> del §2.6 il flusso diventa più tempestivo, ma non è una condizione necessaria.</p>
+
+<h3>5.5 Criteri di accettazione della Fase 3</h3>
+<ul>
+  <li>Interrogando l'API su una lead con appuntamento non onorato, la risposta contiene <strong>contemporaneamente</strong> l'esito originario di appuntamento fissato e l'indicazione di No Show. <em>(§2.1)</em></li>
+  <li>È possibile determinare <strong>quale</strong> appuntamento è stato disatteso e in quale data. <em>(§5.3.1)</em></li>
+  <li>Una lead con No Show pregresso e un appuntamento futuro attivo è distinguibile da una lead con No Show e nessun appuntamento aperto. <em>(§5.3.1)</em></li>
+  <li>Gli esiti <code>WA-NOSHOW-*</code> sono scrivibili su <code>stato_recupero</code>, visibili e filtrabili; <code>WA-NOSHOW-SI</code> è lavorabile dal contact center. <em>(§5.3.3)</em></li>
+</ul>
+
+<!-- ============ 06 ============ -->
+<h2 class="sec newpage"><span class="n">/06</span> RIEPILOGO DELLE RICHIESTE</h2>
+
+<table class="d">
+  <thead><tr><th style="width:8mm">#</th><th style="width:46mm">Richiesta</th><th style="width:14mm">Fase</th><th style="width:42mm">Tipo / formato</th><th>Stato e note</th></tr></thead>
+  <tbody>
+    <tr class="hl">
+      <td><strong>1</strong></td>
+      <td><strong>Valorizzazione dei campi appuntamento sulle lead create dopo il rilascio</strong></td>
+      <td>1 · 3</td><td>—</td>
+      <td><span class="badge dark">Bloccante</span> 0 su 363 lead fissate create dal 06/08 hanno <code>data_ora_appuntamento</code> (§1.3)</td>
+    </tr>
+    <tr class="hl">
+      <td><strong>2</strong></td>
+      <td><strong>Centro e indirizzo dell'appuntamento</strong></td>
+      <td>1</td>
+      <td>Denominazione centro + via/civico, CAP, città, provincia; codice sede se disponibile</td>
+      <td><span class="badge dark">Bloccante</span> <code>centro_bludental</code> vuoto su ~86.000 lead (§3.4.2)</td>
+    </tr>
+    <tr>
+      <td><strong>3</strong></td>
+      <td>Aggiornamento di data, ora, centro e indirizzo in caso di spostamento</td>
+      <td>1</td><td>—</td>
+      <td>Su data e ora già confermato; da estendere a centro e indirizzo (§3.4.3)</td>
+    </tr>
+    <tr>
+      <td><strong>4</strong></td>
+      <td><strong>Appuntamento come oggetto con <code>id_appuntamento</code> univoco</strong>, con <code>no_show</code>, centro, indirizzo, stato e <code>stato_conferma</code> al suo interno</td>
+      <td>1 · 2 · 3</td>
+      <td>Elenco di oggetti nel payload lead; <code>POST /lead/api/set</code> accetta <code>id_appuntamento</code></td>
+      <td><span class="badge dark">Nuovo</span> requisito strutturale, additivo: risolve granularità, spostamenti e scrittura indirizzata (§2.5)</td>
+    </tr>
+    <tr>
+      <td><strong>5</strong></td>
+      <td><strong>Webhook di notifica evento</strong> Nexus → LeadSystem</td>
+      <td>2 <span class="nw">(1 · 3)</span></td>
+      <td><code>POST</code> JSON verso endpoint nostro, con token</td>
+      <td><span class="badge dark">Nuovo</span> obbligatorio per la Fase 2, raccomandato per la Fase 1 (§2.6)</td>
+    </tr>
+    <tr>
+      <td><strong>6</strong></td>
+      <td>Campi <code>numero_tentativi</code> e <code>data_ultimo_tentativo</code></td>
+      <td>2</td>
+      <td>Intero; ISO 8601 con fuso</td>
+      <td><span class="badge dark">Nuovo</span> sull'evento o sulla lead (§4.3.1)</td>
+    </tr>
+    <tr>
+      <td><strong>7</strong></td>
+      <td>Nuovi campi <code>stato_reingaggio</code> e <code>stato_recupero</code></td>
+      <td>2 · 3</td>
+      <td>Testo, max 255, come <code>stato_conferma</code></td>
+      <td><span class="badge dark">Nuovo</span> (§2.2)</td>
+    </tr>
+    <tr>
+      <td><strong>8</strong></td>
+      <td><strong>Esiti aggiuntivi censiti</strong> con codice stabile ed etichetta a video</td>
+      <td>2 · 3</td>
+      <td>Elenco valori al §07</td>
+      <td><span class="badge dark">Nuovo</span> non devono sostituire gli esiti base. <strong>La Fase 1 non richiede valori nuovi</strong> (§2.2, §07)</td>
+    </tr>
+    <tr>
+      <td><strong>9</strong></td>
+      <td><strong>Evidenza visiva e filtrabilità</strong> degli esiti di conferma e dei nuovi esiti; <strong>rientro in coda</strong> per i pazienti che rispondono «SÌ»</td>
+      <td>1 · 2 · 3</td><td>—</td>
+      <td><span class="badge open">Punto aperto</span> modalità da proporre da parte vostra o da allineare con Bludental (§2.4, §3.4.4, §4.3.2)</td>
+    </tr>
+    <tr class="hl">
+      <td><strong>10</strong></td>
+      <td><strong>Modifica di <code>SI-CONFERMA</code> / <code>NO-CONFERMA</code> da interfaccia</strong> da parte delle operatrici</td>
+      <td>1</td>
+      <td>Campo <code>stato_conferma</code> editabile a video; modifica rileggibile via API</td>
+      <td><span class="badge dark">Nuovo</span> serve a far rientrare nel flusso chi conferma per telefono; origine della modifica distinguibile nello storico (§3.4.6)</td>
+    </tr>
+    <tr>
+      <td><strong>11</strong></td>
+      <td><strong>Storico degli esiti in sola aggiunta</strong>, leggibile via API</td>
+      <td>1 · 2 · 3</td>
+      <td>Valore + data/ora + origine</td>
+      <td><span class="badge dark">Nuovo</span> sufficiente esporre lo storico lead se già esistente (§2.3)</td>
+    </tr>
+    <tr>
+      <td><strong>12</strong></td>
+      <td><strong>No Show riferito al singolo appuntamento</strong> (o data dell'appuntamento non onorato)</td>
+      <td>3</td>
+      <td>Dentro l'oggetto appuntamento, o flag legato all'appuntamento, o campo data aggiuntivo</td>
+      <td><span class="badge dark">Da sviluppare</span> già richiesto nella Rev. 1.2 (§5.3.1)</td>
+    </tr>
+    <tr>
+      <td><strong>13</strong></td>
+      <td><strong>Valorizzazione retroattiva</strong> del No Show</td>
+      <td>3</td><td>—</td>
+      <td><span class="badge dark">Non soddisfatto</span> storico anteriore a giugno 2026 di fatto vuoto (§5.3.2)</td>
+    </tr>
+    <tr>
+      <td><strong>14</strong></td>
+      <td>Campo <code>opt_out_whatsapp</code></td>
+      <td>1 · 2 · 3</td>
+      <td>Stringa <code>'1'</code> / <code>NULL</code>, scrivibile da noi</td>
+      <td><span class="badge dark">Nuovo</span> da concordare prima dell'avvio (§2.7)</td>
+    </tr>
+    <tr>
+      <td><strong>15</strong></td>
+      <td>Correzione: valore numerico <code>0</code> salvato come <code>NULL</code> su <code>POST /lead/api/set</code></td>
+      <td>—</td><td>—</td>
+      <td><span class="badge open">Difetto minore</span> oggi aggirato inviando la stringa <code>"0"</code> (§2.8)</td>
+    </tr>
+    <tr>
+      <td><strong>16</strong></td>
+      <td>Elenco delle <strong>15 cliniche pilota</strong> con denominazione e codice esatti su Nexus</td>
+      <td>1</td><td>—</td>
+      <td><span class="badge open">Da fornire</span> richiesta a Bludental e Nexus (§3.2)</td>
+    </tr>
+    <tr>
+      <td><strong>17</strong></td>
+      <td>Lead di prova, token del webhook, lead di esempio valorizzata</td>
+      <td>1 · 2 · 3</td><td>—</td>
+      <td><span class="badge open">Da concordare</span> (§2.9)</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ============ 07 ============ -->
+<h2 class="sec"><span class="n">/07</span> ESITI PROPOSTI</h2>
+
+<p>Nomenclatura proposta da Funnel: adattatela liberamente alle vostre convenzioni, purché i codici siano <strong>stabili nel tempo</strong> e ce li comunichiate in forma definitiva. Il prefisso <code>WA-</code> segnala all'operatrice che l'esito è prodotto dal flusso WhatsApp automatico e non da un contatto telefonico.</p>
+<p>Tutti questi valori sono <strong>aggiuntivi</strong>: si affiancano agli esiti base del contact center (<em>Appuntamento Fissato</em>, <em>Non risponde</em>, …) e non li sostituiscono mai.</p>
+<p>L'elenco è volutamente ridotto all'essenziale. <strong>La Fase 1 non introduce alcun valore nuovo</strong> e usa i due già in produzione; per le Fasi 2 e 3 chiediamo di censire soltanto gli esiti che corrispondono a una <em>decisione del paziente</em>. La tracciatura degli invii resta interamente sul nostro sistema e non richiede scritture su Nexus.</p>
+
+<table class="d">
+  <thead><tr><th style="width:44mm">Codice</th><th style="width:56mm">Etichetta proposta a video</th><th>Significato e azione attesa</th></tr></thead>
+  <tbody>
+    <tr><td colspan="3" style="background:var(--wash); font-weight:700; font-size:7pt; letter-spacing:1.2pt; text-transform:uppercase;">Fase 1 · campo <code>stato_conferma</code> · nessun valore nuovo</td></tr>
+    <tr><td><code>SI-CONFERMA</code> <span class="badge">in uso</span></td><td>Appuntamento confermato dal paziente</td><td>Evita chiamate di conferma ridondanti al centro.</td></tr>
+    <tr><td><code>NO-CONFERMA</code> <span class="badge">in uso</span></td><td>Appuntamento non confermato</td><td>Il paziente ha disdetto, oppure non ha risposto al sollecito entro 12 ore (§3.3). <strong>Slot da liberare e paziente da ricontattare</strong> (§3.4.4).</td></tr>
+
+    <tr><td colspan="3" style="background:var(--wash); font-weight:700; font-size:7pt; letter-spacing:1.2pt; text-transform:uppercase;">Fase 2 · campo <code>stato_reingaggio</code></td></tr>
+    <tr class="hl"><td><code>WA-NR-SI</code></td><td>Interessato — da ricontattare</td><td><strong>Il paziente ha chiesto di essere richiamato per fissare.</strong> Deve comparire in coda di lavoro (§4.3.2).</td></tr>
+    <tr><td><code>WA-NR-NO</code></td><td>Non interessato (WhatsApp)</td><td>Il paziente ha rimandato. Nessun ulteriore invio automatico.</td></tr>
+    <tr><td><code>WA-NR-SILENZIO</code></td><td>Reingaggio senza risposta</td><td>Nessuna risposta al messaggio.</td></tr>
+
+    <tr><td colspan="3" style="background:var(--wash); font-weight:700; font-size:7pt; letter-spacing:1.2pt; text-transform:uppercase;">Fase 3 · campo <code>stato_recupero</code></td></tr>
+    <tr class="hl"><td><code>WA-NOSHOW-SI</code></td><td>Da riprogrammare — interessato</td><td><strong>Il paziente ha chiesto una nuova data.</strong> Deve comparire in coda di lavoro (§5.3.3).</td></tr>
+    <tr><td><code>WA-NOSHOW-NO</code></td><td>Non interessato (WhatsApp)</td><td>Il paziente ha rimandato. Nessun ulteriore invio automatico.</td></tr>
+    <tr><td><code>WA-NOSHOW-SILENZIO</code></td><td>Recupero senza risposta</td><td>Nessuna risposta al messaggio.</td></tr>
+
+    <tr><td colspan="3" style="background:var(--wash); font-weight:700; font-size:7pt; letter-spacing:1.2pt; text-transform:uppercase;">Trasversale · campo <code>opt_out_whatsapp</code></td></tr>
+    <tr><td><code>WA-OPT-OUT</code></td><td>Non ricontattare via WhatsApp</td><td>Il paziente ha chiesto di non ricevere più messaggi. Vale per tutti e tre i flussi e non scade (§2.7).</td></tr>
+  </tbody>
+</table>
+
+<!-- ============ 08 ============ -->
+<h2 class="sec"><span class="n">/08</span> RISCONTRI RICHIESTI E SEQUENZA DI ATTIVAZIONE</h2>
+
+<p>Le tre fasi sono <strong>indipendenti e possono essere rilasciate separatamente</strong>: non è necessario attendere il completamento di tutte per attivare la prima. La priorità indicata da Bludental è Fase 1 → Fase 2 → Fase 3.</p>
+
+<p>Chiediamo cortesemente un riscontro sui seguenti punti:</p>
+<ol>
+  <li><strong>Richiesta n. 1 del §06 (§1.3).</strong> È il punto più urgente e riguarda dati già rilasciati: ci serve la conferma della causa e la data di rientro. Fino alla sua risoluzione nessuna delle tre fasi è attivabile.</li>
+  <li><strong>Fattibilità e modalità realizzativa</strong> per ciascuna delle richieste del §06, con l'indicazione di quali ritenete percorribili e quali no.</li>
+  <li><strong>Nomi definitivi dei campi e valori ammessi</strong>, per allineare il nostro parser prima del rilascio ed evitare interventi correttivi a flusso già acceso.</li>
+  <li><strong>Data prevista di rilascio, distinta per fase.</strong> Non indichiamo una scadenza: ci regoliamo sulle vostre tempistiche, che ci servono però per pianificare gli sviluppi lato Funnel e la comunicazione ai centri pilota. Segnaliamo solo, come riferimento operativo, che l'agenda Bludental riprende il <strong>24 agosto 2026</strong> e che il primo messaggio di recall parte 4 giorni prima dell'appuntamento.</li>
+  <li><strong>Offerta economica</strong>, se possibile ripartita per fase, così da consentire a Bludental di autorizzare le attivazioni in modo progressivo.</li>
+  <li><strong>Punti aperti da concordare:</strong> modalità di resa in interfaccia degli esiti di conferma e dei nuovi esiti (§2.4, §3.4.4), rientro in coda dei pazienti che rispondono «SÌ» (§4.3.2), token del webhook (§2.6).</li>
+</ol>
+
+<p>Restiamo a disposizione per un incontro tecnico di allineamento sulle specifiche, che riteniamo utile in particolare sui requisiti §2.5 (oggetto appuntamento) e §2.6 (webhook), dove una scelta condivisa a monte riduce sensibilmente il lavoro di entrambe le parti.</p>
+
+<!-- ============ CONTATTI ============ -->
+<div class="contacts">
+  <p class="kicker">Contatti</p>
+  <div class="cols">
+    <div class="col">
+      <p class="lbl">Funnel Consulting</p>
+      <p class="nm">Francesca Di Lallo</p>
+      <p class="rl">Direttore Generale</p>
+      <p class="nm">Mattia Noris</p>
+      <p class="rl">Referente tecnico integrazione LeadSystem</p>
+    </div>
+    <div class="col">
+      <p class="lbl">Bludental</p>
+      <p class="nm">Simona Salis</p>
+      <p class="rl">Direttrice Marketing</p>
+    </div>
+  </div>
+  <p class="lbl" style="margin-top:6mm; margin-bottom:2mm;">Distribuzione</p>
+  <p style="color:#c9c9c9; margin:0; font-size:8.6pt;">Si chiede cortesemente di indirizzare le comunicazioni di rilascio e di riscontro tecnico, in copia, a: Simona Salis, Francesca Di Lallo, Mattia Noris, Andrea Caruso.</p>
+</div>
+
+<p class="foot">Funnel Consulting · Specifica funzionale LeadSystem ↔ Nexus · Rev. 2.0 · 12 agosto 2026 · Sostituisce la Rev. 1.2 del 06/08/2026</p>
+
+</body>
+</html>

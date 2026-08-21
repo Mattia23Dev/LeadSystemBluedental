@@ -1,3 +1,8 @@
+> **SUPERATO.** Questo documento (Rev. 1.0, 30/07/2026) è stato sostituito dalla
+> **Rev. 2.0 del 12/08/2026** — `docs/Specifica-Funzionale-LeadSystem-Nexus-v2.0.html`,
+> che riorganizza i requisiti nelle tre fasi del progetto pilota Bludental
+> (Recall / Reingaggio NR / Recupero No Show). Conservato solo per storico.
+
 # Specifica funzionale — Integrazione LeadSystem ↔ Nexus
 ## Esito "No Show" e data/ora appuntamento per reminder automatici
 

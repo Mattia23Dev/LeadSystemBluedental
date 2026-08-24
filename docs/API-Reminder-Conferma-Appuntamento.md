@@ -2,15 +2,15 @@
 
 | | |
 |---|---|
-| **Versione** | 1.1 — 12 agosto 2026 |
+| **Versione** | 2.0 — 24 agosto 2026 |
 | **Ambiente** | Produzione (`https://leadsystembluedental-production.up.railway.app`) |
-| **Stato** | Endpoint di conferma **live e testato**. Invio reminder **integrato e testato** sul connector del qualificatore (contratto dell'11/08/2026). |
+| **Stato** | Endpoint di conferma **live e testato**. Invio reminder integrato sul connector del qualificatore, aggiornato al contratto del 24/08/2026: tre flussi, variabili dentro `dynamicVariables`, chiave webhook ruotata. |
 
 ## 1. Il flusso in due righe
 
-1. LeadSystem conosce gli appuntamenti fissati (mirror dell'agenda Nexus, aggiornato ogni ora) e chiede al qualificatore di inviare al paziente il template WhatsApp *"Ci sarai?" → Sì / No*: una prima volta **~4 giorni prima** (flusso "4 giorni") e una seconda **il giorno prima** (flusso "1 giorno").
+1. LeadSystem conosce gli appuntamenti fissati (mirror dell'agenda Nexus, aggiornato ogni ora) e chiede al qualificatore di mandare al paziente il template giusto per il momento. I messaggi sono **tre** e non hanno lo stesso destinatario: il primo a ~4 giorni va a tutti, il sollecito a ~2 giorni solo a chi non ha risposto, il promemoria finale a ~1 giorno **solo a chi ha confermato**.
 2. Il qualificatore raccoglie la risposta e la rimanda a LeadSystem, che la scrive su Nexus nel campo `stato_conferma` (`SI-CONFERMA` / `NO-CONFERMA`).
-3. Chi non risponde entro 24 ore dall'appuntamento viene chiuso automaticamente a `NO-CONFERMA` da LeadSystem: **non serve che il qualificatore mandi nulla per i silenzi**.
+3. Il silenzio **dopo il sollecito** diventa `NO-CONFERMA` in automatico dopo 12 ore, come promette il testo del sollecito stesso: **non serve che il qualificatore mandi nulla per i silenzi**. Il silenzio dopo il solo primo messaggio non produce invece alcuna scrittura.
 
 ---
 
@@ -103,12 +103,14 @@ Ogni chiamata viene tracciata da noi (payload grezzo compreso), quindi in caso d
 
 ## 3. Direzione B — LeadSystem → Qualificatore (richiesta di invio template)
 
-Contratto consegnato l'11/08/2026 e **implementato** (`server/helpers/qualificatore.js`).
+Contratto consegnato l'11/08/2026, aggiornato il 24/08/2026 e **implementato** (`server/helpers/qualificatore.js`).
+
+> **Cos'è cambiato il 24/08/2026** — le variabili del template non stanno più in cima al payload ma dentro `dynamicVariables`; città e indirizzo si chiamano ora `citta_visita` e `indirizzo_visita` (prima `citta_centro` / `indirizzo_centro`) e il nome del centro non serve più; si aggiunge il terzo flusso (sollecito a 2 giorni); la chiave webhook è stata ruotata.
 
 ```
 POST https://prequalifica-ai-workflow-production.up.railway.app/connector/webhook
 Content-Type: application/json
-X-API-Key: whk_…L5zY
+X-API-Key: whk_…5YUM
 ```
 
 ```json
@@ -120,16 +122,23 @@ X-API-Key: whk_…L5zY
   "email": "mario.rossi@example.com",
   "source": "facebook_ad",
   "flow_id": "c4e58437-dbe3-4e11-8af0-98de2e9d6710",
-  "orario_visita": "10:30",
-  "data_visita": "24/08/2026",
-  "lead_id": "6a72ed08f2a66c279728b9db"
+  "dynamicVariables": {
+    "orario_visita": "10:30",
+    "data_visita": "29/08/2026",
+    "lead_id": "6a72ed08f2a66c279728b9db",
+    "citta_visita": "BOLOGNA",
+    "indirizzo_visita": "VIA EMILIA PONENTE 100"
+  }
 }
 ```
 
-| `flow_id` | Flusso | Quando lo mandiamo |
-|---|---|---|
-| `c4e58437-dbe3-4e11-8af0-98de2e9d6710` | 4 giorni | appuntamento fra 24h e 96h |
-| `89164730-2545-4615-9d51-b0c3f47a5329` | 1 giorno | appuntamento fra 3h e 24h |
+| `flow_id` | Flusso | Finestra | A chi va |
+|---|---|---|---|
+| `c4e58437-dbe3-4e11-8af0-98de2e9d6710` | 4 giorni — primo promemoria | fra 48h e 96h | a tutti |
+| `cade2965-4ad2-4de1-9114-ede44223b786` | 2 giorni — sollecito | fra 24h e 48h | solo a chi non ha risposto |
+| `89164730-2545-4615-9d51-b0c3f47a5329` | 1 giorno — promemoria finale | fra 3h e 24h | solo a chi ha confermato |
+
+`citta_visita` e `indirizzo_visita` vengono dalla nostra anagrafica dei centri, non dalla stringa concatenata di Nexus: i testi Bludental li usano separati ("presso BluDental a \[Città\] in \[Indirizzo\]").
 
 Risposta osservata: `201` con `{ "lead_id": "…", "contact_id": "…", "conversation_id": "…" }` — id **del qualificatore**, che salviamo su `Lead.appuntamento.reminder` per riconciliare le conversazioni.
 
@@ -138,24 +147,24 @@ Risposta osservata: `201` con `{ "lead_id": "…", "contact_id": "…", "convers
 - `data_visita` la mandiamo come `gg/mm/aaaa` e `orario_visita` come `hh:mm` (ora italiana). Se il template si aspetta un altro formato, ditecelo: è una riga di codice.
 - `lead_id` è **il nostro** id LeadSystem: ritornandocelo nella conferma il match è certo. Il match sul solo telefono funziona, ma su numeri presenti più volte in anagrafica selezioniamo la lead più recente.
 - Il connector non prevede un campo `callback_url`: la risposta del paziente va inoltrata all'endpoint della **sezione 2**, che va configurato da parte vostra.
-- Chiamando due volte lo stesso numero abbiamo ricevuto lo stesso `conversation_id`: confermateci che il secondo flusso (1 giorno) parte comunque anche se la conversazione esiste già.
+- Chiamando due volte lo stesso numero abbiamo ricevuto lo stesso `conversation_id`: confermateci che i flussi successivi al primo partono comunque anche se la conversazione esiste già.
 
 ---
 
 ## 4. Regole operative
 
-- **Finestre di invio:** flusso "4 giorni" fra 96h e 24h dall'appuntamento, flusso "1 giorno" fra 24h e 3h. Un appuntamento fissato o spostato con poco preavviso riceve comunque il reminder al primo giro utile, con il flusso corrispondente.
-- **Nessun doppio invio dello stesso flusso** per lo stesso orario (i due flussi partono comunque entrambi). Se l'appuntamento viene **spostato**, i reminder ripartono e l'eventuale risposta data per il vecchio orario viene annullata.
-- **Chi ha risposto NO** non riceve il reminder del giorno prima: ha già disdetto.
+- **Chi riceve cosa:** primo promemoria a tutti; sollecito solo a chi non ha ancora risposto; promemoria finale solo a chi ha confermato, al primo o al secondo messaggio. Chi risponde **NO** esce dal ciclo e non riceve altro.
+- **Finestre di invio:** 4 giorni fra 96h e 48h, 2 giorni fra 48h e 24h, 1 giorno fra 24h e 3h. Un appuntamento fissato o spostato con poco preavviso si aggancia al primo giro utile, ma il primo messaggio che riceve è sempre quello a "4 giorni": il sollecito dice *"non abbiamo ancora ricevuto conferma"* e a chi non ha mai ricevuto nulla direbbe una cosa falsa.
+- **Nessun doppio invio dello stesso flusso** per lo stesso orario. Se l'appuntamento viene **spostato**, il ciclo riparte da capo e l'eventuale risposta data per il vecchio orario viene annullata.
 - **Disdette:** gli appuntamenti spariti dall'agenda Nexus non ricevono reminder.
-- **Silenzi:** li chiude LeadSystem a `NO-CONFERMA` dopo il cutoff (24h prima dell'appuntamento, con almeno 6h di attesa dall'invio).
+- **Silenzi:** LeadSystem scrive `NO-CONFERMA` dopo 12 ore di silenzio dal sollecito, e solo quando la finestra del sollecito è chiusa — così chi ha ricevuto il primo messaggio a −4 giorni non viene chiuso mentre ha ancora il sollecito davanti.
 - `stato_conferma` è un campo dedicato su Nexus: l'aggiornamento è parziale e **non tocca `campagna`, `esito` o `lead_status`**, quindi l'attribuzione delle performance resta intatta.
 
 ---
 
 ## 5. Sequenza di collaudo proposta
 
-1. ✅ Endpoint di invio provato sui due flussi con numero interno: `201` su entrambi, template ricevuti (12/08/2026).
+1. ✅ Endpoint di invio provato sui flussi 4 giorni e 1 giorno con numero interno: `201` su entrambi, template ricevuti (12/08/2026). Da rifare sul contratto nuovo, sollecito compreso: `node server/scripts/test-reminder-connector.js --stage all --live`
 2. Test end-to-end su una lead di prova: creazione → Nexus → reminder → risposta Sì/No → `stato_conferma` su Nexus.
    ```
    node server/scripts/test-reminder-e2e.js crea
@@ -170,8 +179,9 @@ Risposta osservata: `201` con `{ "lead_id": "…", "contact_id": "…", "convers
 
 | Variabile | Valore |
 |---|---|
-| `REMINDER_API_KEY` | `whk_…L5zY` (**obbligatoria**: senza, l'invio è disattivato) |
+| `REMINDER_API_KEY` | la chiave webhook aggiornata il 24/08/2026 (**obbligatoria**: senza, l'invio è disattivato; la precedente non funziona più) |
 | `REMINDER_ENABLED` | `true` per accendere le cron (default `false`) |
 | `REMINDER_DRY_RUN` | `false` per inviare davvero (default `true`) |
+| `REMINDER_WHITELIST_ATTIVA` | **da non impostare** durante il collaudo: assente significa attiva, e la whitelist limita gli invii ai soli numeri del gruppo di test (`server/config/test-whitelist.js`). Metterla a `false` apre l'invio ai pazienti veri. |
 
-URL, `project_id` e i due `flow_id` sono già i default nel codice; si sovrascrivono con `REMINDER_API_URL`, `REMINDER_PROJECT_ID`, `REMINDER_FLOW_4G`, `REMINDER_FLOW_1G`.
+URL, `project_id` e i tre `flow_id` sono già i default nel codice; si sovrascrivono con `REMINDER_API_URL`, `REMINDER_PROJECT_ID`, `REMINDER_FLOW_4G`, `REMINDER_FLOW_2G`, `REMINDER_FLOW_1G`. Le soglie delle finestre stanno in `REMINDER_STAGE_4G_ORE`, `REMINDER_STAGE_2G_ORE`, `REMINDER_STAGE_1G_ORE` e `REMINDER_ATTESA_SOLLECITO_ORE`.

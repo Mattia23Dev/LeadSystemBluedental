@@ -6,42 +6,56 @@
  *  1) INVIO (default ogni ora)
  *     Legge dal MIRROR LOCALE (Lead.appuntamento, tenuto allineato da
  *     scripts/nexus-agenda-sync.js) gli appuntamenti in arrivo e chiede al
- *     qualificatore di mandare il template WhatsApp ("Ci sarai?" -> Si / No).
+ *     qualificatore di mandare il template WhatsApp giusto per il momento.
  *
- *     Due flussi distinti lato qualificatore, scelti in base a quanto manca:
- *       stage '4g' -> appuntamento fra STAGE_1G_ORE e STAGE_4G_ORE (default 24h-96h)
- *       stage '1g' -> appuntamento fra MIN_ORE e STAGE_1G_ORE   (default 3h-24h)
- *     Lo stesso appuntamento riceve quindi fino a DUE reminder: il primo qualche
- *     giorno prima, il secondo il giorno prima.
+ *     Il ciclo e' a TRE messaggi (Rev. 2.0 §3.4), e non sono tre copie dello stesso
+ *     promemoria: ognuno ha un destinatario diverso, deciso dalla risposta ai precedenti.
+ *
+ *       stage '4g'  appuntamento fra STAGE_2G_ORE e STAGE_4G_ORE (default 48h-96h)
+ *                   Primo promemoria con richiesta di conferma. Va a TUTTI.
+ *                   SI -> SI-CONFERMA · NO -> NO-CONFERMA · silenzio -> non si scrive nulla
+ *       stage '2g'  appuntamento fra STAGE_1G_ORE e STAGE_2G_ORE (default 24h-48h)
+ *                   Sollecito. Va SOLO a chi non ha ancora risposto.
+ *                   SI -> SI-CONFERMA · NO -> NO-CONFERMA
+ *                   silenzio per ATTESA_SOLLECITO_ORE -> NO-CONFERMA (job 2)
+ *       stage '1g'  appuntamento fra MIN_ORE e STAGE_1G_ORE (default 3h-24h)
+ *                   Promemoria finale, senza richiesta di conferma. Va SOLO a chi ha
+ *                   confermato, al primo o al secondo messaggio. Non scrive su Nexus.
+ *
+ *     Chi risponde NO esce dal ciclo: ha disdetto, non riceve altro.
  *
  *     Le finestre sono "entro X ore", non "esattamente a N giorni": un appuntamento
- *     fissato o spostato con poco preavviso riceve comunque il reminder al primo
- *     giro utile (con il flusso giusto) invece di essere saltato per sempre.
+ *     fissato o spostato con poco preavviso si aggancia al primo giro utile invece di
+ *     essere saltato per sempre. In quel caso il primo messaggio che riceve e' comunque
+ *     il '4g': il sollecito dice "non abbiamo ancora ricevuto conferma" e a chi non ha
+ *     mai ricevuto niente direbbe una cosa falsa.
  *     Non reinvia due volte lo STESSO stage per lo stesso orario; se l'appuntamento
- *     viene spostato (perDataOra != data/ora corrente) i reminder ripartono.
- *     Salta gli appuntamenti spariti dall'agenda Nexus (disdette) e chi ha gia'
- *     risposto NO (disdetta esplicita: inutile insistere il giorno prima).
+ *     viene spostato (perDataOra != data/ora corrente) il ciclo riparte da capo.
+ *     Salta gli appuntamenti spariti dall'agenda Nexus (disdette).
  *
  *  2) CHIUSURA NON RISPOSTE (default ogni ora)
- *     Chi non ha risposto entro CUTOFF ore dall'appuntamento viene marcato
- *     NO-CONFERMA su Nexus (campo stato_conferma), come da documento funzionale.
- *     Si aspettano comunque ATTESA ore dall'invio prima di dichiarare il silenzio,
- *     cosi' un reminder partito tardi non viene chiuso subito.
+ *     Il silenzio diventa NO-CONFERMA su Nexus solo DOPO il sollecito, non dopo il primo
+ *     messaggio: e' quello che il testo del sollecito promette al paziente ("in assenza
+ *     di riscontro entro la giornata odierna cancelleremo l'appuntamento").
+ *     Si chiude quando sono passate ATTESA_SOLLECITO_ORE dall'ultimo messaggio con
+ *     richiesta di conferma e la finestra del sollecito e' ormai chiusa - cosi' chi ha
+ *     ricevuto il primo promemoria a -4 giorni non viene chiuso mentre ha ancora il
+ *     sollecito davanti.
  *
  * Env:
  *   REMINDER_ENABLED             abilita i cron (default false: si accende quando il
  *                                qualificatore e' collegato e i test sono ok)
  *   REMINDER_DRY_RUN             true = nessun invio, nessuna scrittura (default true)
  *   REMINDER_STAGE_4G_ORE        limite alto: oltre queste ore dall'appuntamento non si
- *                                invia nulla (default 96 = flusso "4 giorni")
- *   REMINDER_STAGE_1G_ORE        soglia fra i due flussi: sotto queste ore si usa il
+ *                                invia nulla (default 96 = primo promemoria)
+ *   REMINDER_STAGE_2G_ORE        soglia del sollecito: sotto queste ore si usa il flusso
+ *                                "2 giorni" (default 48)
+ *   REMINDER_STAGE_1G_ORE        soglia del promemoria finale: sotto queste ore si usa il
  *                                flusso "1 giorno" (default 24)
  *   REMINDER_MIN_ORE             sotto queste ore dall'appuntamento non si invia piu'
  *                                (default 3: un reminder a ridosso e' inutile)
- *   REMINDER_CUTOFF_ORE          ore prima dell'appuntamento oltre le quali la mancata
- *                                risposta diventa NO-CONFERMA (default 24)
- *   REMINDER_ATTESA_ORE          ore minime di attesa dall'invio prima di dichiarare
- *                                "nessuna risposta" (default 6)
+ *   REMINDER_ATTESA_SOLLECITO_ORE  ore di silenzio dopo il sollecito oltre le quali si
+ *                                scrive NO-CONFERMA (default 12, come da testo Bludental)
  *   REMINDER_CRON                cron invio (default '5 * * * *')
  *   REMINDER_CLOSE_CRON          cron chiusura (default '35 * * * *')
  *   REMINDER_MAX_PER_RUN         tetto di sicurezza sugli invii per esecuzione (default 300)
@@ -57,8 +71,9 @@
  *     -> invio REALE alla sola lead con quel numero (--lead <idMongo> per l'id Mongo)
  *   node server/scripts/reminder-appuntamenti.js invio --limit 1 --live
  *     -> invio REALE al primo appuntamento in finestra
- *   --stage 4g|1g  forza il flusso invece di dedurlo dalle ore mancanti
- *   --force  rimanda anche se quello stage per quell'orario e' gia' partito
+ *   --stage 4g|2g|1g  forza il flusso invece di dedurlo dalle ore mancanti
+ *   --force  rimanda anche se quello stage per quell'orario e' gia' partito, e ignora
+ *            le regole su chi puo' riceverlo (serve a provare i template a comando)
  *   --live   e' rifiutato senza un filtro (--tel/--lead/--limit): niente invii di massa per errore
  *
  *   node server/scripts/reminder-appuntamenti.js chiusura
@@ -78,11 +93,13 @@ const { applicaConferma } = require('../helpers/statoConferma');
 const ENABLED = String(process.env.REMINDER_ENABLED || 'false').toLowerCase() === 'true';
 const DRY_RUN = String(process.env.REMINDER_DRY_RUN || 'true').toLowerCase() === 'true';
 const STAGE_4G_ORE = Number(process.env.REMINDER_STAGE_4G_ORE || 96);
+const STAGE_2G_ORE = Number(process.env.REMINDER_STAGE_2G_ORE || 48);
 const STAGE_1G_ORE = Number(process.env.REMINDER_STAGE_1G_ORE || 24);
 const FINESTRA_ORE = STAGE_4G_ORE;
 const MIN_ORE = Number(process.env.REMINDER_MIN_ORE || 3);
-const CUTOFF_ORE = Number(process.env.REMINDER_CUTOFF_ORE || 24);
-const ATTESA_ORE = Number(process.env.REMINDER_ATTESA_ORE || 6);
+// "In assenza di riscontro entro la giornata odierna cancelleremo l'appuntamento":
+// il testo del sollecito da' al paziente una giornata, non un orario preciso.
+const ATTESA_SOLLECITO_ORE = Number(process.env.REMINDER_ATTESA_SOLLECITO_ORE || 12);
 // Perimetro del pilota: si scrive solo ai pazienti dei 16 centri (Rev. 2.0 §3.2 +
 // Bologna Emilia Ponente).
 // Metterlo a false apre l'invio a tutta la rete: da fare solo su decisione di Bludental.
@@ -158,27 +175,76 @@ function dividiPerPerimetro(leads) {
 }
 
 /**
- * Quale flusso serve a questo appuntamento: '1g' se manca meno di STAGE_1G_ORE,
- * altrimenti '4g'. Restituisce null se l'appuntamento e' fuori da ogni finestra.
+ * Quale finestra sta attraversando l'appuntamento adesso: '4g', '2g' o '1g'.
+ * null se e' troppo lontano o troppo vicino perche' valga la pena scrivere.
+ * Attenzione: dice il MOMENTO, non il messaggio da mandare - quello lo decide
+ * messaggioDaInviare(), che guarda anche cosa e' gia' successo.
  */
 function stagePerAppuntamento(dataOraTs, ora = Date.now()) {
   if (!dataOraTs) return null;
   const oreMancanti = (new Date(dataOraTs).getTime() - ora) / 3600000;
   if (oreMancanti < MIN_ORE || oreMancanti > STAGE_4G_ORE) return null;
-  return oreMancanti <= STAGE_1G_ORE ? '1g' : '4g';
+  if (oreMancanti <= STAGE_1G_ORE) return '1g';
+  if (oreMancanti <= STAGE_2G_ORE) return '2g';
+  return '4g';
 }
 
-/** Questo stage, per questo preciso orario, e' gia' partito? */
-function giaGestito(lead, stage) {
+/** La risposta del paziente per l'orario attualmente in agenda ('SI' | 'NO' | null). */
+function rispostaCorrente(lead) {
   const app = lead.appuntamento || {};
   const rem = app.reminder || {};
-  // Chi ha gia' detto NO ha disdetto: non lo si richiama il giorno prima.
-  if (rem.perDataOra === app.dataOra && rem.risposta === 'NO') return true;
+  if (rem.perDataOra !== app.dataOra) return null; // risposta data per un orario ormai spostato
+  return rem.risposta || null;
+}
+
+/** Questo stage, per questo preciso orario, e' gia' partito con esito ok? */
+function giaInviato(lead, stage) {
+  const app = lead.appuntamento || {};
+  const rem = app.reminder || {};
   const invii = Array.isArray(rem.invii) ? rem.invii : [];
   if (invii.some((i) => i.stage === stage && i.perDataOra === app.dataOra && i.esito === 'ok')) return true;
   // Retrocompatibilita' con gli invii fatti prima dello storico per stage.
   if (!invii.length && rem.perDataOra === app.dataOra && rem.esitoInvio === 'ok' && (rem.stage || '4g') === stage) return true;
   return false;
+}
+
+/**
+ * Il messaggio da mandare adesso a questa lead, o null se non le tocca niente.
+ *
+ * La finestra dice a che punto siamo, ma il destinatario di ogni messaggio dipende da
+ * cosa ha risposto finora (Rev. 2.0 §3.4):
+ *   - chi ha detto NO e' fuori dal ciclo;
+ *   - il primo promemoria va a tutti, e va anche a chi si aggancia tardi: se non l'ha
+ *     mai ricevuto glielo si manda comunque, perche' il sollecito ("non abbiamo ancora
+ *     ricevuto conferma") a chi non ha mai ricevuto nulla direbbe una cosa falsa;
+ *   - il sollecito va solo a chi ha ricevuto il primo e non ha risposto;
+ *   - il promemoria finale va solo a chi ha confermato.
+ *
+ * @returns {{stage:string}|{stage:null, motivo:string}}
+ */
+function messaggioDaInviare(lead, finestra) {
+  if (!finestra) return { stage: null, motivo: 'fuori_finestra' };
+
+  const risposta = rispostaCorrente(lead);
+  if (risposta === 'NO') return { stage: null, motivo: 'ha_disdetto' };
+
+  // Primo promemoria mai partito: e' lui che parte, in qualunque finestra siamo.
+  if (!giaInviato(lead, '4g')) {
+    return { stage: '4g' };
+  }
+
+  if (finestra === '4g') return { stage: null, motivo: 'primo_gia_inviato' };
+
+  if (finestra === '2g') {
+    if (risposta === 'SI') return { stage: null, motivo: 'gia_confermato' };
+    if (giaInviato(lead, '2g')) return { stage: null, motivo: 'sollecito_gia_inviato' };
+    return { stage: '2g' };
+  }
+
+  // finestra '1g': il promemoria finale raggiunge soltanto chi ha confermato.
+  if (risposta !== 'SI') return { stage: null, motivo: 'non_ha_confermato' };
+  if (giaInviato(lead, '1g')) return { stage: null, motivo: 'finale_gia_inviato' };
+  return { stage: '1g' };
 }
 
 /** Ultime 10 cifre del numero: unico confronto affidabile fra i formati in DB. */
@@ -228,7 +294,7 @@ async function invioOnce(opts = {}) {
     const inFinestra = await appuntamentiInFinestra();
     const perimetro = dividiPerPerimetro(inFinestra);
     const candidati = filtrato ? applicaFiltri(perimetro.dentro, opts) : perimetro.dentro;
-    console.log(`[Reminder invio] finestra ${MIN_ORE}h-${STAGE_4G_ORE}h (stage 1g sotto ${STAGE_1G_ORE}h) | appuntamenti in agenda=${inFinestra.length} | da servire=${perimetro.dentro.length} | fuori perimetro=${perimetro.fuoriPerimetro.length} | senza centro=${perimetro.senzaCentro.length} | fuori whitelist=${perimetro.fuoriWhitelist.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''} | soloPilota=${SOLO_PILOTA} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
+    console.log(`[Reminder invio] finestre: 4g ${STAGE_2G_ORE}-${STAGE_4G_ORE}h · 2g ${STAGE_1G_ORE}-${STAGE_2G_ORE}h · 1g ${MIN_ORE}-${STAGE_1G_ORE}h | appuntamenti in agenda=${inFinestra.length} | da servire=${perimetro.dentro.length} | fuori perimetro=${perimetro.fuoriPerimetro.length} | senza centro=${perimetro.senzaCentro.length} | fuori whitelist=${perimetro.fuoriWhitelist.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''} | soloPilota=${SOLO_PILOTA} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
     console.log(`[Reminder invio] ${whitelist.descrizione()}`);
     // Un appuntamento senza centro e' un buco di dato, non una scelta: va visto.
     for (const l of perimetro.senzaCentro.slice(0, 10)) {
@@ -243,6 +309,9 @@ async function invioOnce(opts = {}) {
     }
 
     let inviati = 0, saltati = 0, falliti = 0, senzaTelefono = 0;
+    // Perche' una lead in finestra non ha ricevuto niente: senza questo conteggio un
+    // "saltati=37" non dice se il ciclo sta funzionando o se e' rotto qualcosa.
+    const motivi = new Map();
 
     for (const lead of candidati) {
       if (inviati + falliti >= MAX_PER_RUN) {
@@ -253,11 +322,24 @@ async function invioOnce(opts = {}) {
       const app = lead.appuntamento || {};
       const rem = app.reminder || {};
 
-      // Il flusso da usare dipende da quanto manca; --stage lo forza (test).
-      const stage = opts.stage || stagePerAppuntamento(app.dataOraTs);
-      if (!stage) { saltati++; continue; }
-
-      if (!opts.force && giaGestito(lead, stage)) { saltati++; continue; }
+      // La finestra dice a che punto del ciclo siamo, la macchina a stati decide se a
+      // questa lead tocca un messaggio e quale. --stage forza la mano (prove manuali).
+      const finestra = stagePerAppuntamento(app.dataOraTs);
+      let stage;
+      if (opts.stage) {
+        stage = opts.stage;
+        if (!opts.force && giaInviato(lead, stage)) { saltati++; motivi.set('gia_inviato', (motivi.get('gia_inviato') || 0) + 1); continue; }
+      } else {
+        const scelta = messaggioDaInviare(lead, finestra);
+        if (!scelta.stage && !opts.force) {
+          saltati++;
+          motivi.set(scelta.motivo, (motivi.get(scelta.motivo) || 0) + 1);
+          continue;
+        }
+        // --force senza --stage: si rimanda il messaggio della finestra corrente.
+        stage = scelta.stage || finestra;
+        if (!stage) { saltati++; motivi.set('fuori_finestra', (motivi.get('fuori_finestra') || 0) + 1); continue; }
+      }
 
       const telefono = lead.numeroTelefono;
       if (!telefono) {
@@ -343,7 +425,8 @@ async function invioOnce(opts = {}) {
       });
     }
 
-    console.log(`[Reminder invio] Fine | inviati=${inviati} saltati=${saltati} falliti=${falliti} senzaTelefono=${senzaTelefono}`);
+    const dettaglioSaltati = [...motivi.entries()].map(([m, n]) => `${m}=${n}`).join(' ');
+    console.log(`[Reminder invio] Fine | inviati=${inviati} saltati=${saltati} falliti=${falliti} senzaTelefono=${senzaTelefono}${dettaglioSaltati ? ` | saltati per: ${dettaglioSaltati}` : ''}`);
   } catch (e) {
     console.error('[Reminder invio] FAILED:', e?.response?.data || e.message || e);
   } finally {
@@ -360,12 +443,13 @@ async function chiusuraOnce() {
 
   try {
     const ora = new Date();
-    const limite = new Date(ora.getTime() + CUTOFF_ORE * 3600 * 1000);
-    // Il reminder deve essere partito da almeno ATTESA_ORE: un invio tardivo
-    // (appuntamento fissato a ridosso) non va chiuso a NO-CONFERMA all'istante.
-    const inviatoEntro = new Date(ora.getTime() - ATTESA_ORE * 3600 * 1000);
+    // Si chiude solo dentro la finestra del sollecito o piu' avanti: chi ha ricevuto il
+    // primo promemoria a -4 giorni ha ancora il sollecito davanti e non va chiuso ora.
+    const limite = new Date(ora.getTime() + STAGE_2G_ORE * 3600 * 1000);
+    // E solo dopo aver dato al paziente la giornata promessa dal testo del sollecito.
+    const inviatoEntro = new Date(ora.getTime() - ATTESA_SOLLECITO_ORE * 3600 * 1000);
 
-    // Appuntamenti futuri entro il cutoff, reminder inviato, nessuna risposta e
+    // Appuntamenti futuri entro la finestra, ultimo messaggio partito e senza risposta,
     // nessuno stato_conferma gia' scritto.
     const candidati = await Lead.find({
       'appuntamento.dataOraTs': { $gte: ora, $lte: limite },
@@ -381,7 +465,7 @@ async function chiusuraOnce() {
     const ammessi = candidati.filter((l) => whitelist.isConsentito(l?.numeroTelefono));
     const esclusi = candidati.length - ammessi.length;
 
-    console.log(`[Reminder chiusura] candidati=${ammessi.length}${esclusi ? ` (esclusi ${esclusi} fuori whitelist)` : ''} | cutoff=${CUTOFF_ORE}h | attesa=${ATTESA_ORE}h | dryRun=${DRY_RUN}`);
+    console.log(`[Reminder chiusura] candidati=${ammessi.length}${esclusi ? ` (esclusi ${esclusi} fuori whitelist)` : ''} | si chiude entro ${STAGE_2G_ORE}h dall'appuntamento, dopo ${ATTESA_SOLLECITO_ORE}h di silenzio | dryRun=${DRY_RUN}`);
     console.log(`[Reminder chiusura] ${whitelist.descrizione()}`);
 
     let ok = 0, ko = 0;
@@ -433,11 +517,11 @@ if (require.main === module) {
     .then(() => process.exit(0))
     .catch((e) => { console.error('[Reminder]', e?.message || e); process.exit(1); });
 } else if (ENABLED) {
-  console.log(`[Reminder] cron attivi | invio='${CRON_INVIO}' chiusura='${CRON_CHIUSURA}' | finestra=${MIN_ORE}h-${STAGE_4G_ORE}h (1g sotto ${STAGE_1G_ORE}h) cutoff=${CUTOFF_ORE}h attesa=${ATTESA_ORE}h dryRun=${DRY_RUN}`);
+  console.log(`[Reminder] cron attivi | invio='${CRON_INVIO}' chiusura='${CRON_CHIUSURA}' | finestre 4g ${STAGE_2G_ORE}-${STAGE_4G_ORE}h · 2g ${STAGE_1G_ORE}-${STAGE_2G_ORE}h · 1g ${MIN_ORE}-${STAGE_1G_ORE}h | NO-CONFERMA dopo ${ATTESA_SOLLECITO_ORE}h di silenzio dal sollecito | dryRun=${DRY_RUN}`);
   cron.schedule(CRON_INVIO, () => invioOnce().catch((e) => console.error('[Reminder invio] schedule error:', e?.message || e)));
   cron.schedule(CRON_CHIUSURA, () => chiusuraOnce().catch((e) => console.error('[Reminder chiusura] schedule error:', e?.message || e)));
 } else {
   console.log('[Reminder] cron NON attivi (REMINDER_ENABLED != true)');
 }
 
-module.exports = { invioOnce, chiusuraOnce, appuntamentiInFinestra, stagePerAppuntamento, giaGestito };
+module.exports = { invioOnce, chiusuraOnce, appuntamentiInFinestra, stagePerAppuntamento, messaggioDaInviare, giaInviato };

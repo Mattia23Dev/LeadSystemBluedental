@@ -3,7 +3,8 @@
  * invia il template WhatsApp di reminder appuntamento e ci restituisce la risposta
  * del paziente.
  *
- * CONTRATTO (consegnato da Samuel l'11/08/2026):
+ * CONTRATTO (Samuel, 11/08/2026; rivisto il 24/08/2026 con il terzo flusso e le
+ * variabili dentro `dynamicVariables`):
  *
  *   POST https://prequalifica-ai-workflow-production.up.railway.app/connector/webhook
  *   Content-Type: application/json
@@ -13,14 +14,23 @@
  *     "name": "Mario", "surname": "Rossi",
  *     "phone": "+393331234567", "email": "mario.rossi@example.com",
  *     "source": "facebook_ad",
- *     "flow_id": "<flusso 4 giorni | flusso 1 giorno>",
- *     "orario_visita": "10:00", "data_visita": "24/08/2026",
- *     "lead_id": "<_id LeadSystem>"
+ *     "flow_id": "<flusso 4 giorni | 2 giorni | 1 giorno>",
+ *     "dynamicVariables": {
+ *       "orario_visita": "10:00", "data_visita": "24/08/2026",
+ *       "lead_id": "<_id LeadSystem>",
+ *       "citta_visita": "BOLOGNA", "indirizzo_visita": "VIA EMILIA PONENTE 100"
+ *     }
  *   }
  *
- * Due flussi distinti, scelti in base a quanto manca all'appuntamento:
- *   FLOW_4G -> "flusso 4 giorni"  (primo reminder, qualche giorno prima)
- *   FLOW_1G -> "flusso 1 giorno"  (reminder a ridosso, il giorno prima)
+ * Cos'e' cambiato il 24/08/2026: le variabili del template non stanno piu' in cima al
+ * payload ma dentro `dynamicVariables`; citta' e indirizzo si chiamano `citta_visita` e
+ * `indirizzo_visita` (prima `citta_centro` / `indirizzo_centro`) e il nome del centro non
+ * serve piu'. La chiave webhook e' stata ruotata: quella vecchia non funziona.
+ *
+ * Tre flussi distinti, scelti in base a quanto manca all'appuntamento (Rev. 2.0 §3.4):
+ *   FLOW_4G -> "flusso 4 giorni"  primo promemoria con richiesta di conferma, a tutti
+ *   FLOW_2G -> "flusso 2 giorni"  sollecito, solo a chi non ha ancora risposto
+ *   FLOW_1G -> "flusso 1 giorno"  promemoria finale, solo a chi ha confermato
  *
  * La risposta del paziente NON arriva qui: il qualificatore la manda al nostro
  * endpoint POST /api/webhook-conferma-appuntamento (vedi routes/leads.js), che
@@ -32,6 +42,7 @@
  *   REMINDER_API_HEADER   header della chiave (default X-API-Key)
  *   REMINDER_PROJECT_ID   project_id del progetto Bludental
  *   REMINDER_FLOW_4G      flow_id del flusso "4 giorni"
+ *   REMINDER_FLOW_2G      flow_id del flusso "2 giorni" (sollecito)
  *   REMINDER_FLOW_1G      flow_id del flusso "1 giorno"
  *   REMINDER_SOURCE       valore del campo source (default facebook_ad)
  *   REMINDER_TIMEOUT_MS   timeout richiesta (default 15000)
@@ -49,12 +60,13 @@ const API_KEY = process.env.REMINDER_API_KEY || '';
 const API_HEADER = process.env.REMINDER_API_HEADER || 'X-API-Key';
 const PROJECT_ID = process.env.REMINDER_PROJECT_ID || 'a819e732-32ba-421f-aa8d-45c28de199d1';
 const FLOW_4G = process.env.REMINDER_FLOW_4G || 'c4e58437-dbe3-4e11-8af0-98de2e9d6710';
+const FLOW_2G = process.env.REMINDER_FLOW_2G || 'cade2965-4ad2-4de1-9114-ede44223b786';
 const FLOW_1G = process.env.REMINDER_FLOW_1G || '89164730-2545-4615-9d51-b0c3f47a5329';
 const SOURCE = process.env.REMINDER_SOURCE || 'facebook_ad';
 const TIMEOUT_MS = Number(process.env.REMINDER_TIMEOUT_MS || 15000);
 
-/** Stage -> flow_id del qualificatore. '4g' = 4 giorni prima, '1g' = 1 giorno prima. */
-const FLOWS = { '4g': FLOW_4G, '1g': FLOW_1G };
+/** Stage -> flow_id. '4g' primo promemoria, '2g' sollecito, '1g' promemoria finale. */
+const FLOWS = { '4g': FLOW_4G, '2g': FLOW_2G, '1g': FLOW_1G };
 
 const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
 const GIORNI = ['domenica', 'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato'];
@@ -100,18 +112,18 @@ function splitNome(nomeCompleto, cognomeEsplicito) {
 }
 
 /**
- * Payload del connector. `stage` sceglie il flusso ('4g' | '1g').
+ * Payload del connector. `stage` sceglie il flusso ('4g' | '2g' | '1g').
  * `centro` e' l'oggetto restituito da config/centri-bludental.variabiliMessaggio():
  * citta' e indirizzo viaggiano come due variabili distinte, perche' i testi Bludental
  * li usano separati ("presso BluDental a [Citta] in [Indirizzo]").
+ *
+ * Le variabili del template stanno dentro `dynamicVariables`: e' il formato del
+ * contratto aggiornato il 24/08/2026, i campi in cima al payload non vengono piu' letti.
  */
 function buildPayload({ lead, dataOra, nome, cognome, telefono, email, stage = '4g', source, centro }) {
   const f = formattaItaliano(dataOra);
   const { name, surname } = splitNome(nome ?? lead?.nome, cognome ?? lead?.cognome);
   return {
-    citta_centro: centro?.citta || '',
-    indirizzo_centro: centro?.indirizzo || '',
-    nome_centro: centro?.nome || '',
     project_id: PROJECT_ID,
     name,
     surname,
@@ -119,9 +131,13 @@ function buildPayload({ lead, dataOra, nome, cognome, telefono, email, stage = '
     email: email || lead?.email || '',
     source: source || SOURCE,
     flow_id: FLOWS[stage] || FLOW_4G,
-    orario_visita: f.ora,
-    data_visita: f.data,
-    lead_id: String(lead?._id || ''),
+    dynamicVariables: {
+      orario_visita: f.ora,
+      data_visita: f.data,
+      lead_id: String(lead?._id || ''),
+      citta_visita: centro?.citta || '',
+      indirizzo_visita: centro?.indirizzo || '',
+    },
   };
 }
 

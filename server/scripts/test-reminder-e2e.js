@@ -30,6 +30,7 @@ const Lead = require('../models/lead');
 const DeepagentLog = require('../models/deepagentLog');
 const { saveLeadWithResult, normalizePhoneForNexus, getLeadById } = require('../helpers/nexus');
 const { inviaReminder, isConfigurato } = require('../helpers/qualificatore');
+const { variabiliMessaggio } = require('../config/centri-bludental');
 
 const WEBHOOK_BASE = process.env.E2E_WEBHOOK_BASE || 'https://leadsystembluedental-production.up.railway.app';
 
@@ -158,6 +159,9 @@ async function reminder(o) {
     telefono: lead.numeroTelefono,
     email: lead.email,
     stage,
+    // Senza centro citta_visita e indirizzo_visita partono vuote e il template arriva
+    // monco: si usa quello dell'appuntamento, o --centro, o un centro del pilota.
+    centro: variabiliMessaggio(o.centro || app.centroId || '78'),
   });
   console.log('payload:', JSON.stringify(res.payload, null, 2));
   console.log(`ESITO: ok=${res.ok} status=${res.status || '-'}`);

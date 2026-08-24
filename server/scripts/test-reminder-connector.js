@@ -3,15 +3,17 @@
  * ne' dalla cron: serve a verificare contratto, chiave e flussi.
  *
  *   node server/scripts/test-reminder-connector.js                      -> stampa i payload, non invia
- *   node server/scripts/test-reminder-connector.js --stage 4g --live    -> invia il flusso 4 giorni
- *   node server/scripts/test-reminder-connector.js --stage 1g --live    -> invia il flusso 1 giorno
- *   node server/scripts/test-reminder-connector.js --stage both --live  -> entrambi
+ *   node server/scripts/test-reminder-connector.js --stage 4g --live    -> primo promemoria
+ *   node server/scripts/test-reminder-connector.js --stage 2g --live    -> sollecito
+ *   node server/scripts/test-reminder-connector.js --stage 1g --live    -> promemoria finale
+ *   node server/scripts/test-reminder-connector.js --stage all --live   -> tutti e tre
  *
  * Opzioni: --nome --cognome --tel --email --data (gg/mm/aaaa) --ora (hh:mm) --lead <id>
  */
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const { inviaReminder, buildPayload, isConfigurato, FLOWS, URL, PROJECT_ID } = require('../helpers/qualificatore');
+const { variabiliMessaggio } = require('../config/centri-bludental');
 
 function parseArgs(argv) {
   const o = {};
@@ -35,7 +37,7 @@ function toIso(data, ora) {
 (async () => {
   const o = parseArgs(process.argv.slice(2));
   const stage = o.stage || 'both';
-  const stages = stage === 'both' ? ['4g', '1g'] : [stage];
+  const stages = stage === 'both' || stage === 'all' ? ['4g', '2g', '1g'] : [stage];
 
   // Default: appuntamento fittizio fra 4 giorni, cosi' il template ha data/ora sensate.
   const fra4gg = new Date(Date.now() + 4 * 24 * 3600 * 1000);
@@ -48,6 +50,9 @@ function toIso(data, ora) {
     cognome: o.cognome || 'Test',
     telefono: o.tel || '3513257290',
     email: o.email || 'mattia@test.com',
+    // Senza centro le variabili citta_visita/indirizzo_visita partirebbero vuote e il
+    // template arriverebbe monco: di default si usa un centro del pilota.
+    centro: variabiliMessaggio(o.centro || '78'),
   };
 
   console.log(`URL=${URL}`);

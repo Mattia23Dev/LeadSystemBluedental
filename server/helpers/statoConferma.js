@@ -11,9 +11,15 @@
  *
  * L'update e' parziale: POST /lead/api/set con { id, stato_conferma } lascia invariati
  * lead_status, esito, campagna e tutti gli altri campi.
+ *
+ * FASE DI TEST: anche questa scrittura passa dalla whitelist di config/test-whitelist.js.
+ * Serve perche' la chiusura automatica ("nessuna risposta" -> NO-CONFERMA) e' comunque
+ * un dato che finisce sulla scheda di un paziente vero: durante il collaudo tocca solo
+ * le lead del gruppo di test.
  */
 
 const { saveLeadWithResult } = require('./nexus');
+const whitelist = require('../config/test-whitelist');
 
 const SI = 'SI-CONFERMA';
 const NO = 'NO-CONFERMA';
@@ -56,6 +62,10 @@ async function applicaConferma(lead, risposta, opts = {}) {
 
   if (!statoConferma) {
     return { ok: false, statoConferma: null, motivo: 'risposta_non_riconosciuta' };
+  }
+
+  if (!whitelist.isConsentito(lead?.numeroTelefono)) {
+    return { ok: false, statoConferma, motivo: 'fuori_whitelist_test' };
   }
 
   lead.appuntamento = lead.appuntamento || {};

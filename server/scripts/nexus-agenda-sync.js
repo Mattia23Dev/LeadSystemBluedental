@@ -45,7 +45,7 @@ const SELECT =
   't.id, t.id_lead_leadsystem, t.telefono, t.nominativo, t.data_ora_appuntamento, ' +
   't.esito, t.lead_status, t.no_show, t.stato_conferma, t.citta, t.centro_bludental, ' +
   // Campi consegnati da NextUp il 21/08/2026: il centro serve a delimitare il pilota
-  // ai 15 centri e a compilare il messaggio; il mancato appuntamento serve alla Fase 3.
+  // ai centri del pilota e a compilare il messaggio; il mancato appuntamento serve alla Fase 3.
   't.id_centro_bludental, t.indirizzo_completo_centro_bludental, t.data_ora_mancato_appuntamento';
 
 async function connetti() {

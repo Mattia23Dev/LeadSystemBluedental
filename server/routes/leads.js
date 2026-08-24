@@ -1198,6 +1198,16 @@ router.post('/webhook-conferma-appuntamento', async (req, res) => {
 
     console.log(`[Conferma appuntamento] Lead ${lead._id} | risposta=${risposta} | stato_conferma=${esitoConferma.statoConferma} | nexusOk=${esitoConferma.ok}`);
 
+    // Fase di test: risposta da un numero fuori dal gruppo di collaudo. Non e' un
+    // errore del qualificatore, quindi si risponde 200 e non lo si fa ritentare.
+    if (esitoConferma.motivo === 'fuori_whitelist_test') {
+      return res.status(200).json({
+        message: 'Conferma ignorata: numero fuori dalla whitelist di test',
+        leadId: lead._id,
+        risposta,
+      });
+    }
+
     return res.status(esitoConferma.ok ? 200 : 502).json({
       message: esitoConferma.ok ? 'Conferma registrata' : 'Conferma salvata in locale ma non inviata a Nexus',
       leadId: lead._id,

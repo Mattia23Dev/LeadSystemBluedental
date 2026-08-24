@@ -5,7 +5,7 @@
  * Legge da Nexus l'agenda dei prossimi giorni, la incrocia con l'anagrafica dei
  * centri (config/centri-bludental.js) e verifica tre cose:
  *   1) tutti gli id_centro_bludental che Nexus espone sono censiti da noi;
- *   2) quanti appuntamenti cadono nei 15 centri del pilota;
+ *   2) quanti appuntamenti cadono nei centri del pilota;
  *   3) che citta' e indirizzo del messaggio siano compilabili per ciascuno.
  *
  * Non invia nulla e non scrive nulla: sono sole letture.
@@ -48,7 +48,7 @@ async function main() {
 
   console.log(`\n=== AGENDA NEXUS PROSSIMI ${GIORNI} GIORNI ===`);
   console.log(`appuntamenti in agenda            ${app.length}`);
-  console.log(`  nei 15 centri del pilota        ${dentro.length}   <-- a questi si scrive`);
+  console.log(`  nei ${PILOTA.length} centri del pilota        ${dentro.length}   <-- a questi si scrive`);
   console.log(`  fuori perimetro                 ${fuori.length}`);
   console.log(`  senza centro / centro ignoto    ${senzaCentro.length}`);
 

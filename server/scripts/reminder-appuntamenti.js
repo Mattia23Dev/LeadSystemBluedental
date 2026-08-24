@@ -45,6 +45,9 @@
  *   REMINDER_CRON                cron invio (default '5 * * * *')
  *   REMINDER_CLOSE_CRON          cron chiusura (default '35 * * * *')
  *   REMINDER_MAX_PER_RUN         tetto di sicurezza sugli invii per esecuzione (default 300)
+ *   REMINDER_WHITELIST_ATTIVA    fase di test: si scrive solo ai numeri di collaudo
+ *                                (config/test-whitelist.js). Default true; va messa a
+ *                                false solo per aprire l'invio ai pazienti veri.
  *   + le REMINDER_API_* di helpers/qualificatore.js
  *
  * Uso manuale (fase di test, con i cron spenti):
@@ -69,6 +72,7 @@ const Lead = require('../models/lead');
 const DeepagentLog = require('../models/deepagentLog');
 const { inviaReminder, isConfigurato } = require('../helpers/qualificatore');
 const { isPilota, variabiliMessaggio } = require('../config/centri-bludental');
+const whitelist = require('../config/test-whitelist');
 const { applicaConferma } = require('../helpers/statoConferma');
 
 const ENABLED = String(process.env.REMINDER_ENABLED || 'false').toLowerCase() === 'true';
@@ -79,7 +83,8 @@ const FINESTRA_ORE = STAGE_4G_ORE;
 const MIN_ORE = Number(process.env.REMINDER_MIN_ORE || 3);
 const CUTOFF_ORE = Number(process.env.REMINDER_CUTOFF_ORE || 24);
 const ATTESA_ORE = Number(process.env.REMINDER_ATTESA_ORE || 6);
-// Perimetro del pilota: si scrive solo ai pazienti dei 15 centri (Rev. 2.0 §3.2).
+// Perimetro del pilota: si scrive solo ai pazienti dei 16 centri (Rev. 2.0 §3.2 +
+// Bologna Emilia Ponente).
 // Metterlo a false apre l'invio a tutta la rete: da fare solo su decisione di Bludental.
 const SOLO_PILOTA = String(process.env.REMINDER_SOLO_PILOTA || 'true').toLowerCase() === 'true';
 const CRON_INVIO = process.env.REMINDER_CRON || '5 * * * *';
@@ -125,25 +130,31 @@ async function appuntamentiInFinestra(finestraOre = FINESTRA_ORE, minOre = MIN_O
 
 /**
  * Divide i candidati per perimetro:
- *   dentro        centro nei 15 del pilota E censito in anagrafica -> si invia
+ *   dentro         centro nel pilota, censito in anagrafica, numero ammesso -> si invia
  *   fuoriPerimetro centro valido ma non nel pilota                 -> non si invia
- *   senzaCentro   id centro assente o sconosciuto                  -> non si invia,
- *                 perche' senza citta' e indirizzo il messaggio non e' compilabile
+ *   senzaCentro    id centro assente o sconosciuto                 -> non si invia,
+ *                  perche' senza citta' e indirizzo il messaggio non e' compilabile
+ *   fuoriWhitelist fase di test: numero non nel gruppo di collaudo -> non si invia
  *
  * Con SOLO_PILOTA=false resta attivo il solo controllo sull'anagrafica: si puo'
  * allargare la rete, non si puo' mandare un messaggio senza indirizzo.
+ *
+ * Il filtro whitelist e' qui solo per avere il conteggio nei log: il blocco vero e
+ * proprio vive dentro inviaReminder(), che nessun chiamante puo' scavalcare.
  */
 function dividiPerPerimetro(leads) {
   const dentro = [];
   const fuoriPerimetro = [];
   const senzaCentro = [];
+  const fuoriWhitelist = [];
   for (const l of leads) {
     const centroId = l?.appuntamento?.centroId;
     if (!variabiliMessaggio(centroId)) { senzaCentro.push(l); continue; }
     if (SOLO_PILOTA && !isPilota(centroId)) { fuoriPerimetro.push(l); continue; }
+    if (!whitelist.isConsentito(l?.numeroTelefono)) { fuoriWhitelist.push(l); continue; }
     dentro.push(l);
   }
-  return { dentro, fuoriPerimetro, senzaCentro };
+  return { dentro, fuoriPerimetro, senzaCentro, fuoriWhitelist };
 }
 
 /**
@@ -217,7 +228,8 @@ async function invioOnce(opts = {}) {
     const inFinestra = await appuntamentiInFinestra();
     const perimetro = dividiPerPerimetro(inFinestra);
     const candidati = filtrato ? applicaFiltri(perimetro.dentro, opts) : perimetro.dentro;
-    console.log(`[Reminder invio] finestra ${MIN_ORE}h-${STAGE_4G_ORE}h (stage 1g sotto ${STAGE_1G_ORE}h) | appuntamenti in agenda=${inFinestra.length} | nel pilota=${perimetro.dentro.length} | fuori perimetro=${perimetro.fuoriPerimetro.length} | senza centro=${perimetro.senzaCentro.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''} | soloPilota=${SOLO_PILOTA} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
+    console.log(`[Reminder invio] finestra ${MIN_ORE}h-${STAGE_4G_ORE}h (stage 1g sotto ${STAGE_1G_ORE}h) | appuntamenti in agenda=${inFinestra.length} | da servire=${perimetro.dentro.length} | fuori perimetro=${perimetro.fuoriPerimetro.length} | senza centro=${perimetro.senzaCentro.length} | fuori whitelist=${perimetro.fuoriWhitelist.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''} | soloPilota=${SOLO_PILOTA} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
+    console.log(`[Reminder invio] ${whitelist.descrizione()}`);
     // Un appuntamento senza centro e' un buco di dato, non una scelta: va visto.
     for (const l of perimetro.senzaCentro.slice(0, 10)) {
       console.log(`[Reminder invio] SALTATA senza centro | lead=${l._id} | app=${l?.appuntamento?.dataOra} | centroId=${l?.appuntamento?.centroId || '-'}`);
@@ -256,7 +268,7 @@ async function invioOnce(opts = {}) {
 
       if (dryRun) {
         const c = variabiliMessaggio(app.centroId);
-        console.log(`[Reminder invio][DRY_RUN] lead=${lead._id} tel=${telefono} app=${app.dataOra} stage=${stage} centro=${c?.nome || '-'} (${c?.citta || '-'}, ${c?.indirizzo || '-'})`);
+        console.log(`[Reminder invio][DRY_RUN] lead=${lead._id} tel=${telefono}${whitelist.etichetta(telefono) ? ` (${whitelist.etichetta(telefono)})` : ''} app=${app.dataOra} stage=${stage} centro=${c?.nome || '-'} (${c?.citta || '-'}, ${c?.indirizzo || '-'})`);
         inviati++;
         continue;
       }
@@ -324,7 +336,10 @@ async function invioOnce(opts = {}) {
         nexusPayload: res.payload,
         nexusResponse: res.data,
         nexusError: res.error,
-        outcome: res.ok ? 'reminder_inviato' : (res.skipped ? 'reminder_non_configurato' : 'reminder_fallito'),
+        outcome: res.ok ? 'reminder_inviato'
+          : res.blocked ? 'reminder_bloccato_whitelist'
+          : res.skipped ? 'reminder_non_configurato'
+          : 'reminder_fallito',
       });
     }
 
@@ -361,10 +376,16 @@ async function chiusuraOnce() {
       'appuntamento.reminder.statoConferma': { $in: [null, ''] },
     }).limit(MAX_PER_RUN);
 
-    console.log(`[Reminder chiusura] candidati=${candidati.length} | cutoff=${CUTOFF_ORE}h | attesa=${ATTESA_ORE}h | dryRun=${DRY_RUN}`);
+    // In fase di test la chiusura automatica scrive su Nexus solo per il gruppo di
+    // collaudo: NO-CONFERMA sulla scheda di un paziente vero sarebbe un dato falso.
+    const ammessi = candidati.filter((l) => whitelist.isConsentito(l?.numeroTelefono));
+    const esclusi = candidati.length - ammessi.length;
+
+    console.log(`[Reminder chiusura] candidati=${ammessi.length}${esclusi ? ` (esclusi ${esclusi} fuori whitelist)` : ''} | cutoff=${CUTOFF_ORE}h | attesa=${ATTESA_ORE}h | dryRun=${DRY_RUN}`);
+    console.log(`[Reminder chiusura] ${whitelist.descrizione()}`);
 
     let ok = 0, ko = 0;
-    for (const lead of candidati) {
+    for (const lead of ammessi) {
       const res = await applicaConferma(lead, 'NESSUNA', { dryRun: DRY_RUN, raw: { fonte: 'cron-chiusura' } });
       if (res.ok) ok++; else ko++;
       await log({

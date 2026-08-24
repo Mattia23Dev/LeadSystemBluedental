@@ -14,8 +14,9 @@
  * teniamo il dato gia' scomposto: citta' e indirizzo finiscono in due variabili
  * distinte del template WhatsApp (vedi Rev. 2.0 §3.4.2).
  *
- * PILOTA: i 15 centri del progetto pilota (Rev. 2.0 §3.2). E' il perimetro di invio:
- * fuori da questa lista NON si scrive al paziente.
+ * PILOTA: i 16 centri del progetto pilota (Rev. 2.0 §3.2, piu' Bologna Emilia Ponente
+ * confermato il 24/08/2026). E' il perimetro di invio: fuori da questa lista NON si
+ * scrive al paziente.
  */
 
 const CENTRI = [
@@ -104,22 +105,25 @@ const CENTRI = [
 ];
 
 /**
- * I 15 centri del pilota, per id_deasoft. Ordine e raggruppamento come nel documento
+ * I centri del pilota, per id_deasoft. Ordine e raggruppamento come nel documento
  * di progetto Bludental (Rev. 2.0 §3.2):
  *   Top    Pomezia (6) · Bari (10) · Pordenone (74)
  *   Medie  Latina (16) · Milano Brianza (14) · Roma Casilina (13)
  *   Low    Rho (75) · Lodi (56) · Bologna (31) · Mestre (73) · Perugia (59) ·
  *          Forli (43) · Mantova (48) · Vicenza (55) · Abbiategrasso (46)
+ *
+ * Piu' Bologna Emilia Ponente (78): il documento diceva solo "Bologna", ma
+ * l'anagrafica ha due centri in citta' e il 24/08/2026 e' stato confermato che il
+ * pilota li comprende entrambi. Totale 16 centri.
  */
-const PILOTA = ['6', '10', '74', '16', '14', '13', '75', '56', '31', '73', '59', '43', '48', '55', '46'];
+const PILOTA = ['6', '10', '74', '16', '14', '13', '75', '56', '31', '73', '59', '43', '48', '55', '46', '78'];
 
 /**
- * DA CONFERMARE con Bludental: l'anagrafica ha due centri a Bologna, "BOLOGNA" (31) e
- * "BOLOGNA EMILIA PONENTE" (78). Il documento di progetto dice solo "Bologna": nel
- * dubbio il pilota include il solo 31. Se Simona conferma che rientrano entrambi,
- * spostare il 78 dentro PILOTA.
+ * Centri in attesa di conferma da Bludental: nessuno al momento. Il dubbio sui due
+ * centri di Bologna ("BOLOGNA" 31 e "BOLOGNA EMILIA PONENTE" 78) e' stato sciolto il
+ * 24/08/2026: rientrano entrambi, quindi il 78 e' passato dentro PILOTA.
  */
-const PILOTA_DA_CONFERMARE = ['78'];
+const PILOTA_DA_CONFERMARE = [];
 
 const BY_ID = new Map(CENTRI.map((c) => [String(c.id), c]));
 const PILOTA_SET = new Set(PILOTA);

@@ -35,9 +35,14 @@
  *   REMINDER_FLOW_1G      flow_id del flusso "1 giorno"
  *   REMINDER_SOURCE       valore del campo source (default facebook_ad)
  *   REMINDER_TIMEOUT_MS   timeout richiesta (default 15000)
+ *
+ * FASE DI TEST: l'invio passa dalla whitelist di config/test-whitelist.js. Finche' e'
+ * attiva si scrive solo ai numeri del gruppo di collaudo, qualunque sia il chiamante
+ * (cron, CLI manuale, script di test). Vedi REMINDER_WHITELIST_ATTIVA.
  */
 
 const axios = require('axios');
+const whitelist = require('../config/test-whitelist');
 
 const URL = process.env.REMINDER_API_URL || 'https://prequalifica-ai-workflow-production.up.railway.app/connector/webhook';
 const API_KEY = process.env.REMINDER_API_KEY || '';
@@ -132,6 +137,19 @@ function isConfigurato() {
 async function inviaReminder(args = {}) {
   const stage = args.stage || '4g';
   const payload = buildPayload(args);
+
+  // Ultimo cancello prima del paziente: in fase di test si scrive solo al gruppo di
+  // collaudo. Sta qui, e non solo nel cron, perche' cosi' nessun chiamante lo aggira.
+  if (!whitelist.isConsentito(payload.phone)) {
+    return {
+      ok: false,
+      skipped: true,
+      blocked: true,
+      stage,
+      error: `numero fuori dalla whitelist di test (${payload.phone || 'telefono mancante'})`,
+      payload,
+    };
+  }
 
   if (!URL) {
     return { ok: false, skipped: true, stage, error: 'REMINDER_API_URL non configurato', payload };

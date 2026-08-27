@@ -49,8 +49,6 @@ termine di paragone e il pilota non è valutabile.
 
 - Quanto attendere dopo il mancato arrivo prima di scrivere, ed eventuale secondo tentativo.
 - Conferma del testo del messaggio (già fornito).
-- Conferma che i pazienti recuperati vengano ripresi in carico dal contact center.
-- Se escludere dal recupero chi ha già riprenotato per conto proprio.
 
 ## Criteri di accettazione
 

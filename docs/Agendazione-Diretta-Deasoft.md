@@ -49,14 +49,15 @@ con l'indicazione di cosa è successo. Il criterio va concordato con Bludental.
 | 1 | Disponibilità reale dell'agenda per centro | Senza slot veri l'assistente può solo raccogliere una preferenza, non prenotare |
 | 2 | Creazione dell'appuntamento | È l'operazione che chiude il flusso |
 | 3 | Identificativo del paziente restituito al momento del fissaggio | È la chiave per leggere gli esiti dopo la visita |
-| 4 | Modifica e annullamento dell'appuntamento | Serve al punto 6; oggi non è coperto |
+| 4 | Modifica e annullamento dell'appuntamento | Serve al punto 6; in test, non ancora sbloccato |
 | 5 | Ambiente di prova e passaggio in produzione concordato | Il collaudo non può girare sull'agenda reale |
 
 ## Cosa serve da Bludental
 
 - Quali campagne alimentano il flusso e quali centri sono aperti.
 - Regole di contatto: orari, numero di tentativi, quando smettere di insistere.
-- Tono e contenuto della conversazione, e cosa l'assistente può e non può dire.
+- Validazione del tono e del contenuto della conversazione, già impostati negli agenti, e di
+  cosa l'assistente può e non può dire.
 - Cosa fare quando l'assistente non chiude: rientro al contact center, con quale evidenza.
 - Vincoli di prenotazione da rispettare: durata della prima visita, anticipo minimo, eventuali
   limiti per fascia oraria o per centro.
@@ -100,8 +101,9 @@ campagne dedicate, senza cui non entra nessuna richiesta.
 
 - **Chi possiede la disponibilità.** Se l'assistente non vede gli slot reali, il flusso degenera
   in una richiamata: si perde il vantaggio e si aggiunge un passaggio.
-- **Sovrapposizione di messaggi.** Il gestionale invia già un SMS di conferma al paziente. Va
-  deciso chi comunica cosa, per non scrivere due volte la stessa cosa con parole diverse.
+- **Sovrapposizione di messaggi alla prenotazione.** Nel momento in cui l'appuntamento viene
+  fissato il gestionale invia il proprio SMS di conferma. Va deciso chi comunica cosa, per non
+  dire due volte la stessa cosa con parole diverse.
 - **Consenso e opt-out.** Il paziente deve poter chiedere di non essere ricontattato via
   WhatsApp, e la scelta va rispettata da tutti i flussi.
 - **Confine con il recall.** Un appuntamento nato qui riceve anche i promemoria della Fase 1: da

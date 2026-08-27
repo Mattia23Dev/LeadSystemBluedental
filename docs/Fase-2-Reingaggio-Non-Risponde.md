@@ -52,7 +52,6 @@ ottenere lo stesso risultato — riapertura della scheda, attività, task o equi
 
 - La regola di ingaggio: soglia di tentativi, giorni di attesa, uno o più invii.
 - Conferma del testo del messaggio (già fornito).
-- L'impegno del contact center a lavorare la coda dei «SÌ»: è lì che si genera il valore.
 
 ## Criteri di accettazione
 

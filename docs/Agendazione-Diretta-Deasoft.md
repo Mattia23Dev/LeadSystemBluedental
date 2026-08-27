@@ -29,7 +29,7 @@ progressione.
 1. **Ingresso.** La richiesta arriva da una campagna dedicata e viene indirizzata all'assistente
    di agendazione anziché al normale percorso di qualifica.
 2. **Contatto.** L'assistente chiama il paziente; se non risponde o preferisce, la conversazione
-   prosegue su WhatsApp. Numero di tentativi e fasce orarie sono da concordare.
+   prosegue su WhatsApp, secondo i tentativi e le fasce orarie già impostati negli agenti.
 3. **Scelta.** Vengono proposti il centro e gli orari effettivamente disponibili in agenda.
 4. **Prenotazione.** L'appuntamento viene creato su Deasoft. Deasoft restituisce l'identificativo
    del paziente, che conserviamo: è la chiave con cui, in seguito, si leggono gli esiti.
@@ -55,12 +55,7 @@ con l'indicazione di cosa è successo. Il criterio va concordato con Bludental.
 ## Cosa serve da Bludental
 
 - Quali campagne alimentano il flusso e quali centri sono aperti.
-- Regole di contatto: orari, numero di tentativi, quando smettere di insistere.
-- Validazione del tono e del contenuto della conversazione, già impostati negli agenti, e di
-  cosa l'assistente può e non può dire.
 - Cosa fare quando l'assistente non chiude: rientro al contact center, con quale evidenza.
-- Vincoli di prenotazione da rispettare: durata della prima visita, anticipo minimo, eventuali
-  limiti per fascia oraria o per centro.
 
 ## Cosa facciamo noi
 
@@ -101,9 +96,6 @@ campagne dedicate, senza cui non entra nessuna richiesta.
 
 - **Chi possiede la disponibilità.** Se l'assistente non vede gli slot reali, il flusso degenera
   in una richiamata: si perde il vantaggio e si aggiunge un passaggio.
-- **Sovrapposizione di messaggi alla prenotazione.** Nel momento in cui l'appuntamento viene
-  fissato il gestionale invia il proprio SMS di conferma. Va deciso chi comunica cosa, per non
-  dire due volte la stessa cosa con parole diverse.
 - **Consenso e opt-out.** Il paziente deve poter chiedere di non essere ricontattato via
   WhatsApp, e la scelta va rispettata da tutti i flussi.
 - **Confine con il recall.** Un appuntamento nato qui riceve anche i promemoria della Fase 1: da

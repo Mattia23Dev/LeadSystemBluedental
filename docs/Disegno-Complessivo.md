@@ -75,8 +75,8 @@ la persona.
 
 ## In che ordine conviene arrivarci
 
-1. **Chiudere il recall.** È in collaudo, non dipende da nessuno se non dalle risposte ancora
-   aperte su Nexus, e dà il primo risultato misurabile.
+1. **Chiudere il recall.** È in collaudo e non dipende più da Nexus, se non per rendere
+   filtrabile in agenda il terzo valore. È il primo risultato misurabile.
 2. **Accendere l'allineamento degli esiti.** È già sviluppato, è in sola lettura, non tocca il
    lavoro di nessuno e comincia subito ad accumulare lo storico che servirà a valutare tutto il
    resto.

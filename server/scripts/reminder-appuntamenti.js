@@ -33,7 +33,16 @@
  *     viene spostato (perDataOra != data/ora corrente) il ciclo riparte da capo.
  *     Salta gli appuntamenti spariti dall'agenda Nexus (disdette).
  *
- *  2) CHIUSURA NON RISPOSTE (default ogni ora)
+ *  2) MANCATA RISPOSTA AL PRIMO PROMEMORIA (default ogni ora)
+ *     Passate REMINDER_ATTESA_ORE dal primo promemoria senza risposta, scrive su Nexus
+ *     lo stato ATTESA-RISPOSTA: il contact center vede chi non ha confermato e puo'
+ *     richiamarlo mentre il sollecito e' ancora davanti (richiesta Bludental 27/08/2026).
+ *     NON chiude il ciclo e NON tocca reminder.statoConferma: il sollecito parte lo
+ *     stesso e puo' ancora portare la lead a SI-CONFERMA o NO-CONFERMA. Se l'operatrice
+ *     nel frattempo raccoglie la conferma al telefono e corregge il campo a video, quel
+ *     valore torna a noi con la lettura periodica.
+ *
+ *  3) CHIUSURA NON RISPOSTE (default ogni ora)
  *     Il silenzio diventa NO-CONFERMA su Nexus solo DOPO il sollecito, non dopo il primo
  *     messaggio: e' quello che il testo del sollecito promette al paziente ("in assenza
  *     di riscontro entro la giornata odierna cancelleremo l'appuntamento").
@@ -56,7 +65,13 @@
  *                                (default 3: un reminder a ridosso e' inutile)
  *   REMINDER_ATTESA_SOLLECITO_ORE  ore di silenzio dopo il sollecito oltre le quali si
  *                                scrive NO-CONFERMA (default 12, come da testo Bludental)
+ *   REMINDER_ATTESA_ORE          ore di silenzio dopo il PRIMO promemoria oltre le quali
+ *                                si scrive ATTESA-RISPOSTA (default 12)
+ *   REMINDER_STATO_SI / _NO / _ATTESA  i tre valori scritti su stato_conferma. Sono
+ *                                convenzioni concordate con Bludental, non costanti:
+ *                                rinominarne uno e' configurazione, non rilascio.
  *   REMINDER_CRON                cron invio (default '5 * * * *')
+ *   REMINDER_ATTESA_CRON         cron mancata risposta (default '20 * * * *')
  *   REMINDER_CLOSE_CRON          cron chiusura (default '35 * * * *')
  *   REMINDER_MAX_PER_RUN         tetto di sicurezza sugli invii per esecuzione (default 300)
  *   REMINDER_WHITELIST_ATTIVA    fase di test: si scrive solo ai numeri di collaudo
@@ -88,7 +103,7 @@ const DeepagentLog = require('../models/deepagentLog');
 const { inviaReminder, isConfigurato } = require('../helpers/qualificatore');
 const { isPilota, variabiliMessaggio } = require('../config/centri-bludental');
 const whitelist = require('../config/test-whitelist');
-const { applicaConferma } = require('../helpers/statoConferma');
+const { applicaConferma, applicaAttesa, ATTESA } = require('../helpers/statoConferma');
 
 const ENABLED = String(process.env.REMINDER_ENABLED || 'false').toLowerCase() === 'true';
 const DRY_RUN = String(process.env.REMINDER_DRY_RUN || 'true').toLowerCase() === 'true';
@@ -104,12 +119,18 @@ const ATTESA_SOLLECITO_ORE = Number(process.env.REMINDER_ATTESA_SOLLECITO_ORE ||
 // Bologna Emilia Ponente).
 // Metterlo a false apre l'invio a tutta la rete: da fare solo su decisione di Bludental.
 const SOLO_PILOTA = String(process.env.REMINDER_SOLO_PILOTA || 'true').toLowerCase() === 'true';
+// Ore di silenzio dopo il PRIMO promemoria oltre le quali si segnala la mancata
+// risposta su Nexus (mail Caterina 27/08/2026). Non chiude il ciclo: serve a far
+// partire il recall telefonico del contact center mentre il sollecito e' ancora davanti.
+const ATTESA_PRIMO_ORE = Number(process.env.REMINDER_ATTESA_ORE || 12);
 const CRON_INVIO = process.env.REMINDER_CRON || '5 * * * *';
 const CRON_CHIUSURA = process.env.REMINDER_CLOSE_CRON || '35 * * * *';
+const CRON_ATTESA = process.env.REMINDER_ATTESA_CRON || '20 * * * *';
 const MAX_PER_RUN = Number(process.env.REMINDER_MAX_PER_RUN || 300);
 
 let runningInvio = false;
 let runningChiusura = false;
+let runningAttesa = false;
 
 async function connetti() {
   if (mongoose.connection.readyState === 1) return false;
@@ -206,6 +227,20 @@ function giaInviato(lead, stage) {
   // Retrocompatibilita' con gli invii fatti prima dello storico per stage.
   if (!invii.length && rem.perDataOra === app.dataOra && rem.esitoInvio === 'ok' && (rem.stage || '4g') === stage) return true;
   return false;
+}
+
+/** Quando e' partito con successo quello stage per l'orario attuale (null se mai). */
+function inviatoAt(lead, stage) {
+  const app = lead.appuntamento || {};
+  const rem = app.reminder || {};
+  const invii = Array.isArray(rem.invii) ? rem.invii : [];
+  const riga = invii.filter((i) => i.stage === stage && i.perDataOra === app.dataOra && i.esito === 'ok').pop();
+  if (riga?.at) return new Date(riga.at);
+  // Invii precedenti allo storico per stage: c'e' solo il blocco piatto.
+  if (!invii.length && rem.perDataOra === app.dataOra && rem.esitoInvio === 'ok' && (rem.stage || '4g') === stage) {
+    return rem.inviatoAt ? new Date(rem.inviatoAt) : null;
+  }
+  return null;
 }
 
 /**
@@ -435,7 +470,87 @@ async function invioOnce(opts = {}) {
   }
 }
 
-// ====================== 2) CHIUSURA NON RISPOSTE ==========================
+// ============= 2) SEGNALAZIONE DELLA MANCATA RISPOSTA AL PRIMO =============
+/**
+ * Scrive ATTESA-RISPOSTA su Nexus per chi, passate ATTESA_PRIMO_ORE dal primo
+ * promemoria, non ha ancora risposto. Serve al contact center per prendere in carico
+ * il paziente e richiamarlo (mail Caterina 27/08/2026).
+ *
+ * Non e' una chiusura: la lead resta nel ciclo, riceve comunque il sollecito a -2
+ * giorni e da li' puo' ancora diventare SI-CONFERMA o NO-CONFERMA. Per questo il
+ * valore NON viene scritto in `reminder.statoConferma`, che resta l'esito finale e
+ * che la cron di chiusura usa per trovare i suoi candidati.
+ */
+async function attesaOnce({ dryRun = DRY_RUN } = {}) {
+  if (runningAttesa) return console.log('[Reminder attesa] Skip: gia in esecuzione');
+  runningAttesa = true;
+  const didConnect = await connetti().catch((e) => { throw e; });
+
+  try {
+    const ora = new Date();
+    const soglia = new Date(ora.getTime() - ATTESA_PRIMO_ORE * 3600 * 1000);
+
+    // Appuntamento ancora in agenda, primo promemoria partito da almeno ATTESA_PRIMO_ORE,
+    // nessuna risposta e nessun esito finale gia' scritto.
+    const candidati = await Lead.find({
+      'appuntamento.dataOraTs': { $gte: ora },
+      'appuntamento.dataOraSparitaAt': null,
+      'appuntamento.reminder.risposta': { $in: [null, ''] },
+      'appuntamento.reminder.statoConferma': { $in: [null, ''] },
+      $or: [
+        { 'appuntamento.reminder.invii': { $elemMatch: { stage: '4g', esito: 'ok', at: { $lte: soglia } } } },
+        // Invii precedenti allo storico per stage.
+        {
+          'appuntamento.reminder.invii': { $size: 0 },
+          'appuntamento.reminder.esitoInvio': 'ok',
+          'appuntamento.reminder.inviatoAt': { $lte: soglia },
+        },
+      ],
+    }).limit(MAX_PER_RUN);
+
+    // Il filtro fine non si puo' fare in query: serve confrontare l'orario dell'invio
+    // con l'orario CORRENTE dell'appuntamento (se e' stato spostato, il conto riparte).
+    const daSegnalare = candidati.filter((l) => {
+      const at = inviatoAt(l, '4g');
+      if (!at || at > soglia) return false;
+      const rem = l.appuntamento?.reminder || {};
+      return rem.attesaPerDataOra !== l.appuntamento?.dataOra;
+    });
+
+    const ammessi = daSegnalare.filter((l) => whitelist.isConsentito(l?.numeroTelefono));
+    const esclusi = daSegnalare.length - ammessi.length;
+
+    console.log(`[Reminder attesa] candidati=${ammessi.length}${esclusi ? ` (esclusi ${esclusi} fuori whitelist)` : ''} | valore='${ATTESA}' dopo ${ATTESA_PRIMO_ORE}h di silenzio dal primo promemoria | dryRun=${dryRun}`);
+
+    let ok = 0, ko = 0;
+    for (const lead of ammessi) {
+      const res = await applicaAttesa(lead, { dryRun, raw: { fonte: 'cron-attesa' } });
+      if (res.ok) ok++; else ko++;
+      await log({
+        endpoint: 'cron:reminder-attesa',
+        source: 'reminder-appuntamento',
+        matchedLeadId: lead._id,
+        matchedIdNexus: lead.idNexus,
+        payload: { dataOra: lead?.appuntamento?.dataOra, inviatoAt: inviatoAt(lead, '4g'), dryRun },
+        nexusPayload: { id: lead.idNexus, stato_conferma: res.statoConferma },
+        nexusResponse: res.nexus?.data,
+        nexusError: res.nexus?.error,
+        // In dry-run non e' partito niente: il log non deve raccontare il contrario.
+        outcome: dryRun ? 'attesa_risposta_dryrun'
+          : res.ok ? 'attesa_risposta_inviata'
+          : `attesa_risposta_fallita:${res.motivo || 'errore'}`,
+      });
+    }
+    console.log(`[Reminder attesa] Fine | ok=${ok} falliti=${ko}`);
+  } catch (e) {
+    console.error('[Reminder attesa] FAILED:', e?.response?.data || e.message || e);
+  } finally {
+    if (didConnect) await mongoose.disconnect().catch(() => {});
+    runningAttesa = false;
+  }
+}
+
+// ====================== 3) CHIUSURA NON RISPOSTE ==========================
 async function chiusuraOnce() {
   if (runningChiusura) return console.log('[Reminder chiusura] Skip: gia in esecuzione');
   runningChiusura = true;
@@ -512,16 +627,19 @@ function parseArgs(argv) {
 if (require.main === module) {
   const cmd = process.argv[2];
   const opts = parseArgs(process.argv.slice(3));
-  const run = cmd === 'chiusura' ? () => chiusuraOnce() : () => invioOnce(opts);
+  const run = cmd === 'chiusura' ? () => chiusuraOnce()
+    : cmd === 'attesa' ? () => attesaOnce({ dryRun: opts.live ? false : true })
+    : () => invioOnce(opts);
   run()
     .then(() => process.exit(0))
     .catch((e) => { console.error('[Reminder]', e?.message || e); process.exit(1); });
 } else if (ENABLED) {
-  console.log(`[Reminder] cron attivi | invio='${CRON_INVIO}' chiusura='${CRON_CHIUSURA}' | finestre 4g ${STAGE_2G_ORE}-${STAGE_4G_ORE}h · 2g ${STAGE_1G_ORE}-${STAGE_2G_ORE}h · 1g ${MIN_ORE}-${STAGE_1G_ORE}h | NO-CONFERMA dopo ${ATTESA_SOLLECITO_ORE}h di silenzio dal sollecito | dryRun=${DRY_RUN}`);
+  console.log(`[Reminder] cron attivi | invio='${CRON_INVIO}' attesa='${CRON_ATTESA}' chiusura='${CRON_CHIUSURA}' | finestre 4g ${STAGE_2G_ORE}-${STAGE_4G_ORE}h · 2g ${STAGE_1G_ORE}-${STAGE_2G_ORE}h · 1g ${MIN_ORE}-${STAGE_1G_ORE}h | '${ATTESA}' dopo ${ATTESA_PRIMO_ORE}h dal primo · NO-CONFERMA dopo ${ATTESA_SOLLECITO_ORE}h di silenzio dal sollecito | dryRun=${DRY_RUN}`);
   cron.schedule(CRON_INVIO, () => invioOnce().catch((e) => console.error('[Reminder invio] schedule error:', e?.message || e)));
+  cron.schedule(CRON_ATTESA, () => attesaOnce().catch((e) => console.error('[Reminder attesa] schedule error:', e?.message || e)));
   cron.schedule(CRON_CHIUSURA, () => chiusuraOnce().catch((e) => console.error('[Reminder chiusura] schedule error:', e?.message || e)));
 } else {
   console.log('[Reminder] cron NON attivi (REMINDER_ENABLED != true)');
 }
 
-module.exports = { invioOnce, chiusuraOnce, appuntamentiInFinestra, stagePerAppuntamento, messaggioDaInviare, giaInviato };
+module.exports = { invioOnce, attesaOnce, chiusuraOnce, appuntamentiInFinestra, stagePerAppuntamento, messaggioDaInviare, giaInviato, inviatoAt };

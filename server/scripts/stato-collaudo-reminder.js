@@ -93,6 +93,9 @@ async function main() {
       }
     }
     console.log(`  risposta ${rem.risposta || 'nessuna'}${rem.rispostaAt ? ` (${new Date(rem.rispostaAt).toLocaleString('it-IT')})` : ''} | stato_conferma scritto=${rem.statoConferma || '-'}${rem.statoConfermaPushOk === false ? ' PUSH FALLITO' : ''}`);
+    if (rem.attesaAt) {
+      console.log(`  attesa   ${rem.attesaValore} scritto il ${new Date(rem.attesaAt).toLocaleString('it-IT')}${rem.attesaPushOk === false ? ' PUSH FALLITO' : ''} (per ${rem.attesaPerDataOra || '-'})`);
+    }
 
     // 4) cosa farebbe il cron adesso
     if (app.dataOra) {

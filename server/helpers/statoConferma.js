@@ -21,8 +21,15 @@
 const { saveLeadWithResult } = require('./nexus');
 const whitelist = require('../config/test-whitelist');
 
-const SI = 'SI-CONFERMA';
-const NO = 'NO-CONFERMA';
+// I valori sono convenzioni concordate con Bludental/Nexus, non costanti di codice:
+// stanno in env cosi' che rinominarli o aggiungerne sia una configurazione e non un
+// rilascio. Il campo su Nexus e' testo libero, quindi non c'e' lista chiusa da tenere
+// allineata: cambia solo cosa ci scriviamo.
+const SI = process.env.REMINDER_STATO_SI || 'SI-CONFERMA';
+const NO = process.env.REMINDER_STATO_NO || 'NO-CONFERMA';
+// Stato transitorio: il primo promemoria e' partito e il paziente non ha risposto.
+// Non chiude il ciclo - il sollecito parte comunque e potra' portarlo a SI/NO.
+const ATTESA = process.env.REMINDER_STATO_ATTESA || 'ATTESA-RISPOSTA';
 
 /** Normalizza la risposta del paziente (qualunque forma arrivi) in SI / NO / null. */
 function normalizzaRisposta(valore) {
@@ -98,4 +105,55 @@ async function applicaConferma(lead, risposta, opts = {}) {
   return { ok: !!res.ok, statoConferma, nexus: res };
 }
 
-module.exports = { SI, NO, normalizzaRisposta, statoConfermaDaRisposta, applicaConferma };
+/**
+ * Segnala su Nexus che il primo promemoria e' rimasto senza risposta.
+ *
+ * Scrive `stato_conferma` = ATTESA come gli altri due valori, ma NON tocca
+ * `reminder.risposta` ne' `reminder.statoConferma`: la lead resta dentro il ciclo,
+ * riceve il sollecito e potra' ancora diventare SI-CONFERMA o NO-CONFERMA. Se
+ * scrivessimo statoConferma, la cron di chiusura non la troverebbe piu' (cerca
+ * proprio quelle senza esito) e il paziente non verrebbe mai chiuso.
+ *
+ * Idempotente per orario: `reminder.attesaPerDataOra` evita di riscrivere lo stesso
+ * valore a ogni giro, e fa ripartire la segnalazione se l'appuntamento viene spostato.
+ *
+ * @param {object} lead   documento mongoose Lead (verra' salvato)
+ * @param {object} opts   { raw, dryRun }
+ */
+async function applicaAttesa(lead, opts = {}) {
+  const { raw = null, dryRun = false } = opts;
+
+  if (!whitelist.isConsentito(lead?.numeroTelefono)) {
+    return { ok: false, statoConferma: ATTESA, motivo: 'fuori_whitelist_test' };
+  }
+
+  lead.appuntamento = lead.appuntamento || {};
+  lead.appuntamento.reminder = lead.appuntamento.reminder || {};
+  const r = lead.appuntamento.reminder;
+
+  r.attesaAt = new Date();
+  r.attesaValore = ATTESA;
+  r.attesaPerDataOra = lead.appuntamento.dataOra || null;
+  if (raw !== null) r.rispostaRaw = r.rispostaRaw || raw;
+
+  if (!lead.idNexus) {
+    r.attesaPushOk = false;
+    r.attesaError = 'NO_IDNEXUS';
+    if (!dryRun) await lead.save();
+    return { ok: false, statoConferma: ATTESA, motivo: 'no_idnexus' };
+  }
+
+  if (dryRun) {
+    return { ok: true, statoConferma: ATTESA, motivo: 'dry_run' };
+  }
+
+  const res = await saveLeadWithResult({ id: lead.idNexus, stato_conferma: ATTESA });
+
+  r.attesaPushOk = !!res.ok;
+  r.attesaError = res.ok ? null : JSON.stringify(res.error).slice(0, 500);
+  await lead.save();
+
+  return { ok: !!res.ok, statoConferma: ATTESA, nexus: res };
+}
+
+module.exports = { SI, NO, ATTESA, normalizzaRisposta, statoConfermaDaRisposta, applicaConferma, applicaAttesa };

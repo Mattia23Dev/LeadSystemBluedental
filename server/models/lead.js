@@ -259,6 +259,16 @@ const LeadSchema = new Schema({
         statoConfermaPushAt: Date,
         statoConfermaPushOk: Boolean,
         statoConfermaError: String,
+        // -- stato TRANSITORIO: primo promemoria partito, nessuna risposta --
+        // Chiesto da Bludental (mail Caterina 27/08/2026) per far prendere in carico
+        // dal contact center chi non ha confermato, senza aspettare la fine del ciclo.
+        // Volutamente separato da statoConferma: quello e' l'esito finale, e la
+        // chiusura automatica cerca proprio le lead che non ce l'hanno ancora.
+        attesaAt: Date,
+        attesaValore: String,   // ATTESA-RISPOSTA (configurabile)
+        attesaPerDataOra: String,
+        attesaPushOk: Boolean,
+        attesaError: String,
       },
     },
     consent_marketing: String,

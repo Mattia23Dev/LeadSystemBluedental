@@ -16,16 +16,38 @@ const PROGRESS_LOG_EVERY = 25;
 const CRON_EXPR = '0 2 * * *';
 const CRON_ENABLED = true;
 
-function getTwoMonthsAgoRange() {
+// Ampiezza della finestra di rilettura, in mesi. Portata da 2 a 4 il 31/08/2026: il 15,8%
+// degli appuntamenti si svolge oltre 60 giorni dopo la creazione della lead (26,8% sugli
+// allineatori), quindi con due mesi la lead era gia' fuori finestra quando la visita
+// avveniva, e un flag di no show acceso qualche giorno dopo non ci arrivava piu'.
+// Oltre i 120 giorni si resta sotto lo 0,2%: quattro mesi chiudono il problema.
+const SYNC_MESI = Number(process.env.NEXUS_SYNC_MESI || 4);
+
+function getFinestraRange() {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
-  start.setMonth(start.getMonth() - 2);
+  start.setMonth(start.getMonth() - SYNC_MESI);
 
-  // Sync window: from 2 months ago up to now (end of current day).
   const end = new Date();
   end.setHours(23, 59, 59, 999);
 
   return { start, end };
+}
+
+/** Ricerca l'id Nexus a partire dal nostro id lead. Usata solo quando serve davvero. */
+async function risolviIdNexus(leadSystemId) {
+  const listRes = await listLeads({
+    select: 't.id',
+    conditions: `t.id_lead_leadsystem = '${leadSystemId}'`,
+    group: '',
+    having: '',
+    order: 't.data_modifica DESC',
+    limit: '1',
+    offset: '',
+    page: '',
+    pageSize: '',
+  });
+  return (Array.isArray(listRes) && listRes[0]?.id) ? listRes[0].id : (listRes?.[0]?.id || null);
 }
 
 async function syncOnce() {
@@ -58,13 +80,13 @@ async function syncOnce() {
     console.log(`[Nexus sync] Mongo connection ready | alreadyConnected=${mongoAlreadyConnected} | didConnectHere=${didConnectHere}`);
 
     // Limit sync to leads already linked with Nexus.
-    const { start, end } = getTwoMonthsAgoRange();
+    const { start, end } = getFinestraRange();
     const query = {
       idNexus: { $exists: true, $ne: '' },
       dataTimestamp: { $gte: start, $lte: end }
     };
     if (utente) query.utente = utente;
-    console.log(`[Nexus sync] Start | dryRun=${dryRun} | from=${start.toISOString()} | to=${end.toISOString()} | batchSize=${batchSize}`);
+    console.log(`[Nexus sync] Start | dryRun=${dryRun} | finestra=${SYNC_MESI} mesi | from=${start.toISOString()} | to=${end.toISOString()} | batchSize=${batchSize}`);
 
     let lastSeenTimestamp = null;
     let lastSeenId = null;
@@ -108,23 +130,19 @@ async function syncOnce() {
           console.log(`[Nexus sync] Progress | processed=${processed} | updated=${updated} | skipped=${skipped} | notFound=${notFoundInNexus}`);
         }
 
-        // Resolve Nexus lead id using id_lead_leadsystem = local Mongo _id (string)
+        // L'id Nexus ce l'abbiamo gia': la query di selezione richiede idNexus valorizzato.
+        // Usarlo direttamente dimezza le chiamate (era una LIST + una GET per ogni lead),
+        // ed e' quello che rende sostenibile la finestra di NEXUS_SYNC_MESI mesi.
+        // La ricerca per id_lead_leadsystem resta come rete di sicurezza: si usa se l'id
+        // manca o se la GET non trova nulla, cioe' se su Nexus la scheda e' stata rifatta.
         const leadSystemId = String(localLead._id);
-        const listRes = await listLeads({
-          select: 't.id',
-          conditions: `t.id_lead_leadsystem = '${leadSystemId}'`,
-          group: '',
-          having: '',
-          order: 't.data_modifica DESC',
-          limit: '1',
-          offset: '',
-          page: '',
-          pageSize: ''
-        });
+        let nexusId = String(localLead.idNexus || '').trim() || null;
+        let giaRisolto = false;
 
-        const nexusId = Array.isArray(listRes) && listRes[0]?.id
-          ? listRes[0].id
-          : listRes?.[0]?.id;
+        if (!nexusId) {
+          nexusId = await risolviIdNexus(leadSystemId);
+          giaRisolto = true;
+        }
 
         if (!nexusId) {
           notFoundInNexus++;
@@ -156,7 +174,20 @@ async function syncOnce() {
           await Lead.updateOne({ _id: localLead._id }, { $set: { idNexus: nexusId } });
         }
 
-        const nexusLead = await getLeadById(nexusId);
+        let nexusLead = await getLeadById(nexusId);
+
+        // GET a vuoto con un id che avevamo in casa: puo' essere cambiato su Nexus
+        // (schede rifatte o unite). Prima di dichiararla persa, la ricerchiamo.
+        if ((!nexusLead || typeof nexusLead !== 'object') && !giaRisolto) {
+          const altro = await risolviIdNexus(leadSystemId);
+          if (altro && altro !== nexusId) {
+            nexusId = altro;
+            lastResolvedNexusId = nexusId;
+            if (!dryRun) await Lead.updateOne({ _id: localLead._id }, { $set: { idNexus: nexusId } });
+            nexusLead = await getLeadById(nexusId);
+          }
+        }
+
         if (!nexusLead || typeof nexusLead !== 'object') {
           notFoundInNexus++;
 

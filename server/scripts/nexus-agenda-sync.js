@@ -4,7 +4,7 @@
  * Il cron reminder legge esclusivamente da Mongo (blocco Lead.appuntamento). Questo
  * job tiene quel mirror aggiornato e completo, cosa che il sync notturno da solo non
  * garantisce per due motivi:
- *   - copre solo le lead degli ultimi 2 mesi: il 06/08/2026 c'erano 75 appuntamenti
+ *   - copre solo le lead degli ultimi mesi (NEXUS_SYNC_MESI): il 06/08/2026 c'erano 75 appuntamenti
  *     futuri su lead piu' vecchie, che il cron notturno non rilegge mai;
  *   - gira una volta al giorno, quindi spostamenti e disdette della giornata
  *     resterebbero invisibili fino alla notte.
@@ -13,7 +13,8 @@
  * Nessuna GET per lead, quindi si puo' far girare a ogni ora.
  *
  * Cosa fa:
- *   1) legge da Nexus tutte le lead con data_ora_appuntamento da ieri in avanti;
+ *   1) legge da Nexus tutte le lead con data_ora_appuntamento dagli ultimi giorni in avanti
+ *      (AGENDA_SYNC_GIORNI_INDIETRO, default 7);
  *   2) aggiorna il blocco `appuntamento` locale (data/ora, spostamenti, no show,
  *      stato_conferma) tramite helpers/appuntamento.js;
  *   3) marca come SPARITI gli appuntamenti che in locale risultano futuri ma che
@@ -23,6 +24,7 @@
  *   AGENDA_SYNC_ENABLED   default true
  *   AGENDA_SYNC_CRON      default '0 * * * *' (ogni ora, 5 minuti prima del reminder)
  *   AGENDA_SYNC_DRY_RUN   default false
+ *   AGENDA_SYNC_GIORNI_INDIETRO  giorni di agenda passata da rileggere (default 7)
  *
  * Uso manuale: node server/scripts/nexus-agenda-sync.js
  */
@@ -38,6 +40,9 @@ const { buildAppuntamento } = require('../helpers/appuntamento');
 const ENABLED = String(process.env.AGENDA_SYNC_ENABLED || 'true').toLowerCase() === 'true';
 const CRON_EXPR = process.env.AGENDA_SYNC_CRON || '0 * * * *';
 const DRY_RUN = String(process.env.AGENDA_SYNC_DRY_RUN || 'false').toLowerCase() === 'true';
+// Quanti giorni indietro rileggere l'agenda. Serve a raccogliere i no show accesi dopo la
+// visita: con la sola giornata di ieri quei flag ci sfuggivano.
+const GIORNI_INDIETRO = Number(process.env.AGENDA_SYNC_GIORNI_INDIETRO || 7);
 
 let running = false;
 
@@ -67,10 +72,14 @@ async function syncOnce() {
   try {
     didConnect = await connetti();
 
-    // 1) agenda viva su Nexus: da ieri in avanti (ieri serve per chiudere la giornata appena passata)
+    // 1) agenda su Nexus: dagli ultimi GIORNI_INDIETRO giorni in avanti.
+    // Non basta guardare da ieri: il no show viene acceso anche qualche giorno dopo la
+    // visita (trovato il 31/08/2026 un appuntamento del 7 agosto che risultava onorato da
+    // noi e mancato su Nexus). Guardare indietro qualche giorno recupera quei flag finche'
+    // la riga e' ancora esposta, perche' quando Nexus chiude la visita svuota data e centro.
     const res = await listLeads({
       select: SELECT,
-      conditions: 't.data_ora_appuntamento >= DATE_SUB(NOW(), INTERVAL 1 DAY)',
+      conditions: `t.data_ora_appuntamento >= DATE_SUB(NOW(), INTERVAL ${GIORNI_INDIETRO} DAY)`,
       group: '', having: '',
       order: 't.data_ora_appuntamento ASC',
       limit: '5000', offset: '', page: '', pageSize: '',

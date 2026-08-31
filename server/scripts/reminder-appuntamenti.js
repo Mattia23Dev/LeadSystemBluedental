@@ -367,7 +367,14 @@ function messaggioDaInviare(lead, finestra, ora = Date.now()) {
   // dalla visita. Senza il primo non partono nemmeno gli altri due, perche' il sollecito
   // parla di una conferma mai chiesta e il finale va solo a chi ha confermato.
   if (!giaInviato(lead, '4g')) {
-    if (finestra !== '4g') return { stage: null, motivo: 'fuori_dai_quattro_giorni' };
+    // Chi ha prenotato con meno di quattro giorni non entra nel ciclo, ma il giorno
+    // prima riceve comunque il promemoria: stesso testo del finale, quindi senza
+    // richiesta di conferma. Meglio un promemoria senza conferma che il silenzio.
+    const primoPossibile = finestra === '4g' ? '4g' : (finestra === '1g' ? '1g' : null);
+    if (!primoPossibile) return { stage: null, motivo: 'fuori_dalle_giornate_previste' };
+    if (primoPossibile === '1g' && giaInviato(lead, '1g')) {
+      return { stage: null, motivo: 'finale_gia_inviato' };
+    }
     // Appena fissato: si lascia passare un po' di tempo, ma solo se ce n'e' da perdere.
     if (GRAZIA_FISSAGGIO_ORE > 0) {
       const app = lead.appuntamento || {};
@@ -392,7 +399,7 @@ function messaggioDaInviare(lead, finestra, ora = Date.now()) {
       const ore = ts ? (new Date(ts).getTime() - ora) / 3600000 : Infinity;
       if (ore < PRIMO_MIN_ORE) return { stage: null, motivo: 'primo_troppo_a_ridosso' };
     }
-    return { stage: '4g' };
+    return { stage: primoPossibile };
   }
 
   // Distanza minima dal messaggio precedente. Le finestre guardano solo l'orario

@@ -46,10 +46,10 @@
  *     Il silenzio diventa NO-CONFERMA su Nexus solo DOPO il sollecito, non dopo il primo
  *     messaggio: e' quello che il testo del sollecito promette al paziente ("in assenza
  *     di riscontro entro la giornata odierna cancelleremo l'appuntamento").
- *     Si chiude quando sono passate ATTESA_SOLLECITO_ORE dall'ultimo messaggio con
- *     richiesta di conferma e la finestra del sollecito e' ormai chiusa - cosi' chi ha
- *     ricevuto il primo promemoria a -4 giorni non viene chiuso mentre ha ancora il
- *     sollecito davanti.
+ *     Si chiude solo chi il sollecito l'ha davvero ricevuto, e solo dopo che sono
+ *     passate ATTESA_SOLLECITO_ORE da quel messaggio: chi ha ancora il sollecito davanti
+ *     non va chiuso, e chi non l'ha mai ricevuto - perche' e' slittato fuori fascia o
+ *     l'appuntamento era troppo vicino - resta senza esito invece che a NO-CONFERMA.
  *
  * Env:
  *   REMINDER_ENABLED             abilita i cron (default false: si accende quando il
@@ -656,12 +656,23 @@ async function chiusuraOnce() {
       'appuntamento.reminder.statoConferma': { $in: [null, ''] },
     }).limit(MAX_PER_RUN);
 
+    // Si chiude solo chi il sollecito l'ha DAVVERO ricevuto. Il tempo trascorso non
+    // basta a dedurlo: se il sollecito e' slittato oltre la fascia oraria, o e' caduto
+    // sotto il minimo di ore dall'appuntamento, non e' mai partito. Scrivere
+    // NO-CONFERMA a chi non e' stato avvisato sarebbe una promessa mai fatta: il testo
+    // che annuncia la cancellazione e' proprio quello del sollecito.
+    const conSollecito = candidati.filter((l) => {
+      const at = inviatoAt(l, '2g');
+      return at && (ora.getTime() - at.getTime()) >= ATTESA_SOLLECITO_ORE * 3600 * 1000;
+    });
+    const senzaSollecito = candidati.length - conSollecito.length;
+
     // In fase di test la chiusura automatica scrive su Nexus solo per il gruppo di
     // collaudo: NO-CONFERMA sulla scheda di un paziente vero sarebbe un dato falso.
-    const ammessi = candidati.filter((l) => whitelist.isConsentito(l?.numeroTelefono));
-    const esclusi = candidati.length - ammessi.length;
+    const ammessi = conSollecito.filter((l) => whitelist.isConsentito(l?.numeroTelefono));
+    const esclusi = conSollecito.length - ammessi.length;
 
-    console.log(`[Reminder chiusura] candidati=${ammessi.length}${esclusi ? ` (esclusi ${esclusi} fuori whitelist)` : ''} | si chiude entro ${STAGE_2G_ORE}h dall'appuntamento, dopo ${ATTESA_SOLLECITO_ORE}h di silenzio | dryRun=${DRY_RUN}`);
+    console.log(`[Reminder chiusura] candidati=${ammessi.length}${esclusi ? ` (esclusi ${esclusi} fuori whitelist)` : ''}${senzaSollecito ? ` (esclusi ${senzaSollecito} senza sollecito ricevuto)` : ''} | si chiude entro ${STAGE_2G_ORE}h dall'appuntamento, dopo ${ATTESA_SOLLECITO_ORE}h di silenzio dal sollecito | dryRun=${DRY_RUN}`);
     console.log(`[Reminder chiusura] ${whitelist.descrizione()}`);
 
     let ok = 0, ko = 0;

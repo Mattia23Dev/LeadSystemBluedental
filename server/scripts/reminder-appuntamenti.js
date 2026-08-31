@@ -67,6 +67,8 @@
  *                                scrive NO-CONFERMA (default 12, come da testo Bludental)
  *   REMINDER_ATTESA_ORE          ore di silenzio dopo il PRIMO promemoria oltre le quali
  *                                si scrive ATTESA-RISPOSTA (default 12)
+ *   REMINDER_DISTANZA_MIN_ORE    distanza minima fra due messaggi dello stesso ciclo
+ *                                (default 12): protegge gli appuntamenti agganciati tardi
  *   REMINDER_STATO_SI / _NO / _ATTESA  i tre valori scritti su stato_conferma. Sono
  *                                convenzioni concordate con Bludental, non costanti:
  *                                rinominarne uno e' configurazione, non rilascio.
@@ -123,6 +125,12 @@ const SOLO_PILOTA = String(process.env.REMINDER_SOLO_PILOTA || 'true').toLowerCa
 // risposta su Nexus (mail Caterina 27/08/2026). Non chiude il ciclo: serve a far
 // partire il recall telefonico del contact center mentre il sollecito e' ancora davanti.
 const ATTESA_PRIMO_ORE = Number(process.env.REMINDER_ATTESA_ORE || 12);
+// Distanza minima fra due messaggi dello stesso ciclo. Le finestre si calcolano
+// sull'orario dell'appuntamento, non su cosa abbiamo gia' detto al paziente: senza
+// questa soglia, un appuntamento agganciato tardi (prenotato con poco anticipo, o preso
+// in carico all'accensione del servizio) riceve il primo promemoria e il sollecito a
+// un'ora di distanza. Il sollecito non viene annullato, viene rimandato.
+const DISTANZA_MIN_ORE = Number(process.env.REMINDER_DISTANZA_MIN_ORE || 12);
 const CRON_INVIO = process.env.REMINDER_CRON || '5 * * * *';
 const CRON_CHIUSURA = process.env.REMINDER_CLOSE_CRON || '35 * * * *';
 const CRON_ATTESA = process.env.REMINDER_ATTESA_CRON || '20 * * * *';
@@ -243,6 +251,19 @@ function inviatoAt(lead, stage) {
   return null;
 }
 
+/** L'ultimo messaggio del ciclo partito con successo per l'orario attuale. */
+function ultimoInvioAt(lead) {
+  const app = lead.appuntamento || {};
+  const rem = app.reminder || {};
+  const invii = Array.isArray(rem.invii) ? rem.invii : [];
+  const validi = invii.filter((i) => i.perDataOra === app.dataOra && i.esito === 'ok' && i.at);
+  if (validi.length) return new Date(Math.max(...validi.map((i) => new Date(i.at).getTime())));
+  if (!invii.length && rem.perDataOra === app.dataOra && rem.esitoInvio === 'ok' && rem.inviatoAt) {
+    return new Date(rem.inviatoAt);
+  }
+  return null;
+}
+
 /**
  * Il messaggio da mandare adesso a questa lead, o null se non le tocca niente.
  *
@@ -257,7 +278,7 @@ function inviatoAt(lead, stage) {
  *
  * @returns {{stage:string}|{stage:null, motivo:string}}
  */
-function messaggioDaInviare(lead, finestra) {
+function messaggioDaInviare(lead, finestra, ora = Date.now()) {
   if (!finestra) return { stage: null, motivo: 'fuori_finestra' };
 
   const risposta = rispostaCorrente(lead);
@@ -268,18 +289,30 @@ function messaggioDaInviare(lead, finestra) {
     return { stage: '4g' };
   }
 
-  if (finestra === '4g') return { stage: null, motivo: 'primo_gia_inviato' };
-
-  if (finestra === '2g') {
-    if (risposta === 'SI') return { stage: null, motivo: 'gia_confermato' };
-    if (giaInviato(lead, '2g')) return { stage: null, motivo: 'sollecito_gia_inviato' };
-    return { stage: '2g' };
+  // Distanza minima dal messaggio precedente. Le finestre guardano solo l'orario
+  // dell'appuntamento: senza questo, un appuntamento agganciato tardi riceve primo
+  // promemoria e sollecito a un'ora di distanza. Il messaggio non viene annullato,
+  // viene rimandato al primo giro utile oltre la soglia.
+  const ultimo = ultimoInvioAt(lead);
+  if (ultimo && (ora - ultimo.getTime()) < DISTANZA_MIN_ORE * 3600 * 1000) {
+    return { stage: null, motivo: 'troppo_ravvicinato' };
   }
 
-  // finestra '1g': il promemoria finale raggiunge soltanto chi ha confermato.
-  if (risposta !== 'SI') return { stage: null, motivo: 'non_ha_confermato' };
-  if (giaInviato(lead, '1g')) return { stage: null, motivo: 'finale_gia_inviato' };
-  return { stage: '1g' };
+  if (finestra === '4g') return { stage: null, motivo: 'primo_gia_inviato' };
+
+  if (risposta === 'SI') {
+    // Ha confermato: gli resta solo il promemoria finale, nelle ultime ore.
+    if (finestra !== '1g') return { stage: null, motivo: 'gia_confermato' };
+    if (giaInviato(lead, '1g')) return { stage: null, motivo: 'finale_gia_inviato' };
+    return { stage: '1g' };
+  }
+
+  // Nessuna risposta: gli tocca il sollecito. Parte anche se nel frattempo siamo
+  // scivolati nella finestra del giorno prima, perche' e' il messaggio che annuncia
+  // la cancellazione: chiudere a NO-CONFERMA senza averlo mandato sarebbe una
+  // promessa mai fatta al paziente.
+  if (giaInviato(lead, '2g')) return { stage: null, motivo: 'sollecito_gia_inviato' };
+  return { stage: '2g' };
 }
 
 /** Ultime 10 cifre del numero: unico confronto affidabile fra i formati in DB. */

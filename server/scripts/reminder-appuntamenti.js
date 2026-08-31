@@ -69,6 +69,10 @@
  *                                si scrive ATTESA-RISPOSTA (default 12)
  *   REMINDER_DISTANZA_MIN_ORE    distanza minima fra due messaggi dello stesso ciclo
  *                                (default 12): protegge gli appuntamenti agganciati tardi
+ *   REMINDER_GRAZIA_FISSAGGIO_ORE ore di respiro fra il fissaggio dell'appuntamento e il
+ *                                primo promemoria (default 3): evita di scrivere al
+ *                                paziente pochi minuti dopo che ha prenotato. Se
+ *                                l'appuntamento e' troppo vicino il messaggio parte subito.
  *   REMINDER_ORA_INIZIO          prima ora utile per scrivere al paziente (default 8)
  *   REMINDER_ORA_FINE            ultima ora utile (default 19: l'ultimo giro e' il 19:05)
  *   REMINDER_PRIMO_MIN_ORE       anticipo minimo perche' il PRIMO promemoria parta e la
@@ -148,6 +152,13 @@ const PRIMO_MIN_ORE = Number(process.env.REMINDER_PRIMO_MIN_ORE || 0);
 // giro non invia: il messaggio non si perde, parte al primo giro utile del mattino.
 // Vale solo per i messaggi al paziente; le scritture su Nexus (ATTESA-RISPOSTA e la
 // chiusura) restano libere, perche' le legge il contact center e non disturbano nessuno.
+// Respiro fra il fissaggio e il primo promemoria. Il 17,5% degli appuntamenti nasce
+// gia' dentro la finestra dei 4 giorni (misurato il 31/08/2026): senza questa attesa il
+// paziente che prenota alle 17 riceve alle 17:05 un messaggio che gli chiede di
+// confermare quello che ha appena concordato con l'operatrice. Non salta nessun invio:
+// se l'appuntamento e' cosi' vicino che aspettare significherebbe perdere il messaggio,
+// il promemoria parte subito.
+const GRAZIA_FISSAGGIO_ORE = Number(process.env.REMINDER_GRAZIA_FISSAGGIO_ORE || 3);
 const ORA_INIZIO = Number(process.env.REMINDER_ORA_INIZIO || 8);
 const ORA_FINE = Number(process.env.REMINDER_ORA_FINE || 19);
 const CRON_INVIO = process.env.REMINDER_CRON || '5 * * * *';
@@ -320,6 +331,20 @@ function messaggioDaInviare(lead, finestra, ora = Date.now()) {
 
   // Primo promemoria mai partito: e' lui che parte, in qualunque finestra siamo.
   if (!giaInviato(lead, '4g')) {
+    // Appena fissato: si lascia passare un po' di tempo, ma solo se ce n'e' da perdere.
+    if (GRAZIA_FISSAGGIO_ORE > 0) {
+      const app = lead.appuntamento || {};
+      const sp = Array.isArray(app.spostamenti) ? app.spostamenti : [];
+      // Quando e' comparso l'orario ATTUALE: l'ultimo spostamento, o la prima volta che
+      // abbiamo visto una data su questo appuntamento.
+      const visto = sp.length ? sp[sp.length - 1].at : app.dataOraPrimaAt;
+      const oreAll = app.dataOraTs ? (new Date(app.dataOraTs).getTime() - ora) / 3600000 : Infinity;
+      const daPocoFissato = visto && (ora - new Date(visto).getTime()) < GRAZIA_FISSAGGIO_ORE * 3600 * 1000;
+      // Se aspettando si finirebbe sotto il minimo per inviare, si manda adesso.
+      if (daPocoFissato && oreAll > GRAZIA_FISSAGGIO_ORE + MIN_ORE) {
+        return { stage: null, motivo: 'appena_fissato' };
+      }
+    }
     if (PRIMO_MIN_ORE > 0) {
       const ts = lead?.appuntamento?.dataOraTs;
       const ore = ts ? (new Date(ts).getTime() - ora) / 3600000 : Infinity;

@@ -69,6 +69,10 @@
  *                                si scrive ATTESA-RISPOSTA (default 12)
  *   REMINDER_DISTANZA_MIN_ORE    distanza minima fra due messaggi dello stesso ciclo
  *                                (default 12): protegge gli appuntamenti agganciati tardi
+ *   REMINDER_PRIMO_MIN_ORE       anticipo minimo perche' il PRIMO promemoria parta e la
+ *                                lead entri nel ciclo (default 0 = disattivato). Messo a
+ *                                48 all'accensione: chi ha la visita entro due giorni
+ *                                resta fuori, invece di ricevere il testo dei "-4 giorni".
  *   REMINDER_STATO_SI / _NO / _ATTESA  i tre valori scritti su stato_conferma. Sono
  *                                convenzioni concordate con Bludental, non costanti:
  *                                rinominarne uno e' configurazione, non rilascio.
@@ -131,6 +135,13 @@ const ATTESA_PRIMO_ORE = Number(process.env.REMINDER_ATTESA_ORE || 12);
 // in carico all'accensione del servizio) riceve il primo promemoria e il sollecito a
 // un'ora di distanza. Il sollecito non viene annullato, viene rimandato.
 const DISTANZA_MIN_ORE = Number(process.env.REMINDER_DISTANZA_MIN_ORE || 12);
+// Anticipo minimo perche' il ciclo si apra: sotto queste ore dall'appuntamento il PRIMO
+// promemoria non parte, e quindi la lead non entra proprio nel ciclo. Vale solo per il
+// primo messaggio: sollecito e promemoria finale di chi e' gia' dentro non si toccano.
+// Serve all'accensione del servizio, per non mandare il testo dei "-4 giorni" a chi ha
+// la visita domani, e resta utile a regime per le prenotazioni dell'ultimo minuto.
+// 0 = disattivato.
+const PRIMO_MIN_ORE = Number(process.env.REMINDER_PRIMO_MIN_ORE || 0);
 const CRON_INVIO = process.env.REMINDER_CRON || '5 * * * *';
 const CRON_CHIUSURA = process.env.REMINDER_CLOSE_CRON || '35 * * * *';
 const CRON_ATTESA = process.env.REMINDER_ATTESA_CRON || '20 * * * *';
@@ -286,6 +297,11 @@ function messaggioDaInviare(lead, finestra, ora = Date.now()) {
 
   // Primo promemoria mai partito: e' lui che parte, in qualunque finestra siamo.
   if (!giaInviato(lead, '4g')) {
+    if (PRIMO_MIN_ORE > 0) {
+      const ts = lead?.appuntamento?.dataOraTs;
+      const ore = ts ? (new Date(ts).getTime() - ora) / 3600000 : Infinity;
+      if (ore < PRIMO_MIN_ORE) return { stage: null, motivo: 'primo_troppo_a_ridosso' };
+    }
     return { stage: '4g' };
   }
 

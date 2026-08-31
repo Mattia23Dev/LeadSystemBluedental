@@ -11,24 +11,25 @@
  *     Il ciclo e' a TRE messaggi (Rev. 2.0 §3.4), e non sono tre copie dello stesso
  *     promemoria: ognuno ha un destinatario diverso, deciso dalla risposta ai precedenti.
  *
- *       stage '4g'  appuntamento fra STAGE_2G_ORE e STAGE_4G_ORE (default 48h-96h)
+ *       stage '4g'  quattro giorni di calendario prima della visita
  *                   Primo promemoria con richiesta di conferma. Va a TUTTI.
  *                   SI -> SI-CONFERMA · NO -> NO-CONFERMA · silenzio -> non si scrive nulla
- *       stage '2g'  appuntamento fra STAGE_1G_ORE e STAGE_2G_ORE (default 24h-48h)
+ *       stage '2g'  due giorni prima
  *                   Sollecito. Va SOLO a chi non ha ancora risposto.
  *                   SI -> SI-CONFERMA · NO -> NO-CONFERMA
  *                   silenzio per ATTESA_SOLLECITO_ORE -> NO-CONFERMA (job 2)
- *       stage '1g'  appuntamento fra MIN_ORE e STAGE_1G_ORE (default 3h-24h)
+ *       stage '1g'  il giorno prima
  *                   Promemoria finale, senza richiesta di conferma. Va SOLO a chi ha
  *                   confermato, al primo o al secondo messaggio. Non scrive su Nexus.
  *
  *     Chi risponde NO esce dal ciclo: ha disdetto, non riceve altro.
  *
- *     Le finestre sono "entro X ore", non "esattamente a N giorni": un appuntamento
- *     fissato o spostato con poco preavviso si aggancia al primo giro utile invece di
- *     essere saltato per sempre. In quel caso il primo messaggio che riceve e' comunque
- *     il '4g': il sollecito dice "non abbiamo ancora ricevuto conferma" e a chi non ha
- *     mai ricevuto niente direbbe una cosa falsa.
+ *     Ogni messaggio vive nella SUA giornata e non si recupera altrove: il '4g' parte
+ *     solo a quattro giorni dalla visita, il '2g' solo a due, il '1g' solo il giorno
+ *     prima. Un appuntamento fissato con meno di quattro giorni di anticipo non riceve
+ *     il primo promemoria - quel momento e' passato - e quindi non riceve nemmeno gli
+ *     altri due, perche' il sollecito parlerebbe di una conferma mai chiesta e il
+ *     promemoria finale va solo a chi ha confermato.
  *     Non reinvia due volte lo STESSO stage per lo stesso orario; se l'appuntamento
  *     viene spostato (perDataOra != data/ora corrente) il ciclo riparte da capo.
  *     Salta gli appuntamenti spariti dall'agenda Nexus (disdette).
@@ -220,7 +221,7 @@ async function log(doc) {
  * Appuntamenti da servire, letti dal mirror locale: tutti quelli che cadono fra
  * MIN_ORE e FINESTRA_ORE da adesso e che risultano ancora in agenda su Nexus.
  */
-async function appuntamentiInFinestra(finestraOre = FINESTRA_ORE, minOre = MIN_ORE) {
+async function appuntamentiInFinestra(finestraOre = FINESTRA_ORE + 24, minOre = MIN_ORE) {
   const ora = Date.now();
   const da = new Date(ora + minOre * 3600 * 1000);
   const a = new Date(ora + finestraOre * 3600 * 1000);
@@ -269,13 +270,29 @@ function dividiPerPerimetro(leads) {
  * Attenzione: dice il MOMENTO, non il messaggio da mandare - quello lo decide
  * messaggioDaInviare(), che guarda anche cosa e' gia' successo.
  */
+function giorniDiDistanza(appTs, ora = Date.now()) {
+  // Differenza in GIORNI DI CALENDARIO italiani, non in multipli di 24 ore: quello che
+  // conta e' "fra quattro giorni", non "fra 96 ore".
+  const g1 = giornoItaliano(ora);
+  const g2 = giornoItaliano(appTs);
+  const d1 = new Date(`${g1}T00:00:00Z`).getTime();
+  const d2 = new Date(`${g2}T00:00:00Z`).getTime();
+  return Math.round((d2 - d1) / 86400000);
+}
+
 function stagePerAppuntamento(dataOraTs, ora = Date.now()) {
   if (!dataOraTs) return null;
-  const oreMancanti = (new Date(dataOraTs).getTime() - ora) / 3600000;
-  if (oreMancanti < MIN_ORE || oreMancanti > STAGE_4G_ORE) return null;
-  if (oreMancanti <= STAGE_1G_ORE) return '1g';
-  if (oreMancanti <= STAGE_2G_ORE) return '2g';
-  return '4g';
+  const appTs = new Date(dataOraTs).getTime();
+  const oreMancanti = (appTs - ora) / 3600000;
+  // Sotto il minimo non si scrive piu': a ridosso della visita il messaggio non serve
+  // e la risposta non fa in tempo a essere utile al centro.
+  if (oreMancanti < MIN_ORE) return null;
+  switch (giorniDiDistanza(appTs, ora)) {
+    case 4: return '4g';   // il messaggio dei quattro giorni, nella sua giornata
+    case 2: return '2g';   // il sollecito, due giorni prima
+    case 1: return '1g';   // il promemoria finale, il giorno prima
+    default: return null;  // a tre giorni, il giorno stesso o piu' in la': niente
+  }
 }
 
 /** La risposta del paziente per l'orario attualmente in agenda ('SI' | 'NO' | null). */
@@ -344,8 +361,13 @@ function messaggioDaInviare(lead, finestra, ora = Date.now()) {
   const risposta = rispostaCorrente(lead);
   if (risposta === 'NO') return { stage: null, motivo: 'ha_disdetto' };
 
-  // Primo promemoria mai partito: e' lui che parte, in qualunque finestra siamo.
+  // Il primo promemoria E' il messaggio dei -4 giorni: parte solo nella sua finestra.
+  // Se l'appuntamento nasce gia' dentro i quattro giorni quel momento e' passato, e non
+  // si recupera mandandolo piu' tardi: arriverebbe come un "-4 giorni" a due giorni
+  // dalla visita. Senza il primo non partono nemmeno gli altri due, perche' il sollecito
+  // parla di una conferma mai chiesta e il finale va solo a chi ha confermato.
   if (!giaInviato(lead, '4g')) {
+    if (finestra !== '4g') return { stage: null, motivo: 'fuori_dai_quattro_giorni' };
     // Appena fissato: si lascia passare un po' di tempo, ma solo se ce n'e' da perdere.
     if (GRAZIA_FISSAGGIO_ORE > 0) {
       const app = lead.appuntamento || {};
@@ -397,10 +419,11 @@ function messaggioDaInviare(lead, finestra, ora = Date.now()) {
     return { stage: '1g' };
   }
 
-  // Nessuna risposta: gli tocca il sollecito. Parte anche se nel frattempo siamo
-  // scivolati nella finestra del giorno prima, perche' e' il messaggio che annuncia
-  // la cancellazione: chiudere a NO-CONFERMA senza averlo mandato sarebbe una
-  // promessa mai fatta al paziente.
+  // Nessuna risposta: gli tocca il sollecito, ed e' il messaggio dei -2 giorni.
+  // Anche questo sta nella sua giornata: fuori di li' il testo direbbe una cosa falsa
+  // ("entro la giornata odierna cancelleremo" mandato la mattina della visita e' un
+  // ultimatum di poche ore).
+  if (finestra !== '2g') return { stage: null, motivo: 'fuori_dai_due_giorni' };
   if (giaInviato(lead, '2g')) return { stage: null, motivo: 'sollecito_gia_inviato' };
   return { stage: '2g' };
 }
@@ -461,7 +484,7 @@ async function invioOnce(opts = {}) {
     const inFinestra = await appuntamentiInFinestra();
     const perimetro = dividiPerPerimetro(inFinestra);
     const candidati = filtrato ? applicaFiltri(perimetro.dentro, opts) : perimetro.dentro;
-    console.log(`[Reminder invio] finestre: 4g ${STAGE_2G_ORE}-${STAGE_4G_ORE}h · 2g ${STAGE_1G_ORE}-${STAGE_2G_ORE}h · 1g ${MIN_ORE}-${STAGE_1G_ORE}h | appuntamenti in agenda=${inFinestra.length} | da servire=${perimetro.dentro.length} | fuori perimetro=${perimetro.fuoriPerimetro.length} | senza centro=${perimetro.senzaCentro.length} | fuori whitelist=${perimetro.fuoriWhitelist.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''} | soloPilota=${SOLO_PILOTA} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
+    console.log(`[Reminder invio] giornate: 4g = 4 giorni prima · 2g = 2 giorni prima · 1g = il giorno prima (minimo ${MIN_ORE}h dalla visita) | appuntamenti in agenda=${inFinestra.length} | da servire=${perimetro.dentro.length} | fuori perimetro=${perimetro.fuoriPerimetro.length} | senza centro=${perimetro.senzaCentro.length} | fuori whitelist=${perimetro.fuoriWhitelist.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''} | soloPilota=${SOLO_PILOTA} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
     console.log(`[Reminder invio] ${whitelist.descrizione()}`);
     // Un appuntamento senza centro e' un buco di dato, non una scelta: va visto.
     for (const l of perimetro.senzaCentro.slice(0, 10)) {

@@ -69,6 +69,8 @@
  *                                si scrive ATTESA-RISPOSTA (default 12)
  *   REMINDER_DISTANZA_MIN_ORE    distanza minima fra due messaggi dello stesso ciclo
  *                                (default 12): protegge gli appuntamenti agganciati tardi
+ *   REMINDER_ORA_INIZIO          prima ora utile per scrivere al paziente (default 8)
+ *   REMINDER_ORA_FINE            ultima ora utile (default 19: l'ultimo giro e' il 19:05)
  *   REMINDER_PRIMO_MIN_ORE       anticipo minimo perche' il PRIMO promemoria parta e la
  *                                lead entri nel ciclo (default 0 = disattivato). Messo a
  *                                48 all'accensione: chi ha la visita entro due giorni
@@ -142,10 +144,31 @@ const DISTANZA_MIN_ORE = Number(process.env.REMINDER_DISTANZA_MIN_ORE || 12);
 // la visita domani, e resta utile a regime per le prenotazioni dell'ultimo minuto.
 // 0 = disattivato.
 const PRIMO_MIN_ORE = Number(process.env.REMINDER_PRIMO_MIN_ORE || 0);
+// Fascia oraria in cui e' lecito scrivere al paziente, ora italiana. Fuori da qui il
+// giro non invia: il messaggio non si perde, parte al primo giro utile del mattino.
+// Vale solo per i messaggi al paziente; le scritture su Nexus (ATTESA-RISPOSTA e la
+// chiusura) restano libere, perche' le legge il contact center e non disturbano nessuno.
+const ORA_INIZIO = Number(process.env.REMINDER_ORA_INIZIO || 8);
+const ORA_FINE = Number(process.env.REMINDER_ORA_FINE || 19);
 const CRON_INVIO = process.env.REMINDER_CRON || '5 * * * *';
 const CRON_CHIUSURA = process.env.REMINDER_CLOSE_CRON || '35 * * * *';
 const CRON_ATTESA = process.env.REMINDER_ATTESA_CRON || '20 * * * *';
 const MAX_PER_RUN = Number(process.env.REMINDER_MAX_PER_RUN || 300);
+
+/**
+ * L'ora italiana, calcolata esplicitamente: il server gira a UTC e in estate
+ * getHours() darebbe due ore in meno, spostando tutta la fascia.
+ */
+function oraItaliana(ts = Date.now()) {
+  const s = new Intl.DateTimeFormat('it-IT', { timeZone: 'Europe/Rome', hour: 'numeric', hour12: false }).format(new Date(ts));
+  return Number(s);
+}
+
+/** Si puo' scrivere al paziente adesso? */
+function dentroFasciaOraria(ts = Date.now()) {
+  const h = oraItaliana(ts);
+  return h >= ORA_INIZIO && h <= ORA_FINE;
+}
 
 let runningInvio = false;
 let runningChiusura = false;
@@ -373,6 +396,15 @@ async function invioOnce(opts = {}) {
     throw new Error('--live richiede un filtro esplicito (--tel, --lead o --limit)');
   }
   const dryRun = opts.live ? false : DRY_RUN;
+
+  // Fascia oraria: vale per il giro automatico. Un invio manuale mirato (--tel/--lead)
+  // serve alle prove e passa comunque, altrimenti non si potrebbe collaudare di sera.
+  if (!filtrato && !dentroFasciaOraria()) {
+    console.log(`[Reminder invio] Fuori fascia oraria (${ORA_INIZIO}:00-${ORA_FINE}:59, ora italiana: adesso sono le ${oraItaliana()}): nessun invio, si riprende al primo giro utile.`);
+    runningInvio = false;
+    if (didConnect) await mongoose.disconnect().catch(() => {});
+    return;
+  }
 
   try {
     const inFinestra = await appuntamentiInFinestra();

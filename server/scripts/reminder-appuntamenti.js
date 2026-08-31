@@ -175,6 +175,21 @@ function oraItaliana(ts = Date.now()) {
   return Number(s);
 }
 
+/** La data italiana in forma AAAA-MM-GG: serve a ragionare per GIORNI, non per ore. */
+function giornoItaliano(ts = Date.now()) {
+  const p = new Intl.DateTimeFormat('it-IT', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' })
+    .formatToParts(new Date(ts));
+  const v = Object.fromEntries(p.map((x) => [x.type, x.value]));
+  return `${v.year}-${v.month}-${v.day}`;
+}
+
+/** L'appuntamento cade domani? Il testo del promemoria finale dice "di domani": se lo
+ *  mandassimo il giorno stesso direbbe una cosa falsa. */
+function eDomani(appTs, ts = Date.now()) {
+  const domani = giornoItaliano(new Date(ts).getTime() + 24 * 3600 * 1000);
+  return giornoItaliano(appTs) === domani;
+}
+
 /** Si puo' scrivere al paziente adesso? */
 function dentroFasciaOraria(ts = Date.now()) {
   const h = oraItaliana(ts);
@@ -340,8 +355,13 @@ function messaggioDaInviare(lead, finestra, ora = Date.now()) {
       const visto = sp.length ? sp[sp.length - 1].at : app.dataOraPrimaAt;
       const oreAll = app.dataOraTs ? (new Date(app.dataOraTs).getTime() - ora) / 3600000 : Infinity;
       const daPocoFissato = visto && (ora - new Date(visto).getTime()) < GRAZIA_FISSAGGIO_ORE * 3600 * 1000;
-      // Se aspettando si finirebbe sotto il minimo per inviare, si manda adesso.
-      if (daPocoFissato && oreAll > GRAZIA_FISSAGGIO_ORE + MIN_ORE) {
+      // Il respiro si prende solo se non costa niente: deve restare nella stessa
+      // giornata e dentro la fascia. Rimandare a domani mattina allontanerebbe il
+      // promemoria dal suo momento (-4 giorni) e, per un appuntamento dell'indomani,
+      // lo farebbe arrivare il giorno stesso della visita.
+      const dopoLaGrazia = ora + GRAZIA_FISSAGGIO_ORE * 3600 * 1000;
+      const restaOggi = giornoItaliano(dopoLaGrazia) === giornoItaliano(ora) && dentroFasciaOraria(dopoLaGrazia);
+      if (daPocoFissato && restaOggi && oreAll > GRAZIA_FISSAGGIO_ORE + MIN_ORE) {
         return { stage: null, motivo: 'appena_fissato' };
       }
     }
@@ -368,6 +388,12 @@ function messaggioDaInviare(lead, finestra, ora = Date.now()) {
     // Ha confermato: gli resta solo il promemoria finale, nelle ultime ore.
     if (finestra !== '1g') return { stage: null, motivo: 'gia_confermato' };
     if (giaInviato(lead, '1g')) return { stage: null, motivo: 'finale_gia_inviato' };
+    // Il testo dice "il Suo appuntamento di domani": va mandato il giorno prima, non
+    // il giorno stesso. La finestra di 24 ore da sola non basta a garantirlo.
+    const appTs = lead?.appuntamento?.dataOraTs;
+    if (appTs && !eDomani(new Date(appTs).getTime(), ora)) {
+      return { stage: null, motivo: 'finale_non_e_domani' };
+    }
     return { stage: '1g' };
   }
 

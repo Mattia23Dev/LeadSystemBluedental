@@ -236,6 +236,26 @@ async function appuntamentiInFinestra(finestraOre = FINESTRA_ORE + 24, minOre = 
 }
 
 /**
+ * L'appuntamento risulta gia' mancato pur essendo ancora futuro?
+ *
+ * Nexus non espone uno stato "annullato": quando il centro cancella un appuntamento,
+ * l'unico segnale che arriva e' il flag di no show con `data_ora_mancato_appuntamento`
+ * uguale alla data dell'appuntamento stesso. Su un appuntamento futuro e' una
+ * contraddizione - non lo si puo' aver mancato prima che avvenga - e in pratica vuol
+ * dire che quell'appuntamento non ci sara'. Scoperto il 01/09/2026: a due pazienti
+ * era stato mandato il promemoria per una visita che il centro aveva gia' cancellato.
+ *
+ * Su un appuntamento passato la stessa condizione e' invece del tutto normale: e' un
+ * no show vero, e infatti si guarda solo il futuro.
+ */
+function risultaAnnullato(lead, ora = Date.now()) {
+  const app = lead?.appuntamento || {};
+  if (!app.noShow || !app.noShowDataOra || !app.dataOra || !app.dataOraTs) return false;
+  if (new Date(app.dataOraTs).getTime() <= ora) return false;
+  return String(app.noShowDataOra).slice(0, 10) === String(app.dataOra).slice(0, 10);
+}
+
+/**
  * Divide i candidati per perimetro:
  *   dentro         centro nel pilota, censito in anagrafica, numero ammesso -> si invia
  *   fuoriPerimetro centro valido ma non nel pilota                 -> non si invia
@@ -254,14 +274,16 @@ function dividiPerPerimetro(leads) {
   const fuoriPerimetro = [];
   const senzaCentro = [];
   const fuoriWhitelist = [];
+  const annullati = [];
   for (const l of leads) {
     const centroId = l?.appuntamento?.centroId;
+    if (risultaAnnullato(l)) { annullati.push(l); continue; }
     if (!variabiliMessaggio(centroId)) { senzaCentro.push(l); continue; }
     if (SOLO_PILOTA && !isPilota(centroId)) { fuoriPerimetro.push(l); continue; }
     if (!whitelist.isConsentito(l?.numeroTelefono)) { fuoriWhitelist.push(l); continue; }
     dentro.push(l);
   }
-  return { dentro, fuoriPerimetro, senzaCentro, fuoriWhitelist };
+  return { dentro, fuoriPerimetro, senzaCentro, fuoriWhitelist, annullati };
 }
 
 /**
@@ -512,10 +534,14 @@ async function invioOnce(opts = {}) {
     const perimetro = dividiPerPerimetro(inFinestra);
     const grezzi = filtrato ? applicaFiltri(perimetro.dentro, opts) : perimetro.dentro;
     const { tenuti: candidati, scartati: doppioni } = scartaDoppioni(grezzi);
-    console.log(`[Reminder invio] giornate: 4g = 4 giorni prima · 2g = 2 giorni prima · 1g = il giorno prima (minimo ${MIN_ORE}h dalla visita) | appuntamenti in agenda=${inFinestra.length} | da servire=${perimetro.dentro.length} | fuori perimetro=${perimetro.fuoriPerimetro.length} | senza centro=${perimetro.senzaCentro.length} | fuori whitelist=${perimetro.fuoriWhitelist.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''}${doppioni.length ? ` | doppioni scartati=${doppioni.length}` : ''} | soloPilota=${SOLO_PILOTA} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
+    console.log(`[Reminder invio] giornate: 4g = 4 giorni prima · 2g = 2 giorni prima · 1g = il giorno prima (minimo ${MIN_ORE}h dalla visita) | appuntamenti in agenda=${inFinestra.length} | da servire=${perimetro.dentro.length} | fuori perimetro=${perimetro.fuoriPerimetro.length} | senza centro=${perimetro.senzaCentro.length} | gia annullati=${perimetro.annullati.length} | fuori whitelist=${perimetro.fuoriWhitelist.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''}${doppioni.length ? ` | doppioni scartati=${doppioni.length}` : ''} | soloPilota=${SOLO_PILOTA} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
     console.log(`[Reminder invio] ${whitelist.descrizione()}`);
     for (const d of doppioni) {
       console.log(`[Reminder invio] DOPPIONE scartato | lead=${d.lead._id} | tel=${d.lead.numeroTelefono} | app=${d.lead?.appuntamento?.dataOra} | gia servita dalla lead ${d.tenuta}`);
+    }
+
+    for (const l of perimetro.annullati) {
+      console.log(`[Reminder invio] ANNULLATO, non si scrive | lead=${l._id} | app=${l?.appuntamento?.dataOra} | mancato=${l?.appuntamento?.noShowDataOra}`);
     }
 
     // Un appuntamento senza centro e' un buco di dato, non una scelta: va visto.

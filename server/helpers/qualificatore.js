@@ -72,6 +72,22 @@ const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'lug
 const GIORNI = ['domenica', 'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato'];
 
 /** Telefono in formato internazionale +39XXXXXXXXXX (best effort). */
+/** L'email e' valida? Il connector rifiuta il payload se il campo c'e' ma non lo e'. */
+function emailValida(email) {
+  const e = String(email || '').trim();
+  return /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(e);
+}
+
+/**
+ * Il numero e' spedibile? Un numero mutilo fa fallire l'invio con un errore di schema
+ * generico, che nei log non dice quale sia il problema. Meglio riconoscerlo prima.
+ */
+function telefonoValido(e164) {
+  const d = String(e164 || '').replace(/\D/g, '');
+  if (d.startsWith('39')) return d.length === 12;   // 39 + 10 cifre
+  return d.length >= 11 && d.length <= 15;          // E.164, numeri esteri
+}
+
 function toE164(phone) {
   const digits = String(phone || '').replace(/\D/g, '');
   if (!digits) return '';
@@ -128,7 +144,9 @@ function buildPayload({ lead, dataOra, nome, cognome, telefono, email, stage = '
     name,
     surname,
     phone: toE164(telefono || lead?.numeroTelefono),
-    email: email || lead?.email || '',
+    // L'email si manda solo se e' un'email: sui dati veri capita che contenga la citta'
+    // ("bari") o sia vuota, e il connector rifiuta l'intero payload.
+    ...(emailValida(email || lead?.email) ? { email: String(email || lead.email).trim() } : {}),
     source: source || SOURCE,
     flow_id: FLOWS[stage] || FLOW_4G,
     dynamicVariables: {
@@ -156,6 +174,16 @@ async function inviaReminder(args = {}) {
 
   // Ultimo cancello prima del paziente: in fase di test si scrive solo al gruppo di
   // collaudo. Sta qui, e non solo nel cron, perche' cosi' nessun chiamante lo aggira.
+  if (!telefonoValido(payload.phone)) {
+    return {
+      ok: false,
+      skipped: true,
+      stage,
+      error: `telefono non spedibile (${payload.phone || 'mancante'})`,
+      payload,
+    };
+  }
+
   if (!whitelist.isConsentito(payload.phone)) {
     return {
       ok: false,

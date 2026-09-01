@@ -435,6 +435,26 @@ function messaggioDaInviare(lead, finestra, ora = Date.now()) {
   return { stage: '2g' };
 }
 
+/**
+ * Stessa persona, stesso appuntamento: una sola volta.
+ * Su Mongo capita che lo stesso paziente esista come due lead distinte (due form
+ * compilati, due campagne) e che entrambe puntino allo stesso appuntamento Nexus.
+ * Senza questo filtro riceverebbe due messaggi identici a un secondo di distanza.
+ * Si tiene la lead vista per prima; le altre vengono contate e loggate.
+ */
+function scartaDoppioni(leads) {
+  const visti = new Map();
+  const tenuti = [];
+  const scartati = [];
+  for (const l of leads) {
+    const chiave = `${last10(l.numeroTelefono)}|${l?.appuntamento?.dataOra || ''}`;
+    if (visti.has(chiave)) { scartati.push({ lead: l, tenuta: visti.get(chiave) }); continue; }
+    visti.set(chiave, l._id);
+    tenuti.push(l);
+  }
+  return { tenuti, scartati };
+}
+
 /** Ultime 10 cifre del numero: unico confronto affidabile fra i formati in DB. */
 function last10(phone) {
   return String(phone || '').replace(/\D/g, '').slice(-10);
@@ -490,9 +510,14 @@ async function invioOnce(opts = {}) {
   try {
     const inFinestra = await appuntamentiInFinestra();
     const perimetro = dividiPerPerimetro(inFinestra);
-    const candidati = filtrato ? applicaFiltri(perimetro.dentro, opts) : perimetro.dentro;
-    console.log(`[Reminder invio] giornate: 4g = 4 giorni prima · 2g = 2 giorni prima · 1g = il giorno prima (minimo ${MIN_ORE}h dalla visita) | appuntamenti in agenda=${inFinestra.length} | da servire=${perimetro.dentro.length} | fuori perimetro=${perimetro.fuoriPerimetro.length} | senza centro=${perimetro.senzaCentro.length} | fuori whitelist=${perimetro.fuoriWhitelist.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''} | soloPilota=${SOLO_PILOTA} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
+    const grezzi = filtrato ? applicaFiltri(perimetro.dentro, opts) : perimetro.dentro;
+    const { tenuti: candidati, scartati: doppioni } = scartaDoppioni(grezzi);
+    console.log(`[Reminder invio] giornate: 4g = 4 giorni prima · 2g = 2 giorni prima · 1g = il giorno prima (minimo ${MIN_ORE}h dalla visita) | appuntamenti in agenda=${inFinestra.length} | da servire=${perimetro.dentro.length} | fuori perimetro=${perimetro.fuoriPerimetro.length} | senza centro=${perimetro.senzaCentro.length} | fuori whitelist=${perimetro.fuoriWhitelist.length}${filtrato ? ` | dopo filtri=${candidati.length}` : ''}${doppioni.length ? ` | doppioni scartati=${doppioni.length}` : ''} | soloPilota=${SOLO_PILOTA} | dryRun=${dryRun} | qualificatore=${isConfigurato() ? 'configurato' : 'NON configurato'}`);
     console.log(`[Reminder invio] ${whitelist.descrizione()}`);
+    for (const d of doppioni) {
+      console.log(`[Reminder invio] DOPPIONE scartato | lead=${d.lead._id} | tel=${d.lead.numeroTelefono} | app=${d.lead?.appuntamento?.dataOra} | gia servita dalla lead ${d.tenuta}`);
+    }
+
     // Un appuntamento senza centro e' un buco di dato, non una scelta: va visto.
     for (const l of perimetro.senzaCentro.slice(0, 10)) {
       console.log(`[Reminder invio] SALTATA senza centro | lead=${l._id} | app=${l?.appuntamento?.dataOra} | centroId=${l?.appuntamento?.centroId || '-'}`);

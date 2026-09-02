@@ -238,20 +238,33 @@ async function appuntamentiInFinestra(finestraOre = FINESTRA_ORE + 24, minOre = 
 /**
  * L'appuntamento risulta gia' mancato pur essendo ancora futuro?
  *
- * Nexus non espone uno stato "annullato": quando il centro cancella un appuntamento,
- * l'unico segnale che arriva e' il flag di no show con `data_ora_mancato_appuntamento`
- * uguale alla data dell'appuntamento stesso. Su un appuntamento futuro e' una
- * contraddizione - non lo si puo' aver mancato prima che avvenga - e in pratica vuol
- * dire che quell'appuntamento non ci sara'. Scoperto il 01/09/2026: a due pazienti
- * era stato mandato il promemoria per una visita che il centro aveva gia' cancellato.
+ * Due segnali, in ordine di affidabilita'.
+ *
+ * Il primo e' esplicito: quando il centro cancella la visita su Deasoft, Nexus porta
+ * l'esito a "annullato deasoft" (verificato il 02/09/2026 su otto appuntamenti, tutti
+ * pazienti che avevano disdetto rispondendo al nostro promemoria).
+ *
+ * Il secondo e' un ripiego per quando l'esito non e' ancora aggiornato: il flag di no
+ * show acceso su una visita futura, con `data_ora_mancato_appuntamento` uguale alla data
+ * dell'appuntamento stesso. E' una contraddizione - non si puo' mancare una visita prima
+ * che avvenga - e in pratica vuol dire che quell'appuntamento non ci sara'. Il 01/09 due
+ * pazienti avevano ricevuto il promemoria per una visita gia' cancellata dal centro.
  *
  * Su un appuntamento passato la stessa condizione e' invece del tutto normale: e' un
  * no show vero, e infatti si guarda solo il futuro.
  */
 function risultaAnnullato(lead, ora = Date.now()) {
   const app = lead?.appuntamento || {};
-  if (!app.noShow || !app.noShowDataOra || !app.dataOra || !app.dataOraTs) return false;
+  if (!app.dataOra || !app.dataOraTs) return false;
   if (new Date(app.dataOraTs).getTime() <= ora) return false;
+
+  // Segnale esplicito: quando il centro cancella su Deasoft, Nexus porta l'esito a
+  // "annullato deasoft". E' il modo piu' solido, quando c'e'.
+  if (/annullat/i.test(String(app.esitoCorrente || ''))) return true;
+
+  // Ripiego, per quando l'esito non e' ancora stato aggiornato: il flag di mancato
+  // appuntamento acceso su una visita futura, con la data della visita stessa.
+  if (!app.noShow || !app.noShowDataOra) return false;
   return String(app.noShowDataOra).slice(0, 10) === String(app.dataOra).slice(0, 10);
 }
 

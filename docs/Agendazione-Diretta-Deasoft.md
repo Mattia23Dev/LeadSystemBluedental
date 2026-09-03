@@ -84,6 +84,8 @@ con l'indicazione di cosa è successo. Il criterio va concordato con Bludental.
 | Consegna della richiesta all'assistente | Pronta |
 | Ricezione della prenotazione e registrazione sulla scheda | In fase di test, bloccata |
 | Agenti WhatsApp e vocale per l'agendazione | Pronti entrambi |
+| Scelta del centro e ricerca degli slot (flussi n8n) | Attive, vedi `Flussi-n8n-Agendazione.md` |
+| Creazione dell'appuntamento su Deasoft | Manca l'endpoint, bloccante |
 | Lettura dell'agenda e creazione dell'appuntamento su Deasoft | In fase di test, bloccata |
 | Riprogrammazione e annullamento | In fase di test, bloccata |
 | Ambiente | Beta, in attesa del via libera per la produzione |

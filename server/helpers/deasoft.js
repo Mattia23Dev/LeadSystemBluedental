@@ -50,6 +50,52 @@ function tokenUrlDi(endpointUrl) {
   }
 }
 exports.tokenUrlDi = tokenUrlDi;
+
+/** "true"/"false" come stringhe, 0/1, booleani veri: si normalizza tutto. */
+function boolDi(v) {
+  if (v === undefined || v === null || v === '') return null;
+  const t = String(v).trim().toLowerCase();
+  if (['true', '1', 'si', 'sì', 'yes'].includes(t)) return true;
+  if (['false', '0', 'no'].includes(t)) return false;
+  return null;
+}
+
+function numeroDi(v) {
+  if (v === undefined || v === null || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Gli esiti post-visita, normalizzati. Stesso tracciato per ?Type=Result e
+ * ?Type=EventResult: cambia solo la chiave con cui si interroga.
+ * Campi verificati il 03/09/2026 sulle risposte reali. I booleani arrivano come
+ * stringhe "true"/"false", gli importi come numeri, le date come AAAA-MM-GG.
+ *
+ * ATTENZIONE su `data_presentato`: su alcuni contatti riporta una data FUTURA anche
+ * quando presentato e' false. Da chiarire con Deasoft prima di usarla come "data della
+ * visita svolta": sembra contenere il prossimo appuntamento.
+ */
+function mappaEsiti(payload) {
+  const r = Array.isArray(payload) ? (payload[0] || {}) : (payload?.data || payload || {});
+  return {
+    presentato: boolDi(r.presentato),
+    nonPresentato: boolDi(r.non_presentato),
+    dataPresentato: r.data_presentato || null,
+    preventivato: boolDi(r.preventivato),
+    importoPreventivato: numeroDi(r.importo_preventivato),
+    preventivoAccettato: boolDi(r.preventivo_accettato),
+    preventivoNonAccettato: boolDi(r.preventivo_non_accettato),
+    fatturato: boolDi(r.fatturato),
+    importoFatturato: numeroDi(r.importo_fatturato),
+    dataFissato: r.data_fissato || null,
+    rischedulato: numeroDi(r.rischedulato),
+    dataRischedulato: r.data_rischedulato || null,
+    ultimaModificaEsito: r.data_ultima_modifica_esito || null,
+    valore: numeroDi(r.importo_fatturato),
+  };
+}
+exports.mappaEsiti = mappaEsiti;
 exports.EVENT_RESULT_URL = process.env.DEASOFT_EVENT_RESULT_URL || DEFAULT_EVENT_RESULT_URL;
 exports.EVENT_TOKEN_URL = process.env.DEASOFT_EVENT_TOKEN_URL || tokenUrlDi(exports.EVENT_RESULT_URL);
 exports.EVENT_AMBIENTE = EVENT_AMBIENTE;

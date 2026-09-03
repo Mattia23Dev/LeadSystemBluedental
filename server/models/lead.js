@@ -145,6 +145,24 @@ const LeadSchema = new Schema({
       lastError: String,
       /** Ultimo id LeadSystem usato per GET esiti Deasoft (query id_leadsystem). */
       lastLeadSystemId: String,
+      // Esiti post-visita normalizzati, su un solo livello come nexus_sync: cosi' si
+      // leggono e si filtrano senza aprire il payload grezzo (che resta in deasoft_lead).
+      // Nomi dei campi Deasoft verificati il 03/09/2026.
+      presentato: Boolean,
+      nonPresentato: Boolean,
+      dataPresentato: String,
+      preventivato: Boolean,
+      importoPreventivato: Number,
+      preventivoAccettato: Boolean,
+      preventivoNonAccettato: Boolean,
+      fatturato: Boolean,
+      importoFatturato: Number,
+      dataFissato: String,
+      rischedulato: Number,
+      dataRischedulato: String,
+      ultimaModificaEsito: String,
+      /** Alias storico di importoFatturato, tenuto per non rompere letture esistenti. */
+      valore: Number,
       syncHistory: [
         {
           at: Date,
@@ -166,11 +184,22 @@ const LeadSchema = new Schema({
       lastError: String,
       /** Ultimo id_deasoft usato per GET ?Type=EventResult. */
       lastIdDeasoft: String,
-      // Esiti mappati best-effort dal payload EventResult (dipende dallo schema Deasoft).
-      presentato: Schema.Types.Mixed,
-      preventivato: Schema.Types.Mixed,
-      fatturato: Schema.Types.Mixed,
-      valore: Schema.Types.Mixed,
+      // Stessi campi di deasoft_sync: il tracciato di EventResult e di Result coincide,
+      // cambia solo la chiave con cui si interroga (id_deasoft invece di id_leadsystem).
+      presentato: Boolean,
+      nonPresentato: Boolean,
+      dataPresentato: String,
+      preventivato: Boolean,
+      importoPreventivato: Number,
+      preventivoAccettato: Boolean,
+      preventivoNonAccettato: Boolean,
+      fatturato: Boolean,
+      importoFatturato: Number,
+      dataFissato: String,
+      rischedulato: Number,
+      dataRischedulato: String,
+      ultimaModificaEsito: String,
+      valore: Number,
       syncHistory: [
         {
           at: Date,

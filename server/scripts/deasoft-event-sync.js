@@ -3,7 +3,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const cron = require('node-cron');
 const Lead = require('../models/lead');
-const { getDeasoftToken, getDeasoftEventResult, EVENT_TOKEN_URL } = require('../helpers/deasoft');
+const { getDeasoftToken, getDeasoftEventResult, EVENT_TOKEN_URL, mappaEsiti } = require('../helpers/deasoft');
 
 // Cron notturno che allinea gli esiti dell'AGENDAZIONE DIRETTA Deasoft.
 // Per ogni lead agendata (con idDeasoft) chiama GET ?Type=EventResult&id_deasoft=...
@@ -45,49 +45,9 @@ function normalizeEventPayload(payload) {
   return payload || {};
 }
 
-/** "true"/"false" come stringhe, 0/1, booleani veri: si normalizza tutto. */
-function boolDi(v) {
-  if (v === undefined || v === null || v === '') return null;
-  const s = String(v).trim().toLowerCase();
-  if (['true', '1', 'si', 'sì', 'yes'].includes(s)) return true;
-  if (['false', '0', 'no'].includes(s)) return false;
-  return null;
-}
-
-function numeroDi(v) {
-  if (v === undefined || v === null || v === '') return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-/**
- * Campi restituiti da ?Type=EventResult, verificati sul beta il 03/09/2026:
- *   presentato, non_presentato, data_presentato
- *   preventivato, importo_preventivato, preventivo_accettato, preventivo_non_accettato
- *   fatturato, importo_fatturato
- *   data_fissato, rischedulato, data_rischedulato, data_ultima_modifica_esito, id_lead
- * I booleani arrivano come stringhe "true"/"false", gli importi come numeri, le date
- * come AAAA-MM-GG senza fuso (tranne data_ultima_modifica_esito, ISO con Z).
- */
+/** Gli esiti arrivano con lo stesso tracciato di ?Type=Result: mappatura condivisa. */
 function mapEsiti(payload) {
-  const rec = normalizeEventPayload(payload);
-  return {
-    presentato: boolDi(pick(rec, ['presentato'])),
-    nonPresentato: boolDi(pick(rec, ['non_presentato'])),
-    dataPresentato: pick(rec, ['data_presentato']) || null,
-    preventivato: boolDi(pick(rec, ['preventivato'])),
-    importoPreventivato: numeroDi(pick(rec, ['importo_preventivato'])),
-    preventivoAccettato: boolDi(pick(rec, ['preventivo_accettato'])),
-    preventivoNonAccettato: boolDi(pick(rec, ['preventivo_non_accettato'])),
-    fatturato: boolDi(pick(rec, ['fatturato'])),
-    importoFatturato: numeroDi(pick(rec, ['importo_fatturato'])),
-    dataFissato: pick(rec, ['data_fissato']) || null,
-    rischedulato: numeroDi(pick(rec, ['rischedulato'])),
-    dataRischedulato: pick(rec, ['data_rischedulato']) || null,
-    ultimaModificaEsito: pick(rec, ['data_ultima_modifica_esito']) || null,
-    // Manteniamo anche il vecchio nome, usato altrove come "valore".
-    valore: numeroDi(pick(rec, ['importo_fatturato', 'valore', 'importo'])),
-  };
+  return mappaEsiti(normalizeEventPayload(payload));
 }
 
 function getLookbackRange() {

@@ -5,7 +5,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const cron = require('node-cron');
 const Lead = require('../models/lead');
-const { getDeasoftToken, getDeasoftLeadOutcome } = require('../helpers/deasoft');
+const { getDeasoftToken, getDeasoftLeadOutcome, mappaEsiti } = require('../helpers/deasoft');
 
 let running = false;
 const CRON_EXPR = process.env.DEASOFT_SYNC_CRON || '0 5 * * *';
@@ -19,6 +19,9 @@ const EXCLUDE_NEXUS_ESITO_REGEX_SOURCE = (
 ).trim();
 const DEASOFT_HISTORY_LIMIT = Number(process.env.DEASOFT_SYNC_HISTORY_LIMIT || 20);
 const DEBUG_CSV_DIR = process.env.DEASOFT_DEBUG_CSV_DIR || path.resolve(__dirname, '../csv');
+// Il CSV di debug scriveva un file a ogni giro con tutte le lead processate: su Railway
+// il disco e' effimero, quindi e' solo lavoro sprecato. Si accende quando serve davvero.
+const DEBUG_CSV = String(process.env.DEASOFT_DEBUG_CSV || 'false').toLowerCase() === 'true';
 const DRY_RUN = (process.env.DEASOFT_SYNC_DRY_RUN || 'false').toLowerCase() === 'true';
 
 function csvEscape(value) {
@@ -57,11 +60,16 @@ function buildDebugCsv(rows) {
   return `${lines.join('\n')}\n`;
 }
 
-function getTwoMonthsAgoRange() {
+// Finestra di rilettura, in mesi. Allineata a quella del sync Nexus: un appuntamento
+// puo' svolgersi mesi dopo la creazione della lead, e preventivo e fatturato arrivano
+// dopo la visita. Con 4 mesi sono circa 12.700 lead per giro, una chiamata ciascuna.
+const SYNC_MESI = Number(process.env.DEASOFT_SYNC_MESI || 4);
+
+function getFinestraRange() {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
-  //start.setMonth(start.getMonth() - 2);
-  start.setDate(start.getDate() - 4);
+  start.setMonth(start.getMonth() - SYNC_MESI);
+
   const end = new Date();
   end.setHours(23, 59, 59, 999);
 
@@ -87,7 +95,7 @@ async function syncOnce() {
     }
 
     const token = await getDeasoftToken();
-    const { start, end } = getTwoMonthsAgoRange();
+    const { start, end } = getFinestraRange();
     const nexusEsitoKeywordRegex = new RegExp(TARGET_NEXUS_ESITO_KEYWORD, 'i');
     const excludeNexusEsitoRegex = EXCLUDE_NEXUS_ESITO_REGEX_SOURCE
       ? new RegExp(EXCLUDE_NEXUS_ESITO_REGEX_SOURCE, 'i')
@@ -168,12 +176,15 @@ async function syncOnce() {
           history.splice(0, history.length - DEASOFT_HISTORY_LIMIT);
         }
 
+        // Oltre al payload grezzo si salvano gli esiti gia' normalizzati: senza, ogni
+        // lettura a valle - dashboard compresa - dovrebbe rifare il parsing a mano.
         lead.deasoft_lead = deasoftLead;
         lead.deasoft_sync = {
           ...(lead.deasoft_sync || {}),
           lastSyncAt: new Date(),
           lastError: null,
           lastLeadSystemId: idNexus,
+          ...mappaEsiti(deasoftLead),
           syncHistory: history,
         };
         if (!DRY_RUN) await lead.save();
@@ -215,14 +226,14 @@ async function syncOnce() {
       }
     }
 
-    await fs.promises.mkdir(DEBUG_CSV_DIR, { recursive: true });
-    const fileTimestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const fileSuffix = DRY_RUN ? 'dryrun-' : '';
-    const csvPath = path.join(DEBUG_CSV_DIR, `deasoft-sync-debug-${fileSuffix}${fileTimestamp}.csv`);
-    const csvContent = buildDebugCsv(debugRows);
-    await fs.promises.writeFile(csvPath, csvContent, 'utf8');
-
-    console.log(`[Deasoft sync] Debug CSV generated | path=${csvPath} | rows=${debugRows.length}`);
+    if (DEBUG_CSV) {
+      await fs.promises.mkdir(DEBUG_CSV_DIR, { recursive: true });
+      const fileTimestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileSuffix = DRY_RUN ? 'dryrun-' : '';
+      const csvPath = path.join(DEBUG_CSV_DIR, `deasoft-sync-debug-${fileSuffix}${fileTimestamp}.csv`);
+      await fs.promises.writeFile(csvPath, buildDebugCsv(debugRows), 'utf8');
+      console.log(`[Deasoft sync] Debug CSV generated | path=${csvPath} | rows=${debugRows.length}`);
+    }
     console.log('[Deasoft sync] Done');
   } catch (err) {
     console.error('[Deasoft sync] FAILED:', err?.response?.data || err.message);

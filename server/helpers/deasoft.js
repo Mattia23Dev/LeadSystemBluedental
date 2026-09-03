@@ -23,16 +23,49 @@ function extractToken(payload) {
 
 const DEFAULT_TOKEN_URL = 'https://funnel-1032112960130.europe-west1.run.app/?Type=Token';
 const DEFAULT_RESULT_URL = 'https://funnel-1032112960130.europe-west1.run.app/?Type=Result';
-// Nuovo endpoint (beta) per gli esiti dell'agendazione diretta: GET ?Type=EventResult&id_deasoft=...
-// Distinto dal vecchio ?Type=Result (che usa id_leadsystem). Vedi mail Marica Ferri (Deasoft) 2 lug 2026.
-const DEFAULT_EVENT_RESULT_URL = 'https://funnelbeta-1032112960130.europe-west1.run.app/?Type=EventResult';
+// Endpoint per gli esiti post-visita: GET ?Type=EventResult&id_deasoft=...
+// Distinto dal vecchio ?Type=Result (che usa id_leadsystem). Vedi mail Marica Ferri (Deasoft)
+// 2 lug 2026. Deasoft ha due ambienti sullo stesso schema di URL:
+//   beta        https://funnelbeta-1032112960130.europe-west1.run.app
+//   produzione  https://funnel-1032112960130.europe-west1.run.app
+// Per passare in produzione basta DEASOFT_EVENT_AMBIENTE=prod: il token segue da solo,
+// perche' viene chiesto sempre allo stesso host dell'endpoint (vedi tokenUrlDi).
+const HOST_BETA = 'https://funnelbeta-1032112960130.europe-west1.run.app';
+const HOST_PROD = 'https://funnel-1032112960130.europe-west1.run.app';
+const EVENT_AMBIENTE = String(process.env.DEASOFT_EVENT_AMBIENTE || 'beta').toLowerCase();
+const DEFAULT_EVENT_RESULT_URL = `${EVENT_AMBIENTE === 'prod' ? HOST_PROD : HOST_BETA}/?Type=EventResult`;
+
+/**
+ * L'endpoint del token sullo stesso host dell'endpoint che si sta chiamando.
+ *
+ * Serve perche' il token di produzione NON vale sul beta e viceversa: l'endpoint
+ * risponde `{"status":401,"message":"Not Authorized"}` dentro un HTTP 200, quindi
+ * l'errore non salta all'occhio e sembra una risposta vuota. Verificato il 03/09/2026.
+ */
+function tokenUrlDi(endpointUrl) {
+  try {
+    return `${new URL(endpointUrl).origin}/?Type=Token`;
+  } catch (_) {
+    return DEFAULT_TOKEN_URL;
+  }
+}
+exports.tokenUrlDi = tokenUrlDi;
+exports.EVENT_RESULT_URL = process.env.DEASOFT_EVENT_RESULT_URL || DEFAULT_EVENT_RESULT_URL;
+exports.EVENT_TOKEN_URL = process.env.DEASOFT_EVENT_TOKEN_URL || tokenUrlDi(exports.EVENT_RESULT_URL);
+exports.EVENT_AMBIENTE = EVENT_AMBIENTE;
 
 /** Default credenziali Deasoft prod (sovrascrivibili con DEASOFT_USERNAME / DEASOFT_PASSWORD). */
 const DEFAULT_DEASOFT_USERNAME = 'fun.dea';
 const DEFAULT_DEASOFT_PASSWORD = 'RGVhc29mdC1mdW5uZWwyMDI2IQ==';
 
-exports.getDeasoftToken = async () => {
-  const tokenUrl = process.env.DEASOFT_TOKEN_URL || DEFAULT_TOKEN_URL;
+/**
+ * Token Deasoft. L'host conta: il token rilasciato da produzione NON vale sul beta e
+ * viceversa - l'endpoint risponde 401 "Not Authorized" con HTTP 200, quindi l'errore non
+ * salta all'occhio. Verificato il 03/09/2026 su ?Type=EventResult.
+ * @param {string} [urlOverride] endpoint del token; default quello di produzione.
+ */
+exports.getDeasoftToken = async (urlOverride) => {
+  const tokenUrl = urlOverride || process.env.DEASOFT_TOKEN_URL || DEFAULT_TOKEN_URL;
   const username = process.env.DEASOFT_USERNAME || DEFAULT_DEASOFT_USERNAME;
   const password = process.env.DEASOFT_PASSWORD || DEFAULT_DEASOFT_PASSWORD;
 
@@ -54,6 +87,7 @@ exports.getDeasoftToken = async () => {
 /** @param {string} idLeadSystem — id lead su LeadSystem (parametro id_leadsystem verso Deasoft). */
 exports.getDeasoftLeadOutcome = async (idLeadSystem, token) => {
   const leadUrl = process.env.DEASOFT_RESULT_URL || DEFAULT_RESULT_URL;
+  const tokenUsato = token || await exports.getDeasoftToken(tokenUrlDi(leadUrl));
 
   const authMode = 'bearer';
   const tokenQueryName = 'token';
@@ -67,9 +101,9 @@ exports.getDeasoftLeadOutcome = async (idLeadSystem, token) => {
   };
 
   if (authMode === 'query') {
-    config.params[tokenQueryName] = token;
+    config.params[tokenQueryName] = tokenUsato;
   } else {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${tokenUsato}`;
   }
 
   const response = await axios.get(leadUrl, config);
@@ -83,7 +117,10 @@ exports.getDeasoftLeadOutcome = async (idLeadSystem, token) => {
  * @param {string} token — bearer token Deasoft (da getDeasoftToken()).
  */
 exports.getDeasoftEventResult = async (idDeasoft, token) => {
-  const eventUrl = process.env.DEASOFT_EVENT_RESULT_URL || DEFAULT_EVENT_RESULT_URL;
+  const eventUrl = exports.EVENT_RESULT_URL;
+  // Rete di sicurezza: se il token non arriva dal chiamante se lo prende dall'host
+  // giusto, cosi' un uso distratto non finisce in un 401 travestito da risposta vuota.
+  const tokenUsato = token || await exports.getDeasoftToken(tokenUrlDi(eventUrl));
 
   const config = {
     params: {
@@ -95,9 +132,9 @@ exports.getDeasoftEventResult = async (idDeasoft, token) => {
   // Auth Bearer come per il vecchio endpoint Result (scelta confermata).
   // Override opzionale: DEASOFT_EVENT_AUTH_MODE=query mette il token come query param.
   if ((process.env.DEASOFT_EVENT_AUTH_MODE || 'bearer').toLowerCase() === 'query') {
-    config.params.token = token;
-  } else if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.params.token = tokenUsato;
+  } else if (tokenUsato) {
+    config.headers.Authorization = `Bearer ${tokenUsato}`;
   }
 
   const response = await axios.get(eventUrl, config);

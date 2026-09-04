@@ -172,9 +172,10 @@ async function syncOnce() {
 
 if (CRON_ENABLED) {
   console.log(`[Deasoft event sync] cron enabled: ${CRON_EXPR} (dryRun=${DRY_RUN})`);
-  cron.schedule(CRON_EXPR, () => {
+    // Fuso esplicito: il server gira in UTC.
+cron.schedule(CRON_EXPR, () => {
     syncOnce().catch((e) => console.error('[Deasoft event sync] schedule error:', e?.message || e));
-  });
+  }, { timezone: 'Europe/Rome' });
 }
 
 module.exports = { syncOnce };

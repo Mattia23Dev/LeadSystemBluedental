@@ -287,9 +287,10 @@ const enabled = CRON_ENABLED;
 
 if (enabled) {
   console.log(`[Nexus sync] cron enabled: ${cronExpr} (dryRun=${DRY_RUN})`);
-  cron.schedule(cronExpr, () => {
+    // Fuso esplicito: il server gira in UTC.
+cron.schedule(cronExpr, () => {
     syncOnce().catch((e) => console.error('[Nexus sync] schedule error:', e?.message || e));
-  });
+  }, { timezone: 'Europe/Rome' });
 }
 
 module.exports = { syncOnce };

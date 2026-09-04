@@ -64,6 +64,22 @@ function buildDebugCsv(rows) {
 // puo' svolgersi mesi dopo la creazione della lead, e preventivo e fatturato arrivano
 // dopo la visita. Con 4 mesi sono circa 12.700 lead per giro, una chiamata ciascuna.
 const SYNC_MESI = Number(process.env.DEASOFT_SYNC_MESI || 4);
+// Quante lead interrogare in parallelo. In sequenza il giro non finiva: ogni lead costa
+// circa 2s di chiamata piu' il salvataggio, quindi 12.700 lead volevano oltre 30 ore e
+// il cron della notte dopo trovava il giro precedente ancora in corso. Con 8 in
+// parallelo si scende sotto le 2 ore. Da alzare solo se Deasoft regge.
+const CONCORRENZA = Number(process.env.DEASOFT_SYNC_CONCORRENZA || 8);
+// Tetto sulle lead processate: serve alle prove controllate, in produzione resta nullo.
+const MAX_LEADS = process.env.DEASOFT_SYNC_MAX_LEADS ? Number(process.env.DEASOFT_SYNC_MAX_LEADS) : null;
+// Ogni quanti giorni tornare a chiedere una lead che abbiamo gia' interrogato.
+// L'endpoint Deasoft impiega ~13s quando trova il dato e rallenta sotto carico: chiedere
+// tutte le 12.700 lead ogni notte vuol dire un giro che non finisce mai (misurato il
+// 04/09/2026: dopo 12 ore era al 36%). Si torna a chiedere solo quando ha senso.
+const RICHIEDI_DOPO_GIORNI = Number(process.env.DEASOFT_SYNC_RICHIEDI_GIORNI || 1);
+// Esito gia' fatturato: e' il capolinea, non serve rileggerlo ogni notte.
+const RICHIEDI_FINALE_GIORNI = Number(process.env.DEASOFT_SYNC_FINALE_GIORNI || 14);
+// Contatto che Deasoft non trova: probabilmente non lo trovera' nemmeno domani.
+const RICHIEDI_KO_GIORNI = Number(process.env.DEASOFT_SYNC_KO_GIORNI || 7);
 
 function getFinestraRange() {
   const start = new Date();
@@ -127,9 +143,33 @@ async function syncOnce() {
     };
     if (SYNC_UTENTE) query.utente = SYNC_UTENTE;
 
-    const leads = await Lead.find(query).sort({ dataTimestamp: -1 })//.limit(BATCH_SIZE);
+    // Un esito puo' esistere solo DOPO la visita: le lead con appuntamento futuro non
+    // hanno ancora nulla da raccontare e si saltano finche' la data non e' passata.
+    // Quelle senza data restano dentro: non sappiamo quando sia la visita.
+    const adesso = new Date();
+    query.$or = [
+      { 'appuntamento.dataOraTs': null },
+      { 'appuntamento.dataOraTs': { $exists: false } },
+      { 'appuntamento.dataOraTs': { $lt: adesso } },
+    ];
+
+    let leads = await Lead.find(query).sort({ dataTimestamp: -1 });
+    const totaleInFinestra = leads.length;
+
+    const giorniFa = (g) => new Date(adesso.getTime() - g * 24 * 3600 * 1000);
+    const daRichiedere = (lead) => {
+      const d = lead.deasoft_sync || {};
+      if (!d.lastSyncAt) return true;                                  // mai interrogata
+      if (d.fatturato === true) return d.lastSyncAt < giorniFa(RICHIEDI_FINALE_GIORNI);
+      if (d.lastError) return d.lastSyncAt < giorniFa(RICHIEDI_KO_GIORNI);
+      return d.lastSyncAt < giorniFa(RICHIEDI_DOPO_GIORNI);
+    };
+    leads = leads.filter(daRichiedere);
+    const saltate = totaleInFinestra - leads.length;
+
+    if (MAX_LEADS) leads = leads.slice(0, MAX_LEADS);
     const debugRows = [];
-    console.log(`[Deasoft sync] Start | leads=${leads.length}`, {
+    console.log(`[Deasoft sync] Start | da interrogare=${leads.length} | in finestra=${totaleInFinestra} | saltate perche' gia' aggiornate=${saltate}`, {
       dateFrom: start.toISOString(),
       dateTo: end.toISOString(),
       targetNexusEsitoKeyword: TARGET_NEXUS_ESITO_KEYWORD,
@@ -138,7 +178,8 @@ async function syncOnce() {
       dryRun: DRY_RUN,
     });
 
-    for (const lead of leads) {
+    let fatte = 0;
+    const processaLead = async (lead) => {
       const idNexus = String(lead.idNexus || '').trim();
       const nexusEsito = lead?.nexus_sync?.lastEsito || lead?.nexus_lead?.esito || 'N/D';
       const baseDebugRow = {
@@ -156,7 +197,7 @@ async function syncOnce() {
           syncOk: false,
           deasoftResult: 'SKIPPED: missing idNexus',
         });
-        continue;
+        return;
       }
       try {
         console.log(
@@ -224,7 +265,23 @@ async function syncOnce() {
         });
         console.error(`[Deasoft sync] Failed lead ${lead._id} | idNexus=${idNexus}:`, error?.response?.data || error.message);
       }
-    }
+    };
+
+    // Pool di lavoratori: CONCORRENZA lead alla volta, ognuno pesca la successiva appena
+    // ha finito. Cosi' una lead lenta non blocca le altre.
+    let prossima = 0;
+    const lavoratore = async () => {
+      while (prossima < leads.length) {
+        const lead = leads[prossima++];
+        await processaLead(lead);
+        fatte++;
+        if (fatte % 250 === 0) {
+          console.log(`[Deasoft sync] Progress | ${fatte}/${leads.length}`);
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.max(1, CONCORRENZA) }, () => lavoratore()));
+    console.log(`[Deasoft sync] Elaborate ${fatte} lead con concorrenza ${CONCORRENZA}`);
 
     if (DEBUG_CSV) {
       await fs.promises.mkdir(DEBUG_CSV_DIR, { recursive: true });
@@ -249,9 +306,11 @@ async function syncOnce() {
 
 if (CRON_ENABLED) {
   console.log(`[Deasoft sync] cron enabled: ${CRON_EXPR}`);
+  // Fuso esplicito: il server gira in UTC, senza questo '0 5 * * *' scatterebbe alle
+  // 07:00 italiane (verificato il 04/09/2026, il giro e' partito alle 07:00:21).
   cron.schedule(CRON_EXPR, () => {
     syncOnce().catch((e) => console.error('[Deasoft sync] schedule error:', e?.message || e));
-  });
+  }, { timezone: 'Europe/Rome' });
 }
 
 module.exports = { syncOnce };

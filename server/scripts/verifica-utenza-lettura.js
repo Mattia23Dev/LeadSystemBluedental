@@ -26,6 +26,20 @@ if (!URI) {
   process.exit(1);
 }
 
+/** Errori tipici che si commettono incollando la stringa, riconosciuti prima di provare. */
+function controllaStringa(uri) {
+  const pwd = (String(uri).match(/^mongodb(?:\+srv)?:\/\/[^:]+:([^@]*)@/) || [])[1];
+  if (pwd === undefined) return 'La stringa non ha la forma utente:password@host.';
+  if (!pwd) return 'Manca la password fra i due punti e la chiocciola.';
+  if (/^(PASSWORD|password|<password>|PWD|xxx+)$/.test(pwd)) {
+    return `La password e' rimasta il segnaposto "${pwd}": va sostituita con quella vera dell'utenza.`;
+  }
+  if (/[@/:#?[\]]/.test(decodeURIComponent(pwd)) && pwd === decodeURIComponent(pwd)) {
+    return 'La password contiene caratteri speciali (@ / : # ?) e va codificata, altrimenti la stringa si spezza.';
+  }
+  return null;
+}
+
 /** Utente e host, senza la password: quello che si puo' mostrare a schermo. */
 function descrizione(uri) {
   const m = String(uri).match(/^mongodb(?:\+srv)?:\/\/([^:]+):[^@]*@([^/?]+)\/([^?]*)/);
@@ -36,6 +50,11 @@ function descrizione(uri) {
 const esito = (ok, atteso) => (ok === atteso ? '  ok  ' : ' !!!  ');
 
 async function main() {
+  const problema = controllaStringa(URI);
+  if (problema) {
+    console.error(`\nStringa di connessione da correggere: ${problema}`);
+    process.exit(1);
+  }
   const d = descrizione(URI);
   console.log(`\n=== VERIFICA UTENZA MONGO ===`);
   console.log(`  utente: ${d.utente} | host: ${d.host} | database: ${d.db}\n`);
@@ -96,4 +115,13 @@ async function main() {
   await client.close();
 }
 
-main().catch((e) => { console.error('\nVERIFICA FALLITA:', e.message); process.exit(1); });
+main().catch((e) => {
+  console.error('\nVERIFICA FALLITA:', e.message);
+  if (/Authentication failed/i.test(e.message)) {
+    console.error("  Utente o password non corretti, oppure l'utenza non e' abilitata su questo cluster.");
+    console.error('  Se la password contiene % @ / : # ? va codificata: node -e "console.log(encodeURIComponent(process.argv[1]))" "la-password"');
+  }
+  if (/ENOTFOUND|querySrv/i.test(e.message)) console.error('  Host non raggiungibile: controlla il nome del cluster.');
+  if (/not authorized|IP/i.test(e.message)) console.error('  Potrebbe essere il tuo IP non abilitato in Atlas (Network Access).');
+  process.exit(1);
+});

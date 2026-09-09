@@ -65,8 +65,8 @@ tarare insieme.
 |---|---|
 | Selezione delle richieste fissate su Nexus | Sviluppata |
 | Interrogazione notturna di Deasoft e salvataggio degli esiti, con storico | Sviluppata |
-| Attivazione in produzione | **Mai accesa**: il processo è disattivato nell'applicazione |
-| Significato dei valori restituiti da Deasoft | Da confermare |
+| Attivazione in produzione | Attiva dal 03/09/2026, gira ogni notte alle 05:00 |
+| Significato dei valori restituiti da Deasoft | Chiarito: presentato non affidabile in produzione |
 | Indicatori e reportistica per Bludental | Da definire |
 
 Il lavoro tecnico è quindi già fatto e fermo prima dell'accensione. Per riprenderlo servono le tre
@@ -83,3 +83,6 @@ progetto da accendere e tarare.
 - **Rapporto con l'agendazione diretta.** Gli appuntamenti nati dall'assistente automatico hanno
   un canale di lettura degli esiti separato, già predisposto. Da valutare se ricondurre i due
   percorsi a uno solo una volta che entrambi saranno accesi.
+- **Tempi di risposta.** Ogni interrogazione richiede circa tredici secondi, quindi leggere
+  qualche migliaio di pazienti occupa ore. Deasoft sta sviluppando due letture più efficienti —
+  per singolo paziente e per centro con intervallo di date — che risolvono il problema.

@@ -101,6 +101,9 @@ altri due.
 
 ## Punti aperti
 
-- **Appuntamenti presi direttamente a gestionale.** Rilevato il 27/08/2026 in collaudo: un
-  appuntamento fissato sul gestionale che non risale sulla scheda del paziente è invisibile al
-  recall, che quindi non parte. Da verificare quanto sia diffuso.
+- **Appuntamenti presi tramite EasyCall: risolto.** Le prenotazioni delle operatrici esterne
+  creavano su Nexus un contatto nuovo invece di agganciarsi alla scheda esistente, quindi
+  l'appuntamento restava invisibile al recall. Corretto il 7-8 settembre 2026 da NextUp ed
+  EasyCall, con recupero dello storico di agosto: gli appuntamenti visibili nei centri pilota
+  sono passati da 951 a 1.841, e la copertura della data sulle prenotazioni EasyCall dal 5% al
+  65%, in linea con gli altri canali.

@@ -23,10 +23,10 @@ scelte di investimento smettono di basarsi sul numero di appuntamenti.
 È un'operazione di **sola lettura**: non scriviamo nulla su Deasoft e non tocchiamo nulla su
 Nexus. Non modifica il lavoro delle operatrici né quello dei centri.
 
-La finestra temporale serve a ricontrollare gli appuntamenti recenti più volte, perché preventivo
-e fatturato non nascono il giorno stesso della visita: l'esito di un appuntamento va riletto per
-qualche giorno prima di considerarlo definitivo. Ampiezza della finestra e frequenza sono da
-tarare insieme.
+La finestra temporale serve a ricontrollare gli appuntamenti più volte, perché preventivo e
+fatturato non nascono il giorno stesso della visita: l'esito va riletto per qualche giorno prima
+di considerarlo definitivo. Oggi guardiamo indietro quattro mesi e rileggiamo ogni paziente una
+volta al giorno, più di rado quando l'esito è ormai chiuso.
 
 ## Dati attesi da Deasoft
 
@@ -39,11 +39,10 @@ tarare insieme.
 
 ## Cosa serve da Deasoft
 
-1. L'elenco dei valori restituiti e il loro **significato esatto**, in particolare come si
-   distingue «non ancora avvenuto» da «avvenuto con esito negativo».
-2. La conferma che il dato venga **aggiornato nel tempo** e non solo alla creazione
-   dell'appuntamento.
-3. Il via libera al passaggio dall'ambiente di prova alla produzione.
+1. **Portare in produzione la correzione sul dato di presenza**, già verificata sul loro
+   ambiente di collaudo.
+2. I due nuovi modi di leggere gli appuntamenti — per singolo paziente e per centro con
+   intervallo di date — attualmente in sviluppo.
 
 ## Cosa serve da Bludental
 
@@ -69,14 +68,21 @@ tarare insieme.
 | Significato dei valori restituiti da Deasoft | Chiarito: presentato non affidabile in produzione |
 | Indicatori e reportistica per Bludental | Da definire |
 
-Il lavoro tecnico è quindi già fatto e fermo prima dell'accensione. Per riprenderlo servono le tre
-conferme da Deasoft e la decisione sugli indicatori: non è un progetto da ricominciare, è un
-progetto da accendere e tarare.
+Il sync è acceso e sta raccogliendo dati: al 09/09/2026 abbiamo esiti su circa 9.100 pazienti,
+con **1.271 preventivi per 3,17 milioni di euro** e **462 fatturati per 1,45 milioni**.
+Preventivato e fatturato sono affidabili e utilizzabili da subito.
+
+**Il dato sulla presenza invece non lo è ancora.** Il campo che dovrebbe dire se il paziente si
+è presentato vale «sì» quasi sempre, anche per visite che devono ancora svolgersi: risponde di
+fatto «esiste un appuntamento» e non «è venuto». Deasoft ha corretto il problema sul proprio
+ambiente di collaudo — verificato da noi il 09/09 su quattordici pazienti, tutti corretti — e
+deve portare la correzione in produzione. Fino ad allora la presenza va letta dal dato di
+mancato arrivo che arriva da Nexus.
 
 ## Punti aperti
 
-- **Perimetro.** Oggi la selezione è limitata a una finestra di pochi giorni e a una parte delle
-  richieste: va deciso se estenderla a tutte le fissate del pilota o dell'intera rete.
+- **Perimetro.** Oggi leggiamo i pazienti con una prima visita fissata negli ultimi quattro mesi:
+  va deciso se estendere la finestra più indietro per ricostruire lo storico.
 - **Sovrapposizione con l'export esistente.** Un'informazione simile arriva già per altra via al
   call center, tramite un foglio esportato dal gestionale. Due fonti per lo stesso dato prima o
   poi divergono: meglio scegliere quale fa fede.

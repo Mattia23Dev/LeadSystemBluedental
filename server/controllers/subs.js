@@ -1498,6 +1498,35 @@ cron.schedule('20,10,35,50 6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * *
 });
 //calculateAndAssignLeadsEveryDayMetaWeb();
 
+/**
+ * L'errore di Nexus e' definitivo? Un dato che il database rifiuta per forma non
+ * diventa valido riprovando: senza questa distinzione il cron ripropone lo stesso
+ * invio ogni ora per mesi. Visto in produzione fino al 14/09/2026 con l'errore
+ * SQLSTATE[22001] "Data too long for column nominativo" su undici lead.
+ * Definitivi: gli errori SQL sul dato. Transitori: rete, timeout, 5xx.
+ */
+function erroreDefinitivoNexus(errore) {
+  const testo = typeof errore === 'string' ? errore : JSON.stringify(errore || '');
+  // SQLSTATE 22001 = valore troppo lungo, 1406/1366 = troncamento, 22007 = data non valida.
+  return /SQLSTATE\[(22001|22003|22007)\]|\b(1406|1366)\b|Data too long|Incorrect .{1,20} value/i.test(testo);
+}
+
+/** Tentativi massimi del cron di fallback su una singola lead, prima di lasciarla. */
+const NEXUS_MAX_TENTATIVI = Number(process.env.NEXUS_MAX_TENTATIVI || 5);
+
+/**
+ * Nexus concatena nome e ragione sociale in `nominativo` e quella colonna ha un tetto:
+ * un nome lungo fa rifiutare l'intera lead. Nei dati veri quel campo a volte contiene
+ * la risposta libera del form (fino a 572 caratteri, misurati il 14/09/2026), quindi si
+ * accorcia: meglio una lead sul CRM con il nome tagliato che una lead che non arriva.
+ * Il dato sporco resta integro da noi, si accorcia solo quello che si manda.
+ */
+const NOME_MAX_NEXUS = 60;
+function nomePerNexus(nome) {
+  const pulito = String(nome || '').replace(/\s+/g, ' ').trim();
+  return pulito.length > NOME_MAX_NEXUS ? pulito.slice(0, NOME_MAX_NEXUS) : pulito;
+}
+
 // FALLBACK 24h: invia a Nexus le lead Meta Web con invio differito che dopo 24h dalla
 // creazione non hanno ricevuto una prequalifica con punteggio. Vengono inviate come lead
 // "normale" (micro_fonte META WEB, lead_status "Da contattare", punteggio null), come se fosse
@@ -1513,6 +1542,9 @@ const inviaMetaWebDifferiteScadute = async () => {
       nexusDeferred: true,
       idNexus: { $in: [null, ''] },   // non ancora inviata a Nexus
       dataTimestamp: { $lte: cutoff },
+      // Le lead abbandonate (errore definitivo o tentativi esauriti) restano fuori:
+      // riproporle ogni ora e' solo rumore, e nasconde gli errori veri.
+      nexusInvioScartatoAt: { $in: [null, undefined] },
     }).limit(200);
 
     if (!leads.length) {
@@ -1524,8 +1556,8 @@ const inviaMetaWebDifferiteScadute = async () => {
     for (const lead of leads) {
       const haPunteggio = lead.punteggio != null;
       const leadPayload = {
-        nome: lead.nome,
-        ragione_sociale: lead.nome,
+        nome: nomePerNexus(lead.nome),
+        ragione_sociale: nomePerNexus(lead.nome),
         email: lead.email,
         telefono: normalizePhoneForNexus(lead.numeroTelefono),
         // Se nel frattempo e' arrivato un punteggio (es. create v2 fallita), inviamo come PRE-META;
@@ -1555,8 +1587,34 @@ const inviaMetaWebDifferiteScadute = async () => {
         await lead.save();
         console.log(`[Meta Web 24h] Inviata a Nexus lead ${lead._id} -> idNexus ${r.data.id}`);
       } else {
-        // Resta nexusDeferred:true senza idNexus: verra' ritentata al giro successivo.
-        console.error(`[Meta Web 24h] Invio FALLITO lead ${lead._id}:`, JSON.stringify(r.error));
+        // Si conta il tentativo e si guarda che errore e': un dato rifiutato da Nexus
+        // non diventa valido riprovando, e un invio che fallisce da giorni non deve
+        // restare in coda per sempre. La lead non si perde: resta qui, marcata.
+        const tentativi = (lead.nexusInvioTentativi || 0) + 1;
+        lead.nexusInvioTentativi = tentativi;
+        lead.nexusInvioUltimoErrore = JSON.stringify(r.error || '').slice(0, 500);
+        const motivo = erroreDefinitivoNexus(r.error) ? 'dato rifiutato da Nexus'
+          : tentativi >= NEXUS_MAX_TENTATIVI ? `${tentativi} tentativi falliti`
+          : null;
+        if (motivo) {
+          lead.nexusInvioScartatoAt = new Date();
+          lead.nexusInvioScartatoMotivo = motivo;
+          console.error(`[Meta Web 24h] ABBANDONATA lead ${lead._id} (${motivo}):`, lead.nexusInvioUltimoErrore);
+          await DeepagentLog.create({
+            receivedAt: new Date(),
+            endpoint: 'cron:metaweb-24h',
+            source: 'metaweb-differite',
+            outcome: 'metaweb_scartata',
+            matchedLeadId: lead._id,
+            userPhone: lead.numeroTelefono,
+            nexusPayload: leadPayload,
+            nexusError: r.error,
+            payload: { motivo, tentativi, nomeLunghezza: (lead.nome || '').length },
+          }).catch((e) => console.error('[Meta Web 24h] log fallito:', e?.message || e));
+        } else {
+          console.error(`[Meta Web 24h] Invio FALLITO lead ${lead._id} (tentativo ${tentativi}, si riprova):`, JSON.stringify(r.error));
+        }
+        await lead.save();
       }
     }
   } catch (error) {

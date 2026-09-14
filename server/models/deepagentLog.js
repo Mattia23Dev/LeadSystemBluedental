@@ -14,12 +14,20 @@ const { Schema } = mongoose;
  *   scored_nexus_failed       -> lead qualificata ma UPDATE PRE-META a Nexus FALLITO
  *   scored_nexus_created      -> [v2] lead Meta Web differita CREATA su Nexus (PRE-META) con successo
  *   scored_nexus_create_failed-> [v2] lead Meta Web differita: CREATE su Nexus FALLITA
+ *   metaweb_scartata          -> [cron Meta Web 24h] invio a Nexus abbandonato: errore
+ *                                definitivo (dato rifiutato) o tentativi esauriti
  *   handler_error             -> eccezione non gestita nel webhook
  *
  * Reminder appuntamento (cron reminder-appuntamenti + /webhook-conferma-appuntamento):
  *   reminder_inviato          -> template WhatsApp richiesto al qualificatore con successo
  *   reminder_fallito          -> chiamata al qualificatore in errore
  *   reminder_non_configurato  -> REMINDER_API_URL assente: invio saltato
+ *   reminder_numero_rifiutato -> numero non valido/rifiutato dal connector: scartato per sempre
+ *   giro_completato           -> [cron:reminder-battito] il giro e' girato, anche a vuoto:
+ *                                la sua assenza e' l'unico modo per accorgersi che il
+ *                                reminder e' fermo (vedi cron:reminder-guardiano)
+ *   reminder_fermo            -> [cron:reminder-guardiano] nessun battito in fascia oraria:
+ *                                allarme via email, il ciclo non sta girando
  *   lead_locale_non_trovata   -> appuntamento su Nexus senza lead corrispondente in Mongo
  *   telefono_mancante         -> lead senza numero: reminder impossibile
  *   conferma_ok:<valore>      -> risposta paziente registrata e stato_conferma scritto su Nexus

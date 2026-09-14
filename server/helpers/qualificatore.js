@@ -88,6 +88,23 @@ function telefonoValido(e164) {
   return d.length >= 11 && d.length <= 15;          // E.164, numeri esteri
 }
 
+/**
+ * L'errore del connector e' definitivo? Un numero rifiutato per forma non diventa
+ * valido riprovando: senza questa distinzione il cron ritenta ogni ora per giorni
+ * (in produzione 21 tentativi sullo stesso fisso di Bari fra l'11 e il 14/09/2026,
+ * che nei log coprivano gli errori veri).
+ * Definitivi: gli errori di validazione e i 4xx. Transitori: timeout, 5xx, 408, 429.
+ */
+function erroreDefinitivo(error) {
+  const status = error?.response?.status || null;
+  const body = error?.response?.data || {};
+  const kind = String(body.errorKind || '');
+  const categoria = String(body.category || '').toLowerCase();
+  if (categoria === 'validation' || kind.startsWith('ingestion.invalid')) return true;
+  if (status && status >= 400 && status < 500 && status !== 408 && status !== 429) return true;
+  return false;
+}
+
 function toE164(phone) {
   const digits = String(phone || '').replace(/\D/g, '');
   if (!digits) return '';
@@ -166,7 +183,8 @@ function isConfigurato() {
 
 /**
  * Invia la richiesta di reminder al qualificatore.
- * @returns {Promise<{ok:boolean, skipped?:boolean, data?:any, error?:any, status?:number, payload:object, stage:string}>}
+ * `permanente: true` = rifiuto definitivo (numero non valido): non si riprova.
+ * @returns {Promise<{ok:boolean, skipped?:boolean, permanente?:boolean, data?:any, error?:any, status?:number, payload:object, stage:string}>}
  */
 async function inviaReminder(args = {}) {
   const stage = args.stage || '4g';
@@ -179,6 +197,7 @@ async function inviaReminder(args = {}) {
       ok: false,
       skipped: true,
       stage,
+      permanente: true,
       error: `telefono non spedibile (${payload.phone || 'mancante'})`,
       payload,
     };
@@ -210,6 +229,7 @@ async function inviaReminder(args = {}) {
   } catch (error) {
     return {
       ok: false,
+      permanente: erroreDefinitivo(error),
       error: error?.response?.data || error?.message || String(error),
       status: error?.response?.status || null,
       payload,
@@ -220,6 +240,7 @@ async function inviaReminder(args = {}) {
 
 module.exports = {
   inviaReminder,
+  erroreDefinitivo,
   buildPayload,
   isConfigurato,
   toE164,

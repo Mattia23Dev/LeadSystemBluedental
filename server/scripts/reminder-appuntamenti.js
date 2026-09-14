@@ -87,6 +87,14 @@
  *   REMINDER_ATTESA_CRON         cron mancata risposta (default '20 * * * *')
  *   REMINDER_CLOSE_CRON          cron chiusura (default '35 * * * *')
  *   REMINDER_MAX_PER_RUN         tetto di sicurezza sugli invii per esecuzione (default 300)
+ *   REMINDER_MAX_TENTATIVI       tentativi massimi per lo STESSO messaggio prima di
+ *                                lasciarlo perdere (default 3). I rifiuti definitivi
+ *                                (numero non valido) non vengono ritentati affatto.
+ *   REMINDER_WATCHDOG            guardiano del battito (default true). false solo per
+ *                                una pausa voluta del reminder, altrimenti avvisa.
+ *   REMINDER_WATCHDOG_ORE        ore senza battito oltre le quali scatta l'allarme (default 3)
+ *   REMINDER_WATCHDOG_CRON       cron del guardiano (default '50 * * * *')
+ *   REMINDER_ALERT_TO            destinatario degli allarmi
  *   REMINDER_WHITELIST_ATTIVA    fase di test: si scrive solo ai numeri di collaudo
  *                                (config/test-whitelist.js). Default true; va messa a
  *                                false solo per aprire l'invio ai pazienti veri.
@@ -111,6 +119,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 
 const mongoose = require('mongoose');
 const cron = require('node-cron');
+const nodemailer = require('nodemailer');
 const Lead = require('../models/lead');
 const DeepagentLog = require('../models/deepagentLog');
 const { inviaReminder, isConfigurato } = require('../helpers/qualificatore');
@@ -166,6 +175,20 @@ const CRON_INVIO = process.env.REMINDER_CRON || '5 * * * *';
 const CRON_CHIUSURA = process.env.REMINDER_CLOSE_CRON || '35 * * * *';
 const CRON_ATTESA = process.env.REMINDER_ATTESA_CRON || '20 * * * *';
 const MAX_PER_RUN = Number(process.env.REMINDER_MAX_PER_RUN || 300);
+// Tetto ai tentativi sullo STESSO messaggio: un errore di rete si riprova, ma non per
+// sempre. I rifiuti definitivi (numero non valido) non si riprovano nemmeno una volta.
+const MAX_TENTATIVI = Number(process.env.REMINDER_MAX_TENTATIVI || 3);
+// Guardiano: ogni giro lascia un battito, anche quando non ha nulla da mandare. Se i
+// battiti si fermano il reminder e' fermo, e va detto subito: fra il 2 e il 9 settembre
+// 2026 e' rimasto zitto sei giorni col servizio perfettamente vivo, e non se n'e'
+// accorto nessuno perche' senza invii non restava traccia di niente.
+const WATCHDOG = String(process.env.REMINDER_WATCHDOG || 'true').toLowerCase() !== 'false';
+const WATCHDOG_ORE = Number(process.env.REMINDER_WATCHDOG_ORE || 3);
+const WATCHDOG_CRON = process.env.REMINDER_WATCHDOG_CRON || '50 * * * *';
+const ALERT_TO = process.env.REMINDER_ALERT_TO || 'mattia.noris@funnelconsulting.it';
+// Momento dell'avvio del processo: il guardiano tace finche' il giro non ha avuto il
+// tempo di girare almeno una volta, altrimenti ogni deploy sarebbe un falso allarme.
+const AVVIATO_AT = Date.now();
 
 /**
  * L'ora italiana, calcolata esplicitamente: il server gira a UTC e in estate
@@ -347,6 +370,22 @@ function giaInviato(lead, stage) {
   // Retrocompatibilita' con gli invii fatti prima dello storico per stage.
   if (!invii.length && rem.perDataOra === app.dataOra && rem.esitoInvio === 'ok' && (rem.stage || '4g') === stage) return true;
   return false;
+}
+
+/**
+ * Questo messaggio e' da considerare chiuso senza esito, invece di riprovarlo a ogni
+ * giro? Due casi: il connector ha rifiutato il numero (riprovare non lo rende valido),
+ * oppure i tentativi transitori hanno superato il tetto.
+ * @returns {string|null} il motivo dello scarto, o null se si puo' ancora provare.
+ */
+function scartatoDefinitivo(lead, stage) {
+  const app = lead.appuntamento || {};
+  const rem = app.reminder || {};
+  const invii = Array.isArray(rem.invii) ? rem.invii : [];
+  const dello = invii.filter((i) => i.stage === stage && i.perDataOra === app.dataOra);
+  if (dello.some((i) => i.permanente)) return 'numero_rifiutato';
+  if (dello.filter((i) => i.esito === 'failed' || i.esito === 'invalid').length >= MAX_TENTATIVI) return 'tentativi_esauriti';
+  return null;
 }
 
 /** Quando e' partito con successo quello stage per l'orario attuale (null se mai). */
@@ -602,6 +641,10 @@ async function invioOnce(opts = {}) {
         if (!stage) { saltati++; motivi.set('fuori_finestra', (motivi.get('fuori_finestra') || 0) + 1); continue; }
       }
 
+      // Numero rifiutato o tentativi esauriti: si lascia perdere, senza riprovare ogni ora.
+      const scarto = opts.force ? null : scartatoDefinitivo(lead, stage);
+      if (scarto) { saltati++; motivi.set(scarto, (motivi.get(scarto) || 0) + 1); continue; }
+
       const telefono = lead.numeroTelefono;
       if (!telefono) {
         senzaTelefono++;
@@ -629,7 +672,9 @@ async function invioOnce(opts = {}) {
         centro: variabiliMessaggio(app.centroId),
       });
 
-      const esito = res.ok ? 'ok' : (res.skipped ? 'skipped' : 'failed');
+      // 'invalid' = rifiutato per sempre (numero non valido), distinto da 'failed' che
+      // e' transitorio e viene ritentato entro il tetto dei tentativi.
+      const esito = res.ok ? 'ok' : res.permanente ? 'invalid' : (res.skipped ? 'skipped' : 'failed');
       const errore = res.ok ? null : JSON.stringify(res.error).slice(0, 500);
       const stessoOrario = rem.perDataOra === app.dataOra;
       // Orario spostato: lo storico degli invii per il vecchio orario non serve piu'.
@@ -654,6 +699,7 @@ async function invioOnce(opts = {}) {
           flowId: res.payload?.flow_id || null,
           perDataOra: app.dataOra,
           esito,
+          permanente: !!res.permanente,
           errore,
           connectorLeadId: res.data?.lead_id || null,
           connectorContactId: res.data?.contact_id || null,
@@ -681,6 +727,7 @@ async function invioOnce(opts = {}) {
         nexusError: res.error,
         outcome: res.ok ? 'reminder_inviato'
           : res.blocked ? 'reminder_bloccato_whitelist'
+          : res.permanente ? 'reminder_numero_rifiutato'
           : res.skipped ? 'reminder_non_configurato'
           : 'reminder_fallito',
       });
@@ -688,6 +735,23 @@ async function invioOnce(opts = {}) {
 
     const dettaglioSaltati = [...motivi.entries()].map(([m, n]) => `${m}=${n}`).join(' ');
     console.log(`[Reminder invio] Fine | inviati=${inviati} saltati=${saltati} falliti=${falliti} senzaTelefono=${senzaTelefono}${dettaglioSaltati ? ` | saltati per: ${dettaglioSaltati}` : ''}`);
+
+    // BATTITO: una riga per ogni giro, anche quando non c'e' nulla da mandare. Serve a
+    // distinguere "non c'era niente da fare" da "il reminder e' fermo": senza il battito,
+    // sei giorni di silenzio sono indistinguibili da sei giorni tranquilli.
+    if (!filtrato) {
+      await log({
+        endpoint: 'cron:reminder-battito',
+        source: 'reminder-appuntamento',
+        outcome: 'giro_completato',
+        payload: {
+          inAgenda: inFinestra.length,
+          daServire: perimetro.dentro.length,
+          inviati, saltati, falliti, senzaTelefono, dryRun,
+          motivi: Object.fromEntries(motivi),
+        },
+      });
+    }
   } catch (e) {
     console.error('[Reminder invio] FAILED:', e?.response?.data || e.message || e);
   } finally {
@@ -845,6 +909,93 @@ async function chiusuraOnce() {
   }
 }
 
+// ===================== 4) GUARDIANO: il reminder e' vivo? =====================
+let alertUltimoInvio = 0;
+const ALERT_INTERVALLO_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * Nessun battito da WATCHDOG_ORE ore in pieno orario di lavoro vuol dire che il giro
+ * non sta girando: REMINDER_ENABLED spento per sbaglio, cron non registrati, processo
+ * ripartito male o job bloccato. E' il controllo che mancava fra il 2 e il 9 settembre
+ * 2026, quando il reminder e' rimasto fermo sei giorni con il servizio perfettamente
+ * vivo e piu di cento appuntamenti pilota passati senza un messaggio.
+ *
+ * Vive FUORI dal guard di REMINDER_ENABLED: se stesse dentro tacerebbe proprio nel
+ * caso in cui serve di piu'. Throttle: una mail ogni 6 ore.
+ */
+async function watchdogOnce({ verbose = false } = {}) {
+  const didConnect = await connetti().catch(() => false);
+  try {
+    if (!dentroFasciaOraria()) {
+      if (verbose) console.log(`[Reminder guardiano] fuori fascia (${ORA_INIZIO}-${ORA_FINE}): non controllo`);
+      return null;
+    }
+    const da = new Date(Date.now() - WATCHDOG_ORE * 3600 * 1000);
+    if (Date.now() - AVVIATO_AT < WATCHDOG_ORE * 3600 * 1000) {
+      if (verbose) console.log(`[Reminder guardiano] processo avviato da poco: aspetto ${WATCHDOG_ORE}h prima di giudicare`);
+      return null;
+    }
+    const battiti = await DeepagentLog.countDocuments({ endpoint: 'cron:reminder-battito', receivedAt: { $gte: da } });
+    if (battiti > 0) {
+      if (verbose) console.log(`[Reminder guardiano] ok: ${battiti} battiti nelle ultime ${WATCHDOG_ORE}h`);
+      return null;
+    }
+    const motivo = ENABLED
+      ? `nessun battito da ${WATCHDOG_ORE}h: il giro non sta girando (job bloccato o cron non registrati)`
+      : "REMINDER_ENABLED non e' true: i tre cron non sono registrati, non parte nessun promemoria";
+    console.error(`[Reminder guardiano] ALLARME: ${motivo}`);
+    await log({
+      endpoint: 'cron:reminder-guardiano',
+      source: 'reminder-appuntamento',
+      outcome: 'reminder_fermo',
+      payload: { motivo, enabled: ENABLED, oreSenzaBattito: WATCHDOG_ORE },
+    });
+    await avvisaReminderFermo(motivo);
+    return motivo;
+  } catch (e) {
+    console.error('[Reminder guardiano] errore:', e?.message || e);
+    return null;
+  } finally {
+    if (didConnect) await mongoose.disconnect().catch(() => {});
+  }
+}
+
+/** Email di allarme, con lo stesso stile degli altri avvisi automatici del sistema. */
+async function avvisaReminderFermo(motivo) {
+  try {
+    const ora = Date.now();
+    if (ora - alertUltimoInvio < ALERT_INTERVALLO_MS) return;
+    if (!process.env.EMAIL_GMAIL || !process.env.PASS_GMAIL) {
+      console.error('[Reminder guardiano] credenziali email mancanti, salto invio');
+      return;
+    }
+    alertUltimoInvio = ora;
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_GMAIL, pass: process.env.PASS_GMAIL },
+    });
+    await transporter.sendMail({
+      from: process.env.EMAIL_GMAIL,
+      to: ALERT_TO,
+      subject: '[Lead System] il reminder appuntamenti e FERMO',
+      html: `
+        <p>Ciao,</p>
+        <p>Il giro del reminder appuntamenti <strong>non sta girando</strong>.</p>
+        <p><strong>Motivo:</strong> ${motivo}</p>
+        <p>Finche resta fermo, i pazienti dei centri pilota non ricevono il promemoria a
+        quattro giorni, ne il sollecito, ne il promemoria del giorno prima, e su Nexus non
+        viene scritto nessuno stato di conferma.</p>
+        <p>Da controllare, in ordine: la variabile <code>REMINDER_ENABLED</code> su Railway,
+        che il servizio sia davvero partito, e i log del processo.</p>
+        <p style="color:#888;font-size:12px">Avviso automatico del guardiano, max 1 ogni 6 ore.</p>
+      `,
+    });
+    console.log(`[Reminder guardiano] email di allarme inviata a ${ALERT_TO}`);
+  } catch (e) {
+    console.error('[Reminder guardiano] errore invio email:', e?.message || e);
+  }
+}
+
 // ================================ bootstrap ================================
 /** Flag della modalita' manuale: --tel / --lead / --limit / --force / --live */
 function parseArgs(argv) {
@@ -865,6 +1016,7 @@ if (require.main === module) {
   const cmd = process.argv[2];
   const opts = parseArgs(process.argv.slice(3));
   const run = cmd === 'chiusura' ? () => chiusuraOnce()
+    : cmd === 'guardiano' ? () => watchdogOnce({ verbose: true })
     : cmd === 'attesa' ? () => attesaOnce({ dryRun: opts.live ? false : true })
     : () => invioOnce(opts);
   run()
@@ -879,4 +1031,11 @@ if (require.main === module) {
   console.log('[Reminder] cron NON attivi (REMINDER_ENABLED != true)');
 }
 
-module.exports = { invioOnce, attesaOnce, chiusuraOnce, appuntamentiInFinestra, stagePerAppuntamento, messaggioDaInviare, giaInviato, inviatoAt };
+// Il guardiano sta fuori dal ramo di ENABLED: deve poter dire anche "il reminder e'
+// spento", che e' proprio il caso in cui nessuno se ne accorge.
+if (require.main !== module && WATCHDOG) {
+  cron.schedule(WATCHDOG_CRON, () => watchdogOnce().catch((e) => console.error('[Reminder guardiano] schedule error:', e?.message || e)));
+  console.log(`[Reminder] guardiano attivo | cron='${WATCHDOG_CRON}' | allarme se nessun battito da ${WATCHDOG_ORE}h nella fascia ${ORA_INIZIO}-${ORA_FINE} | avvisi a ${ALERT_TO}`);
+}
+
+module.exports = { invioOnce, attesaOnce, chiusuraOnce, watchdogOnce, appuntamentiInFinestra, stagePerAppuntamento, messaggioDaInviare, giaInviato, inviatoAt, scartatoDefinitivo };

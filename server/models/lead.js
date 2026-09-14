@@ -275,7 +275,9 @@ const LeadSchema = new Schema({
           stage: String,
           flowId: String,
           perDataOra: String,
-          esito: String,        // ok | failed | skipped
+          esito: String,        // ok | failed | skipped | invalid (rifiutato per sempre)
+          // true = il connector ha rifiutato il numero: non si ritenta piu' quel messaggio.
+          permanente: Boolean,
           errore: String,
           connectorLeadId: String,
           connectorContactId: String,
@@ -305,6 +307,16 @@ const LeadSchema = new Schema({
     // Meta Web: invio a Nexus differito. true = creata ma NON ancora inviata a Nexus
     // (verrà inviata alla qualifica deepagent oppure dal cron dopo 24h).
     nexusDeferred: { type: Boolean, default: false },
+    // Quante volte il cron di fallback ha provato a creare questa lead su Nexus, e
+    // com'e' andata l'ultima volta. Servono a non ritentare all'infinito un invio che
+    // non potra' mai riuscire: fino al 14/09/2026 undici lead con il nome sporco
+    // venivano rifiutate da Nexus e riproposte ogni ora, per mesi.
+    nexusInvioTentativi: { type: Number, default: 0 },
+    nexusInvioUltimoErrore: String,
+    // Valorizzato = invio abbandonato: errore definitivo o tentativi esauriti. La lead
+    // resta qui, visibile e recuperabile a mano, ma esce dalla coda del cron.
+    nexusInvioScartatoAt: Date,
+    nexusInvioScartatoMotivo: String,
   });
 
   LeadSchema.pre('save', function(next) {

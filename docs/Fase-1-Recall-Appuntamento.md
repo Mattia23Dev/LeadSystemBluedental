@@ -20,7 +20,7 @@ Ponente. Gli appuntamenti degli altri centri della rete non ricevono nulla.
 | Quando | Messaggio | A chi | Esito scritto sulla scheda |
 |---|---|---|---|
 | −4 giorni | Promemoria con richiesta di conferma | Tutti gli appuntamenti del perimetro | SI → `SI-CONFERMA` · NO → `NO-CONFERMA` · nessuna risposta entro 12 ore → `ATTESA-RISPOSTA` |
-| −2 giorni | Sollecito di conferma | Solo chi non ha risposto al primo | SI → `SI-CONFERMA` · NO → `NO-CONFERMA` · nessuna risposta entro 12 ore → `NO-CONFERMA` |
+| −2 giorni | Sollecito di conferma | Solo chi non ha risposto al primo | SI → `SI-CONFERMA` · NO → `NO-CONFERMA` · nessuna risposta entro 6 ore → `NO-RISPOSTA-AI` |
 | −1 giorno | Promemoria finale, senza richiesta di conferma | Solo chi ha confermato | Nulla, la conferma è già scritta |
 
 Regole del ciclo:
@@ -93,7 +93,7 @@ altri due.
 | Ciclo a tre messaggi con concatenamento delle risposte | Attivo, in collaudo |
 | Scrittura dell'esito di conferma su Nexus | Attiva e verificata |
 | Città e indirizzo nel messaggio | Attivi, presi dall'anagrafica centri |
-| Chiusura a `NO-CONFERMA` dopo 12 ore di silenzio | Attiva |
+| Chiusura del silenzio dopo il sollecito | Attiva. Dal 16/09/2026 (proposta Bludental) l'esito è `NO-RISPOSTA-AI` dopo 6 ore, non più `NO-CONFERMA` dopo 12: così il contact center distingue chi ha rifiutato da chi non ha letto |
 | Segnalazione `ATTESA-RISPOSTA` dopo 12 ore dal primo promemoria | Attiva dal 27/08/2026 |
 | Collaudo su cinque utenze interne, con blocco verso i pazienti veri | In corso dal 24/08/2026 |
 | Rientro nel flusso dopo correzione manuale dell'operatrice | Da sviluppare: la dipendenza da Nexus è caduta |

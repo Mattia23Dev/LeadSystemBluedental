@@ -10,7 +10,7 @@
 
 1. LeadSystem conosce gli appuntamenti fissati (mirror dell'agenda Nexus, aggiornato ogni ora) e chiede al qualificatore di mandare al paziente il template giusto per il momento. I messaggi sono **tre** e non hanno lo stesso destinatario: il primo a ~4 giorni va a tutti, il sollecito a ~2 giorni solo a chi non ha risposto, il promemoria finale a ~1 giorno **solo a chi ha confermato**.
 2. Il qualificatore raccoglie la risposta e la rimanda a LeadSystem, che la scrive su Nexus nel campo `stato_conferma` (`SI-CONFERMA` / `NO-CONFERMA`).
-3. Il silenzio **dopo il sollecito** diventa `NO-CONFERMA` in automatico dopo 12 ore, come promette il testo del sollecito stesso: **non serve che il qualificatore mandi nulla per i silenzi**. Il silenzio dopo il solo primo messaggio non produce invece alcuna scrittura.
+3. Il silenzio **dopo il sollecito** diventa `NO-RISPOSTA-AI` in automatico dopo 6 ore (fino al 16/09/2026: `NO-CONFERMA` dopo 12), come promette il testo del sollecito stesso: **non serve che il qualificatore mandi nulla per i silenzi**. Il silenzio dopo il solo primo messaggio non produce invece alcuna scrittura.
 
 ---
 
@@ -157,7 +157,7 @@ Risposta osservata: `201` con `{ "lead_id": "…", "contact_id": "…", "convers
 - **Finestre di invio:** 4 giorni fra 96h e 48h, 2 giorni fra 48h e 24h, 1 giorno fra 24h e 3h. Un appuntamento fissato o spostato con poco preavviso si aggancia al primo giro utile, ma il primo messaggio che riceve è sempre quello a "4 giorni": il sollecito dice *"non abbiamo ancora ricevuto conferma"* e a chi non ha mai ricevuto nulla direbbe una cosa falsa.
 - **Nessun doppio invio dello stesso flusso** per lo stesso orario. Se l'appuntamento viene **spostato**, il ciclo riparte da capo e l'eventuale risposta data per il vecchio orario viene annullata.
 - **Disdette:** gli appuntamenti spariti dall'agenda Nexus non ricevono reminder.
-- **Silenzi:** LeadSystem scrive `NO-CONFERMA` dopo 12 ore di silenzio dal sollecito, e solo quando la finestra del sollecito è chiusa — così chi ha ricevuto il primo messaggio a −4 giorni non viene chiuso mentre ha ancora il sollecito davanti.
+- **Silenzi:** LeadSystem scrive `NO-RISPOSTA-AI` dopo 6 ore di silenzio dal sollecito, e solo quando la finestra del sollecito è chiusa — così chi ha ricevuto il primo messaggio a −4 giorni non viene chiuso mentre ha ancora il sollecito davanti.
 - `stato_conferma` è un campo dedicato su Nexus: l'aggiornamento è parziale e **non tocca `campagna`, `esito` o `lead_status`**, quindi l'attribuzione delle performance resta intatta.
 
 ---

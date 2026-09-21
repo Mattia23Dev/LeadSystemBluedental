@@ -17,7 +17,7 @@
  *       stage '2g'  due giorni prima
  *                   Sollecito. Va SOLO a chi non ha ancora risposto.
  *                   SI -> SI-CONFERMA · NO -> NO-CONFERMA
- *                   silenzio per ATTESA_SOLLECITO_ORE -> NO-CONFERMA (job 2)
+ *                   silenzio per ATTESA_SOLLECITO_ORE -> NO-RISPOSTA-AI (job 3)
  *       stage '1g'  il giorno prima
  *                   Promemoria finale, senza richiesta di conferma. Va SOLO a chi ha
  *                   confermato, al primo o al secondo messaggio. Non scrive su Nexus.
@@ -44,9 +44,12 @@
  *     valore torna a noi con la lettura periodica.
  *
  *  3) CHIUSURA NON RISPOSTE (default ogni ora)
- *     Il silenzio diventa NO-CONFERMA su Nexus solo DOPO il sollecito, non dopo il primo
- *     messaggio: e' quello che il testo del sollecito promette al paziente ("in assenza
- *     di riscontro entro la giornata odierna cancelleremo l'appuntamento").
+ *     Il silenzio diventa NO-RISPOSTA-AI su Nexus solo DOPO il sollecito, non dopo il
+ *     primo messaggio: e' quello che il testo del sollecito promette al paziente ("in
+ *     assenza di riscontro entro la giornata odierna cancelleremo l'appuntamento").
+ *     Fino al 16/09/2026 il silenzio finiva in NO-CONFERMA, indistinguibile dal rifiuto
+ *     esplicito: Bludental ha chiesto un terzo esito finale (REMINDER_STATO_SILENZIO),
+ *     cosi' il contact center sa chi richiamare, e la soglia a 6 ore invece di 12.
  *     Si chiude solo chi il sollecito l'ha davvero ricevuto, e solo dopo che sono
  *     passate ATTESA_SOLLECITO_ORE da quel messaggio: chi ha ancora il sollecito davanti
  *     non va chiuso, e chi non l'ha mai ricevuto - perche' e' slittato fuori fascia o
@@ -65,7 +68,8 @@
  *   REMINDER_MIN_ORE             sotto queste ore dall'appuntamento non si invia piu'
  *                                (default 3: un reminder a ridosso e' inutile)
  *   REMINDER_ATTESA_SOLLECITO_ORE  ore di silenzio dopo il sollecito oltre le quali si
- *                                scrive NO-CONFERMA (default 12, come da testo Bludental)
+ *                                scrive NO-RISPOSTA-AI (default 6, richiesta Bludental
+ *                                del 16/09/2026; prima era 12)
  *   REMINDER_ATTESA_ORE          ore di silenzio dopo il PRIMO promemoria oltre le quali
  *                                si scrive ATTESA-RISPOSTA (default 12)
  *   REMINDER_DISTANZA_MIN_ORE    distanza minima fra due messaggi dello stesso ciclo
@@ -80,9 +84,10 @@
  *                                lead entri nel ciclo (default 0 = disattivato). Messo a
  *                                48 all'accensione: chi ha la visita entro due giorni
  *                                resta fuori, invece di ricevere il testo dei "-4 giorni".
- *   REMINDER_STATO_SI / _NO / _ATTESA  i tre valori scritti su stato_conferma. Sono
- *                                convenzioni concordate con Bludental, non costanti:
- *                                rinominarne uno e' configurazione, non rilascio.
+ *   REMINDER_STATO_SI / _NO / _ATTESA / _SILENZIO  i quattro valori scritti su
+ *                                stato_conferma. Sono convenzioni concordate con
+ *                                Bludental, non costanti: rinominarne uno e'
+ *                                configurazione, non rilascio.
  *   REMINDER_CRON                cron invio (default '5 * * * *')
  *   REMINDER_ATTESA_CRON         cron mancata risposta (default '20 * * * *')
  *   REMINDER_CLOSE_CRON          cron chiusura (default '35 * * * *')
@@ -125,7 +130,7 @@ const DeepagentLog = require('../models/deepagentLog');
 const { inviaReminder, isConfigurato } = require('../helpers/qualificatore');
 const { isPilota, variabiliMessaggio } = require('../config/centri-bludental');
 const whitelist = require('../config/test-whitelist');
-const { applicaConferma, applicaAttesa, ATTESA } = require('../helpers/statoConferma');
+const { applicaConferma, applicaAttesa, ATTESA, SILENZIO } = require('../helpers/statoConferma');
 
 const ENABLED = String(process.env.REMINDER_ENABLED || 'false').toLowerCase() === 'true';
 const DRY_RUN = String(process.env.REMINDER_DRY_RUN || 'true').toLowerCase() === 'true';
@@ -136,7 +141,7 @@ const FINESTRA_ORE = STAGE_4G_ORE;
 const MIN_ORE = Number(process.env.REMINDER_MIN_ORE || 3);
 // "In assenza di riscontro entro la giornata odierna cancelleremo l'appuntamento":
 // il testo del sollecito da' al paziente una giornata, non un orario preciso.
-const ATTESA_SOLLECITO_ORE = Number(process.env.REMINDER_ATTESA_SOLLECITO_ORE || 12);
+const ATTESA_SOLLECITO_ORE = Number(process.env.REMINDER_ATTESA_SOLLECITO_ORE || 6);
 // Perimetro del pilota: si scrive solo ai pazienti dei 16 centri (Rev. 2.0 §3.2 +
 // Bologna Emilia Ponente).
 // Metterlo a false apre l'invio a tutta la rete: da fare solo su decisione di Bludental.
@@ -867,9 +872,9 @@ async function chiusuraOnce() {
 
     // Si chiude solo chi il sollecito l'ha DAVVERO ricevuto. Il tempo trascorso non
     // basta a dedurlo: se il sollecito e' slittato oltre la fascia oraria, o e' caduto
-    // sotto il minimo di ore dall'appuntamento, non e' mai partito. Scrivere
-    // NO-CONFERMA a chi non e' stato avvisato sarebbe una promessa mai fatta: il testo
-    // che annuncia la cancellazione e' proprio quello del sollecito.
+    // sotto il minimo di ore dall'appuntamento, non e' mai partito. Chiudere chi non
+    // e' stato avvisato sarebbe una promessa mai fatta: il testo che annuncia la
+    // cancellazione e' proprio quello del sollecito.
     const conSollecito = candidati.filter((l) => {
       const at = inviatoAt(l, '2g');
       return at && (ora.getTime() - at.getTime()) >= ATTESA_SOLLECITO_ORE * 3600 * 1000;
@@ -877,11 +882,11 @@ async function chiusuraOnce() {
     const senzaSollecito = candidati.length - conSollecito.length;
 
     // In fase di test la chiusura automatica scrive su Nexus solo per il gruppo di
-    // collaudo: NO-CONFERMA sulla scheda di un paziente vero sarebbe un dato falso.
+    // collaudo: un esito sulla scheda di un paziente vero sarebbe un dato falso.
     const ammessi = conSollecito.filter((l) => whitelist.isConsentito(l?.numeroTelefono));
     const esclusi = conSollecito.length - ammessi.length;
 
-    console.log(`[Reminder chiusura] candidati=${ammessi.length}${esclusi ? ` (esclusi ${esclusi} fuori whitelist)` : ''}${senzaSollecito ? ` (esclusi ${senzaSollecito} senza sollecito ricevuto)` : ''} | si chiude entro ${STAGE_2G_ORE}h dall'appuntamento, dopo ${ATTESA_SOLLECITO_ORE}h di silenzio dal sollecito | dryRun=${DRY_RUN}`);
+    console.log(`[Reminder chiusura] candidati=${ammessi.length}${esclusi ? ` (esclusi ${esclusi} fuori whitelist)` : ''}${senzaSollecito ? ` (esclusi ${senzaSollecito} senza sollecito ricevuto)` : ''} | si chiude a '${SILENZIO}' entro ${STAGE_2G_ORE}h dall'appuntamento, dopo ${ATTESA_SOLLECITO_ORE}h di silenzio dal sollecito | dryRun=${DRY_RUN}`);
     console.log(`[Reminder chiusura] ${whitelist.descrizione()}`);
 
     let ok = 0, ko = 0;
@@ -897,6 +902,8 @@ async function chiusuraOnce() {
         nexusPayload: { id: lead.idNexus, stato_conferma: res.statoConferma },
         nexusResponse: res.nexus?.data,
         nexusError: res.nexus?.error,
+        // Nome storico dell'outcome: resta 'no_conferma_*' anche ora che il valore scritto
+        // e' NO-RISPOSTA-AI, per non spezzare le letture sui log di settembre.
         outcome: res.ok ? 'no_conferma_inviata' : `no_conferma_fallita:${res.motivo || 'errore'}`,
       });
     }
@@ -1023,7 +1030,7 @@ if (require.main === module) {
     .then(() => process.exit(0))
     .catch((e) => { console.error('[Reminder]', e?.message || e); process.exit(1); });
 } else if (ENABLED) {
-  console.log(`[Reminder] cron attivi | invio='${CRON_INVIO}' attesa='${CRON_ATTESA}' chiusura='${CRON_CHIUSURA}' | finestre 4g ${STAGE_2G_ORE}-${STAGE_4G_ORE}h · 2g ${STAGE_1G_ORE}-${STAGE_2G_ORE}h · 1g ${MIN_ORE}-${STAGE_1G_ORE}h | '${ATTESA}' dopo ${ATTESA_PRIMO_ORE}h dal primo · NO-CONFERMA dopo ${ATTESA_SOLLECITO_ORE}h di silenzio dal sollecito | dryRun=${DRY_RUN}`);
+  console.log(`[Reminder] cron attivi | invio='${CRON_INVIO}' attesa='${CRON_ATTESA}' chiusura='${CRON_CHIUSURA}' | finestre 4g ${STAGE_2G_ORE}-${STAGE_4G_ORE}h · 2g ${STAGE_1G_ORE}-${STAGE_2G_ORE}h · 1g ${MIN_ORE}-${STAGE_1G_ORE}h | '${ATTESA}' dopo ${ATTESA_PRIMO_ORE}h dal primo · '${SILENZIO}' dopo ${ATTESA_SOLLECITO_ORE}h di silenzio dal sollecito | dryRun=${DRY_RUN}`);
   cron.schedule(CRON_INVIO, () => invioOnce().catch((e) => console.error('[Reminder invio] schedule error:', e?.message || e)));
   cron.schedule(CRON_ATTESA, () => attesaOnce().catch((e) => console.error('[Reminder attesa] schedule error:', e?.message || e)));
   cron.schedule(CRON_CHIUSURA, () => chiusuraOnce().catch((e) => console.error('[Reminder chiusura] schedule error:', e?.message || e)));

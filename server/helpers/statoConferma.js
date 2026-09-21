@@ -6,8 +6,11 @@
  * della lead per l'attribuzione delle performance).
  *
  * Valori convenzionali concordati:
- *   SI-CONFERMA -> il paziente ha risposto "Si" al reminder
- *   NO-CONFERMA -> il paziente ha risposto "No" oppure non ha risposto entro la scadenza
+ *   SI-CONFERMA    -> il paziente ha risposto "Si" al reminder
+ *   NO-CONFERMA    -> il paziente ha risposto "No"
+ *   NO-RISPOSTA-AI -> non ha risposto al sollecito entro la scadenza (proposta Bludental
+ *                     del 16/09/2026: prima il silenzio finiva in NO-CONFERMA e la sede
+ *                     non distingueva chi ha detto no da chi non ha letto)
  *
  * L'update e' parziale: POST /lead/api/set con { id, stato_conferma } lascia invariati
  * lead_status, esito, campagna e tutti gli altri campi.
@@ -30,6 +33,9 @@ const NO = process.env.REMINDER_STATO_NO || 'NO-CONFERMA';
 // Stato transitorio: il primo promemoria e' partito e il paziente non ha risposto.
 // Non chiude il ciclo - il sollecito parte comunque e potra' portarlo a SI/NO.
 const ATTESA = process.env.REMINDER_STATO_ATTESA || 'ATTESA-RISPOSTA';
+// Silenzio dopo il sollecito: esito finale come SI/NO, ma distinto, cosi' il contact
+// center sa che questo paziente va richiamato e non ha rifiutato.
+const SILENZIO = process.env.REMINDER_STATO_SILENZIO || 'NO-RISPOSTA-AI';
 
 /** Normalizza la risposta del paziente (qualunque forma arrivi) in SI / NO / null. */
 function normalizzaRisposta(valore) {
@@ -47,10 +53,11 @@ function normalizzaRisposta(valore) {
   return null;
 }
 
-/** Risposta paziente -> valore da scrivere su Nexus. NESSUNA risposta = NO-CONFERMA. */
+/** Risposta paziente -> valore da scrivere su Nexus. */
 function statoConfermaDaRisposta(risposta) {
   if (risposta === 'SI') return SI;
-  if (risposta === 'NO' || risposta === 'NESSUNA') return NO;
+  if (risposta === 'NO') return NO;
+  if (risposta === 'NESSUNA') return SILENZIO;
   return null;
 }
 
@@ -156,4 +163,4 @@ async function applicaAttesa(lead, opts = {}) {
   return { ok: !!res.ok, statoConferma: ATTESA, nexus: res };
 }
 
-module.exports = { SI, NO, ATTESA, normalizzaRisposta, statoConfermaDaRisposta, applicaConferma, applicaAttesa };
+module.exports = { SI, NO, ATTESA, SILENZIO, normalizzaRisposta, statoConfermaDaRisposta, applicaConferma, applicaAttesa };

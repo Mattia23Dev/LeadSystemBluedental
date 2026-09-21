@@ -317,6 +317,14 @@ const LeadSchema = new Schema({
     // resta qui, visibile e recuperabile a mano, ma esce dalla coda del cron.
     nexusInvioScartatoAt: Date,
     nexusInvioScartatoMotivo: String,
+    // Benvenuto WhatsApp alle lead GOLD / AMBRA / ALLINEATORI (helpers/benvenuto.js).
+    benvenuto: {
+      inviatoAt: Date,
+      esito: String,   // ok | failed | skipped
+      errore: String,
+      flowId: String,
+      connectorConversationId: String,
+    },
   });
 
   LeadSchema.pre('save', function(next) {

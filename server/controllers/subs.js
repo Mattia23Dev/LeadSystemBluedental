@@ -14,6 +14,7 @@ const moment = require('moment');
 const path = require('path');
 const { saveLead, saveLeadWithResult } = require('../helpers/nexus');
 const DeepagentLog = require('../models/deepagentLog');
+const benvenuto = require('../helpers/benvenuto');
 // Gestione lead senza campagna (form 02_BS_* Volume/Intent via Zapier) -> lead_donot_send.
 const { spostaInDoNotSend, spostaLeadSenzaCampagna } = require('../helpers/doNotSend');
 
@@ -492,7 +493,30 @@ const calculateAndAssignLeadsEveryDay = async () => {
             const leadNexus = await saveLead(leadPayload);
             newLead.idNexus = leadNexus.id;
             await newLead.save();
-            console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);            
+            console.log(`Assegnato il lead ${leadWithoutUser?._id} all'utente ${user.nome}`);
+            // Benvenuto WhatsApp (GOLD / AMBRA / ALLINEATORI): parte solo con BENVENUTO_ENABLED.
+            // Dopo il salvataggio e fuori dal percorso Nexus: un errore qui non tocca la lead.
+            if (benvenuto.campagnaAmmessa(leadWithoutUser.name)) {
+              try {
+                const b = await benvenuto.inviaBenvenuto(newLead);
+                if (!b.skipped || b.permanente) {
+                  newLead.benvenuto = {
+                    inviatoAt: new Date(), esito: b.ok ? 'ok' : (b.skipped ? 'skipped' : 'failed'),
+                    errore: b.ok ? null : JSON.stringify(b.error || '').slice(0, 300), flowId: benvenuto.FLOW_ID,
+                    connectorConversationId: b.data && (b.data.conversation_id || b.data.conversationId) || null,
+                  };
+                  await newLead.save();
+                  await DeepagentLog.create({
+                    receivedAt: new Date(), endpoint: 'cron:benvenuto', source: 'benvenuto',
+                    outcome: b.ok ? 'benvenuto_inviato' : `benvenuto_fallito`, matchedLeadId: newLead._id,
+                    userPhone: newLead.numeroTelefono, payload: b.payload, nexusResponse: b.data, handlerError: b.ok ? null : JSON.stringify(b.error || '').slice(0, 500),
+                  }).catch((e) => console.error('[Benvenuto] log fallito:', e?.message || e));
+                }
+                if (!b.ok && !b.skipped) console.error(`[Benvenuto] invio fallito per lead ${newLead._id}:`, JSON.stringify(b.error));
+              } catch (e) {
+                console.error(`[Benvenuto] errore per lead ${newLead._id}:`, e?.message || e);
+              }
+            }
           } else {
             //await trigger(newLead, user)
             await user.save();

@@ -99,6 +99,12 @@ const LeadSchema = new Schema({
     appFissato: String,
     reminderInviato: Boolean,
     idDeasoft: String,
+    // Quando abbiamo preso l'id_deasoft dal JOIN sulla tabella contatto di Nexus
+    // (scripts/nexus-id-deasoft-sync.js). Vedi docs/API-Nexus.md.
+    nexus_deasoft_link: {
+      at: Date,
+      idDeasoftPrecedente: String,
+    },
     appVoiceBot: Boolean,
     chiamato: Boolean,
     outHour: Boolean,

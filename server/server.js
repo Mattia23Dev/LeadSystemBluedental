@@ -731,6 +731,8 @@ require('./scripts/deasoft-nightly-sync');
 require('./scripts/deasoft-event-sync');
 // Register agenda sync (allinea data/ora appuntamento e disdette nel mirror locale).
 require('./scripts/nexus-agenda-sync');
+// Porta sulle lead l'id_deasoft dal JOIN sulla tabella contatto di Nexus (docs/API-Nexus.md).
+require('./scripts/nexus-id-deasoft-sync');
 // Register reminder appuntamenti (invio entro 72h + chiusura non risposte).
 // Si attiva solo con REMINDER_ENABLED=true; di default logga e resta spento.
 require('./scripts/reminder-appuntamenti');

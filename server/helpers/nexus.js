@@ -84,3 +84,39 @@ exports.getLeadById = async (idNexus) => {
     throw error;
   }
 }
+
+/**
+ * id_deasoft (identificativo del paziente sul gestionale) delle lead, letto con il JOIN sulla
+ * tabella `contatto` indicato da NextUp il 23/09/2026. Il campo non sta sulla lead: sta sul
+ * contatto, e Nexus lo valorizza quando l'appuntamento viene fissato via Trace.
+ *
+ * Una lead senza contatto associato semplicemente non compare nel risultato.
+ *
+ * @param {string} [conditions] filtro SQL sulla lead, es. "t.data_creazione >= '2026-06-01'"
+ * @returns {Promise<Map<string,string>>} idNexus -> id_deasoft
+ */
+exports.getIdDeasoftMap = async (conditions = '') => {
+  const response = await nexus.get('/lead/api/list', {
+    params: {
+      select: 't.id,contatto.id_deasoft',
+      join: 'JOIN contatto on contatto.id_lead = t.id',
+      conditions,
+      limit: 'all',
+    },
+  });
+  const rows = (response.data && (response.data.data || response.data)) || [];
+  const map = new Map();
+  (Array.isArray(rows) ? rows : []).forEach((r) => {
+    if (r && r.id && r.id_deasoft) map.set(String(r.id), String(r.id_deasoft));
+  });
+  return map;
+};
+
+/** id_deasoft di una singola lead (null se non c'e' un contatto associato). */
+exports.getIdDeasoft = async (idNexus) => {
+  const response = await nexus.get('/lead/api/get', {
+    params: { id: idNexus, select: 't.id,contatto.id_deasoft', join: 'JOIN contatto on contatto.id_lead = t.id' },
+  });
+  const d = (response.data && (response.data.data || response.data)) || null;
+  return d && d.id_deasoft ? String(d.id_deasoft) : null;
+};

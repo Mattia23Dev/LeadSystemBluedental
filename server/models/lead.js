@@ -247,6 +247,20 @@ const LeadSchema = new Schema({
       centroIndirizzoNexus: String,
       centroVistoAt: Date,
       cambiCentro: [{ at: Date, da: String, a: String }],
+      // -- esito del SINGOLO appuntamento letto da Deasoft con l'id paziente --
+      // Fonte: ?Type=ListAppointments&id_deasoft=... (scripts/deasoft-appuntamenti-sync.js).
+      // E' l'unica lettura per appuntamento: il flag no_show di Nexus e' di paziente e comprende
+      // anche le disdette. Vedi docs/API-Nexus.md.
+      deasoft: {
+        lettoAt: Date,
+        idAppuntamento: Number,
+        stato: Number,           // 0 annullato · 1 confermato · 2 non presentato · 3-6 presentato · 7 fissato
+        statoEtichetta: String,
+        presentato: Boolean,
+        annullato: Boolean,
+        nonPresentato: Boolean,
+        appuntamentiPaziente: Number,
+      },
       // -- no show: sticky, mai azzerato --
       noShow: { type: Boolean, default: false },
       // orario dell'appuntamento non onorato (data_ora_mancato_appuntamento)
@@ -323,6 +337,16 @@ const LeadSchema = new Schema({
     // resta qui, visibile e recuperabile a mano, ma esce dalla coda del cron.
     nexusInvioScartatoAt: Date,
     nexusInvioScartatoMotivo: String,
+    // Preventivato/fatturato letti per PAZIENTE (?Type=EventResult&id_deasoft=...): possono
+    // riferirsi anche a visite precedenti, per questo stanno fuori dal blocco appuntamento.
+    deasoft_paziente: {
+      lettoAt: Date,
+      preventivato: Boolean,
+      importoPreventivato: Number,
+      fatturato: Boolean,
+      importoFatturato: Number,
+      ultimaModificaEsito: String,
+    },
     // Benvenuto WhatsApp alle lead GOLD / AMBRA / ALLINEATORI (helpers/benvenuto.js).
     benvenuto: {
       inviatoAt: Date,

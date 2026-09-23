@@ -5,7 +5,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const cron = require('node-cron');
 const Lead = require('../models/lead');
-const { getDeasoftToken, getDeasoftLeadOutcome, mappaEsiti } = require('../helpers/deasoft');
+const { getDeasoftToken, getDeasoftLeadOutcome, mappaEsiti, getDeasoftEventResult, getDeasoftAppointmentsByPatient, ETICHETTA_STATO, STATI_PRESENTE } = require('../helpers/deasoft');
 
 let running = false;
 const CRON_EXPR = process.env.DEASOFT_SYNC_CRON || '0 5 * * *';
@@ -18,6 +18,10 @@ const EXCLUDE_NEXUS_ESITO_REGEX_SOURCE = (
   process.env.DEASOFT_EXCLUDE_NEXUS_ESITO_REGEX || 'già\\s*fissato'
 ).trim();
 const DEASOFT_HISTORY_LIMIT = Number(process.env.DEASOFT_SYNC_HISTORY_LIMIT || 20);
+// Secondo tentativo per le lead che rispondono "id_leadsystem non trovato": se conosciamo l'id
+// del PAZIENTE (idDeasoft, dal contatto di Nexus) si rilegge per paziente. Recupera meta' delle
+// non trovate. Si spegne con DEASOFT_RECUPERO_PAZIENTE=false.
+const RECUPERO_PER_PAZIENTE = String(process.env.DEASOFT_RECUPERO_PAZIENTE || 'true').toLowerCase() === 'true';
 const DEBUG_CSV_DIR = process.env.DEASOFT_DEBUG_CSV_DIR || path.resolve(__dirname, '../csv');
 // Il CSV di debug scriveva un file a ogni giro con tutte le lead processate: su Railway
 // il disco e' effimero, quindi e' solo lavoro sprecato. Si accende quando serve davvero.
@@ -179,6 +183,7 @@ async function syncOnce() {
     });
 
     let fatte = 0;
+    let recuperate = 0;
     const processaLead = async (lead) => {
       const idNexus = String(lead.idNexus || '').trim();
       const nexusEsito = lead?.nexus_sync?.lastEsito || lead?.nexus_lead?.esito || 'N/D';
@@ -257,6 +262,22 @@ async function syncOnce() {
           lastLeadSystemId: idNexus,
           syncHistory: history,
         };
+
+        // SECONDO TENTATIVO. "id_leadsystem non trovato" non vuol dire che il paziente non
+        // esista: vuol dire che l'anagrafica in agenda non porta il nostro id, cosa che succede
+        // quando la prenotazione viene fatta creando un contatto nuovo sul gestionale.
+        // Se pero' conosciamo l'id del PAZIENTE (idDeasoft, preso dal contatto di Nexus: vedi
+        // scripts/nexus-id-deasoft-sync.js), lo stesso paziente si legge per id paziente: da li'
+        // arrivano preventivato e fatturato, e lo stato del singolo appuntamento.
+        if (RECUPERO_PER_PAZIENTE && /non trovato/i.test(errorMessage || "") && lead.idDeasoft) {
+          try {
+            const rec = await recuperaPerPaziente(lead, token);
+            recuperate++;
+            console.log("[Deasoft sync] RECUPERATA per id paziente " + lead.idDeasoft + " | lead " + lead._id + (rec.etichetta ? " | appuntamento: " + rec.etichetta : ""));
+          } catch (e) {
+            console.error("[Deasoft sync] recupero per paziente fallito | lead " + lead._id + " | idDeasoft=" + lead.idDeasoft + ":", e.message);
+          }
+        }
         if (!DRY_RUN) await lead.save();
         debugRows.push({
           ...baseDebugRow,
@@ -266,6 +287,54 @@ async function syncOnce() {
         console.error(`[Deasoft sync] Failed lead ${lead._id} | idNexus=${idNexus}:`, error?.response?.data || error.message);
       }
     };
+
+    /**
+     * Legge la stessa lead per ID PAZIENTE invece che per id lead. Scrive:
+     *   deasoft_paziente.*      preventivato e fatturato. Sono dati di PAZIENTE e possono
+     *                           riferirsi anche a visite precedenti: per questo stanno fuori da
+     *                           deasoft_sync e non si mescolano con l'esito della singola visita.
+     *   appuntamento.deasoft.*  stato del singolo appuntamento, quando ne troviamo uno nella data
+     *                           della visita che conosciamo: 0 annullato, 2 non presentato,
+     *                           3-6 presentato. E' l'unica lettura per appuntamento che abbiamo,
+     *                           e distingue la disdetta dal no show.
+     * Non tocca deasoft_sync: li' resta scritto che per id lead non si trova, ed e' vero.
+     */
+    async function recuperaPerPaziente(lead, tok) {
+      const id = String(lead.idDeasoft);
+      const esiti = mappaEsiti(await getDeasoftEventResult(id, tok));
+      lead.deasoft_paziente = {
+        ...(lead.deasoft_paziente || {}),
+        lettoAt: new Date(),
+        preventivato: esiti.preventivato,
+        importoPreventivato: esiti.importoPreventivato,
+        fatturato: esiti.fatturato,
+        importoFatturato: esiti.importoFatturato,
+        ultimaModificaEsito: esiti.ultimaModificaEsito,
+      };
+      lead.markModified("deasoft_paziente");
+
+      let etichetta = null;
+      const dataVisita = lead && lead.appuntamento && lead.appuntamento.dataOraTs;
+      if (dataVisita) {
+        const giorno = new Date(dataVisita).toLocaleDateString("sv-SE", { timeZone: "Europe/Rome" });
+        const items = (await getDeasoftAppointmentsByPatient(id, tok)) || [];
+        const quello = items.find((x) => String(x.data_ora_inizio || "").startsWith(giorno));
+        const stato = quello ? quello.stato : null;
+        etichetta = quello ? (ETICHETTA_STATO[stato] || ("stato " + stato)) : "appuntamento assente";
+        lead.appuntamento.deasoft = {
+          lettoAt: new Date(),
+          idAppuntamento: quello ? quello.id_appuntamento : null,
+          stato,
+          statoEtichetta: etichetta,
+          presentato: quello ? STATI_PRESENTE.has(stato) : null,
+          annullato: quello ? stato === 0 : null,
+          nonPresentato: quello ? stato === 2 : null,
+          appuntamentiPaziente: items.length,
+        };
+        lead.markModified("appuntamento.deasoft");
+      }
+      return { etichetta };
+    }
 
     // Pool di lavoratori: CONCORRENZA lead alla volta, ognuno pesca la successiva appena
     // ha finito. Cosi' una lead lenta non blocca le altre.

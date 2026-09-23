@@ -186,3 +186,27 @@ exports.getDeasoftEventResult = async (idDeasoft, token) => {
   const response = await axios.get(eventUrl, config);
   return response.data;
 };
+
+/**
+ * Appuntamenti di un paziente (?Type=ListAppointments&id_deasoft=...), sempre in PRODUZIONE.
+ * E' l'unica lettura per singolo appuntamento: ogni item ha `stato` (0 annullato · 1 confermato ·
+ * 2 non presentato · 3-6 presentato · 7 fissato), data/ora in ora italiana e `id_lead`.
+ * Vedi docs/API-Deasoft.md.
+ * @returns {Promise<Array>} items (array vuoto se il paziente non ha appuntamenti)
+ */
+exports.getDeasoftAppointmentsByPatient = async (idDeasoft, token) => {
+  const url = process.env.DEASOFT_LIST_URL || `${HOST_PROD}/`;
+  const tokenUsato = token || await exports.getDeasoftToken(tokenUrlDi(url));
+  const response = await axios.get(url, {
+    params: { Type: 'ListAppointments', id_deasoft: idDeasoft },
+    headers: { Authorization: `Bearer ${tokenUsato}` },
+    timeout: Number(process.env.DEASOFT_LIST_TIMEOUT_MS || 60000),
+  });
+  const data = response.data || {};
+  return Array.isArray(data.items) ? data.items : [];
+};
+
+/** Stato dell'appuntamento Deasoft -> etichetta leggibile (legenda Marica, 16/09/2026). */
+exports.ETICHETTA_STATO = { 0: 'annullato', 1: 'confermato', 2: 'non presentato', 3: 'entrato', 4: 'in cura', 5: 'uscito', 6: 'terminato', 7: 'fissato' };
+/** Gli stati che significano "il paziente e' venuto". */
+exports.STATI_PRESENTE = new Set([3, 4, 5, 6]);

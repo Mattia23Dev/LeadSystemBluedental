@@ -39,10 +39,11 @@ volta al giorno, più di rado quando l'esito è ormai chiuso.
 
 ## Cosa serve da Deasoft
 
-1. **Portare in produzione la correzione sul dato di presenza**, già verificata sul loro
-   ambiente di collaudo.
-2. I due nuovi modi di leggere gli appuntamenti — per singolo paziente e per centro con
-   intervallo di date — attualmente in sviluppo.
+- I due nuovi modi di leggere gli appuntamenti — per singolo paziente e per centro con
+  intervallo di date — attualmente in sviluppo.
+
+La correzione sul dato di presenza, che era l'altra richiesta, è in produzione
+dall'11/09/2026.
 
 ## Cosa serve da Bludental
 
@@ -65,19 +66,24 @@ volta al giorno, più di rado quando l'esito è ormai chiuso.
 | Selezione delle richieste fissate su Nexus | Sviluppata |
 | Interrogazione notturna di Deasoft e salvataggio degli esiti, con storico | Sviluppata |
 | Attivazione in produzione | Attiva dal 03/09/2026, gira ogni notte alle 05:00 |
-| Significato dei valori restituiti da Deasoft | Chiarito: presentato non affidabile in produzione |
+| Significato dei valori restituiti da Deasoft | Chiarito; presenza corretta in produzione dall'11/09/2026 |
 | Indicatori e reportistica per Bludental | Da definire |
 
 Il sync è acceso e sta raccogliendo dati: al 09/09/2026 abbiamo esiti su circa 9.100 pazienti,
 con **1.271 preventivi per 3,17 milioni di euro** e **462 fatturati per 1,45 milioni**.
 Preventivato e fatturato sono affidabili e utilizzabili da subito.
 
-**Il dato sulla presenza invece non lo è ancora.** Il campo che dovrebbe dire se il paziente si
-è presentato vale «sì» quasi sempre, anche per visite che devono ancora svolgersi: risponde di
-fatto «esiste un appuntamento» e non «è venuto». Deasoft ha corretto il problema sul proprio
-ambiente di collaudo — verificato da noi il 09/09 su quattordici pazienti, tutti corretti — e
-deve portare la correzione in produzione. Fino ad allora la presenza va letta dal dato di
-mancato arrivo che arriva da Nexus.
+**Il dato sulla presenza è affidabile dall'11/09/2026.** Fino ad allora il campo valeva «sì»
+quasi sempre, anche per visite ancora da svolgere: rispondeva di fatto «esiste un
+appuntamento» e non «è venuto». Deasoft ha portato la correzione in produzione l'11/09 e lo
+stesso giorno l'abbiamo verificata: le visite future risultano non presentate, i fatturati
+presentati, i mancati arrivi segnalati da Nexus non presentati.
+
+Due cautele. I valori letti prima dell'11/09 si correggono da soli man mano che il sync li
+rilegge, ma per le visite ancora da svolgere succede solo la notte dopo la visita: fino ad
+allora le analisi sulle presenze devono escludere le letture precedenti. E per riconoscere
+un mancato arrivo conta «visita passata e non presentato», perché il dato esplicito di
+mancato arrivo non viene sempre compilato dai centri.
 
 ## Punti aperti
 

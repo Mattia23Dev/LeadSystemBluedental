@@ -471,10 +471,10 @@ const calculateAndAssignLeadsEveryDay = async () => {
               lead_status: "Da contattare", //FISSO
               dettaglio_status_negativo: null,
               numero_tentativi: null,
-              // PROMO ABT+SB: macro FUNNEL. Le promo del 24/09/2026 (ABT, IMPIANTI, ALLINEATORI) hanno una
-              // micro dedicata ma restano macro Online. L'ordine conta: "promo abt+sb" prima di "promo abt",
+              // Macro Online per tutte, promo comprese (PROMO ABT+SB era FUNNEL fino al 24/09/2026).
+              // Le promo hanno una micro dedicata. L'ordine conta: "promo abt+sb" prima di "promo abt",
               // e "promo allineatori" prima di "allineatori".
-              macro_fonte: (leadWithoutUser.name || '').toLowerCase().includes("promo abt+sb") ? "FUNNEL" : "Online",
+              macro_fonte: "Online",
               micro_fonte: (leadWithoutUser.name || '').toLowerCase().includes("promo abt+sb") ? "PROMO ABT+SB" :
                (leadWithoutUser.name || '').toLowerCase().includes("promo abt") ? "PROMO ABT 3 ABT" :
                (leadWithoutUser.name || '').toLowerCase().includes("promo impianti") ? "PROMO IMPIANTI 1290€" :

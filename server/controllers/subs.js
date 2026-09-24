@@ -322,7 +322,9 @@ const calculateAndAssignLeadsEveryDay = async () => {
         { name: { $regex: /\S/ } },
         { name: { $not: { $regex: /Meta Web/, $options: 'i' } } },
         { name: { $not: { $regex: /ESTETICA/, $options: 'i' } } },
-        { name: { $not: { $regex: /GFU/, $options: 'i' } } }
+        { name: { $not: { $regex: /GFU/, $options: 'i' } } },
+        // Comparatore DentistaItalia: segue il flusso Meta Web (routes/comparatore.js)
+        { name: { $not: { $regex: /GOOGLE WHITE LABEL/, $options: 'i' } } }
       ] // 'i' per ignorare il case sensitivity
     }).limit(100);
     const totalLeads = leads.length;
@@ -947,7 +949,8 @@ const calculateAndAssignLeadsEveryDayMetaWeb = async () => {
     });
     let leads = await LeadFacebook.find({
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
-      name: { $regex: /Meta Web/, $options: 'i' }
+      // Anche il comparatore DentistaItalia (campagna GOOGLE WHITE LABEL, routes/comparatore.js)
+      name: { $regex: /Meta Web|GOOGLE WHITE LABEL/, $options: 'i' }
     }).limit(50);
     let leadsGfu = await LeadFacebook.find({
       $or: [{ assigned: false }, { assigned: { $exists: false } }],
